@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Your App Name here.</string>
+
+    <!-- Replace "000000000000" with your Facebook App ID here. -->
+    <string name="facebook_app_id">1593692634072105</string>
+    
+    <!-- Replace "000000000000" with your Facebook App ID here. -->
+    <string name="fb_login_protocol_scheme">fb1593692634072105</string>
+    <string-array name = "scopes">
+        <item>"https://auth.snapchat.com/oauth2/api/user.external_id"</item>
+        <item>"https://auth.snapchat.com/oauth2/api/user.display_name"</item>
+        <item>"https://auth.snapchat.com/oauth2/api/user.bitmoji.avatar"</item>
+    </string-array>
+</resources>

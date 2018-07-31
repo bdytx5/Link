@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "509399610383",
+    "firebase_url": "https://mu-ridesharing.firebaseio.com",
+    "project_id": "mu-ridesharing",
+    "storage_bucket": "mu-ridesharing.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509399610383:android:ddde5590e35dc515",
+        "android_client_info": {
+          "package_name": "com.example.newproj"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "509399610383-v6skpa8ukl56jtsapab6sojn59idurok.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbCYqC5lGGgEMxS9XsXEbZ1G3yN1ePB1Y"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

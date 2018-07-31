@@ -1,0 +1,98 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.example.flutter3">
+
+    <!-- The INTERNET permission is required for development. Specifically,
+         flutter needs it to communicate with the running application
+         to allow setting breakpoints, to provide hot reload, etc.
+    -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- io.flutter.app.FlutterApplication is an android.app.Application that
+         calls FlutterMain.startInitialization(this); in its onCreate method.
+         In most cases you can leave this as-is, but you if you want to provide
+         additional functionality it is fine to subclass or reimplement
+         FlutterApplication and put your custom class here. -->
+    <application
+            android:name="io.flutter.app.FlutterApplication"
+            android:screenOrientation="portrait"
+            android:label="Thumbs-Out"
+            android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.snapchat.kit.sdk.clientId" android:value="442352e4-c3d2-4934-a755-20f9e951d74a" />
+        <meta-data android:name="com.snapchat.kit.sdk.redirectUrl" android:value="thumbsout://hey" />
+        <meta-data android:name="com.snapchat.kit.sdk.scopes" android:resource="@array/scopes" /> <!-- This should be a string array of scopes !-->
+
+        <activity
+                android:name="com.snapchat.kit.sdk.SnapKitActivity"
+                android:launchMode="singleTask"
+        >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!--
+                    Enter the parts of your redirect url below
+                    e.g., if your redirect url is my-app://abc/xy/z
+                        android:scheme="my-app"
+                        android:host="abc"
+                        android:path="/xy/z"
+                !-->
+                <data
+                        android:scheme="thumbsout"
+                        android:host="hey"
+
+                />
+            </intent-filter>
+        </activity>
+        <activity
+                android:name="com.yalantis.ucrop.UCropActivity"
+                android:screenOrientation="portrait"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+
+        <activity
+                android:name=".MainActivity"
+                android:screenOrientation="portrait"
+                android:launchMode="singleTop"
+                android:theme="@style/LaunchTheme"
+                android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density"
+                android:hardwareAccelerated="true"
+                android:windowSoftInputMode="adjustResize">
+
+            <!-- This keeps the window background of the activity showing
+                 until Flutter renders its first frame. It can be removed if
+                 there is no splash screen (such as the default splash screen
+                 defined in @style/LaunchTheme). -->
+            <meta-data
+                    android:name="io.flutter.app.android.SplashScreenUntilFirstFrame"
+                    android:value="true" />
+            <intent-filter>
+                <data android:host="hey" android:scheme="thumbsout"></data>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- Facebook Login configuration -->
+        <meta-data android:name="com.facebook.sdk.ApplicationId"
+                   android:value="@string/facebook_app_id"/>
+
+        <activity android:name="com.facebook.FacebookActivity"
+                  android:configChanges=
+                          "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+                  android:label="@string/app_name" />
+        <activity
+                android:name="com.facebook.CustomTabActivity"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/fb_login_protocol_scheme" />
+            </intent-filter>
+        </activity>
+
+
+
+
+
+    </application>
+</manifest>
