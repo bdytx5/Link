@@ -36,6 +36,7 @@ dev_dependencies:
   path_provider: ^0.4.1
   secure_string: ^2.0.0
   firebase_auth: ^0.5.15
+  latlong: ^0.5.3
 
 
 

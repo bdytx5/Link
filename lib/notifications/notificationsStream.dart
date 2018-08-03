@@ -88,7 +88,7 @@ Widget rideNotificationCell(Map notification, BuildContext context){
               ],
             ),
             onTap: (){
-              showProfilePage(notification['id'], context);
+              showCommentsPage(notification['id'],notification['commentNode'], context);
             },
           )
       )
@@ -153,7 +153,7 @@ Widget commentNotificationCell(Map notification, BuildContext context){
           ],
         ),
         onTap: (){
-          showProfilePage(notification['id'], context);
+          showCommentsPage(notification['postId'], notification['commentNode'],context);
         },
       )
     )
@@ -161,39 +161,41 @@ Widget commentNotificationCell(Map notification, BuildContext context){
 
   );
 }
+void showCommentsPage(String id, String commentKey,BuildContext context)async{
+
+
+  Navigator.push(context,
+      new MaterialPageRoute(builder: (context) => new commentsPage(id: id, commentKey: commentKey)));
+}
+
 
 String getDateOfMsg(Map notification){
+  var time = notification['time'];
 
   String date = '';
   var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-  DateTime recentMsgDate = formatter.parse(notification['time']);
+  DateTime recentMsgDate = formatter.parse(time);
   var dayFormatter = new DateFormat('EEEE');
   var shortDatFormatter = new DateFormat('M/d/yy');
   var timeFormatter = new DateFormat('h:mm a');
   var now = new DateTime.now();
   Duration difference = now.difference(recentMsgDate);
   var differenceInSeconds = difference.inSeconds;
-  if(differenceInSeconds < 604800){
-    // msg is less than a week old
-    final lastMidnight = new DateTime(now.year, now.month, now.day);
-    if(differenceInSeconds < 86400 && recentMsgDate.isAfter(lastMidnight)){
+  // msg is less than a week old
+  final lastMidnight = new DateTime(now.year, now.month, now.day );
+  if(differenceInSeconds < 604800) {
+    if (differenceInSeconds < 86400 && recentMsgDate.isAfter(lastMidnight)) {
       date = timeFormatter.format(recentMsgDate);
-    }else{
+    } else {
       date = dayFormatter.format(recentMsgDate);
     }
-  }else{
+  }
+  else{
     date = shortDatFormatter.format(recentMsgDate);
   }
   return date;
 }
 
-
-void showProfilePage(String id, BuildContext context)async{
-
-
-  Navigator.push(context,
-      new MaterialPageRoute(builder: (context) => new commentsPage(id: id)));
-}
 
 
 //Widget rideNotificationCell(Map notification,BuildContext context){

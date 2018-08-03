@@ -9,6 +9,7 @@ import 'msgStream.dart';
 import '../globals.dart' as globals;
 import '../homePage/feedStream.dart';
 import 'package:intl/intl.dart';
+import '../main.dart';
 
 
 
@@ -30,13 +31,15 @@ class ChatScreen extends StatefulWidget {
 
 
 }
-class _chatScreenState extends State<ChatScreen> with TickerProviderStateMixin{
+class _chatScreenState extends State<ChatScreen> with RouteAware{
   //final List<Msg> _messages = <Msg>[];
   final TextEditingController _textController = new TextEditingController();
   bool _isWriting = false;
   bool newConvo;
   FocusNode txtInputFocusNode = new FocusNode();
   Query chatQuery;
+  ScrollController listController = new ScrollController();
+
   /// critical info
   String recipFullName;
   String recipId;
@@ -49,21 +52,28 @@ class _chatScreenState extends State<ChatScreen> with TickerProviderStateMixin{
 
 
 
+
+
    void initState() {
     super.initState();
-
     makeSureAllMsgScreenInfoIsAvailable();
-
-
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-
-    chatQuery = ref.child('convos').child(widget.convoID);
-
-    newConvo = widget.newConvo;
-
+    addDismissKeyboardListener();
+    setupStreamQuery();
    }
 
+    @override
+  void didPop() {
+    // TODO: implement didPop
 
+    updateReadReceipts();
+
+    super.didPop();
+  }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context));
+  }
 
 
 
@@ -73,6 +83,7 @@ class _chatScreenState extends State<ChatScreen> with TickerProviderStateMixin{
   Widget build(BuildContext context){
     return new Scaffold(
 
+
       appBar: new AppBar(
         backgroundColor: Colors.yellowAccent,
         title: new Text((recipFullName != null) ? recipFullName : '', style: new TextStyle(color: Colors.black),),
@@ -80,7 +91,6 @@ class _chatScreenState extends State<ChatScreen> with TickerProviderStateMixin{
           color: Colors.black,
           icon: new Icon(Icons.arrow_back),
           onPressed: (){
-            updateReadReceipts();
             Navigator.pop(context);
           },
         ),
@@ -115,6 +125,7 @@ class _chatScreenState extends State<ChatScreen> with TickerProviderStateMixin{
         //  sort: (DataSnapshot a, DataSnapshot b) => a.key.compareTo(b.key),
         padding: new EdgeInsets.all(8.0),
         reverse: true,
+        controller: listController,
 
         sort: (a, b) => (b.key.compareTo(a.key)),
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
@@ -243,6 +254,12 @@ class _chatScreenState extends State<ChatScreen> with TickerProviderStateMixin{
 }
 
 
+void addDismissKeyboardListener(){
+     listController.addListener((){
+       txtInputFocusNode.unfocus();
+     });
+  }
+
 
 
 Future<void> sendRegularMsg(String id)async{
@@ -260,8 +277,13 @@ return;
 }
 
   void sendFeedbackMsg(){
-  var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-  var now = formatter.format(new DateTime.now());
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var now = formatter.format(new DateTime.now());
+
+    if(globals.id != null || _textController.text != null || now == null){
+      return;
+    }
+
   DatabaseReference ref = FirebaseDatabase.instance.reference();
   Map message = {'to':'thumbsout','from':globals.id,'message':_textController.text, 'formattedTime':now}; // CREATE MESSAGE
   ref.child('convos').child(globals.id).push().set(message);
@@ -320,6 +342,8 @@ var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
 
 
   Future<void> makeSureAllMsgScreenInfoIsAvailable()async{
+    newConvo = widget.newConvo;
+
 
     /// senderInfo
   await getSenderFullName();
@@ -334,15 +358,19 @@ var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
         allInfoIsAvailable = true;
       });
     }
+  }
 
 
+void setupStreamQuery(){
+  DatabaseReference ref = FirebaseDatabase.instance.reference();
+  chatQuery = ref.child('convos').child(widget.convoID);
 }
 
 
 
 
   Future<void> getSenderImgURL()async{
-    if(widget.senderFullName != null){
+    if(widget.senderImgURL != null){
       setState(() {
         senderImgURL = widget.senderImgURL;
       });

@@ -231,17 +231,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
         children: <Widget>[
           new ChatList(stream: changeNotifier.stream),
           new Feed(app: widget.app,userID: widget.userID, commentNotificationCallback:_commentNotificationCallback,streamController: changeNotifier),
-//          new ColorState(
-//            child: new Container(
-//              child: new Center(
-//                child: new IconButton(icon: new Icon(Icons.clear), onPressed: (){
-//
-//                  
-//
-//                })
-//              ),
-//            ),
-//          )
+
         ],
       ),
     );
@@ -267,11 +257,11 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                           height: 90.0,
                           width: 90.0,
                           child: new InkWell(
-                            child: new CircleAvatar(radius: 25.0,backgroundColor: Colors.transparent,backgroundImage: new NetworkImage((globals.imgURL != null) ? (bitmojiLoading) ? logoURL : globals.imgURL : logoURL),
+                            child: (globals.imgURL != null ) ? new CircleAvatar(radius: 25.0,backgroundColor: Colors.transparent,backgroundImage: new NetworkImage((globals.imgURL != null) ? globals.imgURL : logoURL),
                                 child: new Center(
                                   child: (bitmojiLoading) ? new CircularProgressIndicator() : new Container(),
                                 )
-                            ),
+                            ) : new CircularProgressIndicator(),
                             onTap: ()async{
                               var res = await   _warningMenu('Update Bitmoji?', 'Are You Sure You want to update your Bitmoji?', "This CANNOT be undone.");
                               if(res){

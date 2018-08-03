@@ -17,7 +17,7 @@
             android:screenOrientation="portrait"
             android:label="Thumbs-Out"
             android:icon="@mipmap/ic_launcher">
-        <meta-data android:name="com.snapchat.kit.sdk.clientId" android:value="442352e4-c3d2-4934-a755-20f9e951d74a" />
+        <meta-data android:name="com.snapchat.kit.sdk.clientId" android:value="" />
         <meta-data android:name="com.snapchat.kit.sdk.redirectUrl" android:value="thumbsout://hey" />
         <meta-data android:name="com.snapchat.kit.sdk.scopes" android:resource="@array/scopes" /> <!-- This should be a string array of scopes !-->
 

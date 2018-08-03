@@ -5,7 +5,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
-
+import 'package:latlong/latlong.dart';
 import '../globals.dart' as globals;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -64,7 +64,8 @@ class feedStream extends StatelessWidget {
         defaultChild: new CircularProgressIndicator(),
         padding: new EdgeInsets.all(8.0),
         reverse: false,
-        sort: (DataSnapshot a, DataSnapshot b) => (a.key != globals.id) ? getTime(b).compareTo(getTime(a)) : -1,
+      // sort: (DataSnapshot a, DataSnapshot b) => (a.key != globals.id) ? sortFeed(a, b) : -1,
+        sort: (DataSnapshot a, DataSnapshot b) => sortFeed(a, b),
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
           // here we can just look up every user from the snapshot, and then pass it into the chat message
           Map post = snapshot.value;
@@ -78,6 +79,74 @@ class feedStream extends StatelessWidget {
     }
 
 }
+
+
+String transportMode = 'Driving';
+LatLng destination = new LatLng(39.0997265, -94.5785667);
+
+
+
+int sortFeed(DataSnapshot a, DataSnapshot b){
+  
+  // if the a.key == id, return -1 !
+  // else if a.distance is < 50k return -1
+  // else return time comparison
+
+  // we are sorting the array as follows
+
+  // if user is a driver, we will put all riders first, and vice versa
+  // then with those riders, we will see who if they are within a certain range
+
+  if(a.key == globals.id){
+    return -1;
+  }
+  if(b.key == globals.id){
+    return 1;
+  }
+
+
+  if(a.value['riderOrDriver'] == transportMode && b.value['riderOrDriver'] != transportMode){
+    return 1;
+  }
+  if(a.value['riderOrDriver'] == transportMode && b.value['riderOrDriver'] == transportMode){
+    return 0;
+  }
+  if(a.value['riderOrDriver'] != transportMode && b.value['riderOrDriver'] == transportMode){
+    return -1;
+  }
+
+  if(a.value['riderOrDriver'] != transportMode && b.value['riderOrDriver'] != transportMode){
+
+
+        Map aCoordinates = a.value['coordinates'];
+    Map bCoordinates = b.value['coordinates'];
+    double aLat = double.parse(aCoordinates['lat']);
+    double alon = double.parse(aCoordinates['lon']);
+    double bLat = double.parse(bCoordinates['lat']);
+    double blon = double.parse(bCoordinates['lon']);
+    final Distance distance = new Distance();
+    double ameter = distance(new LatLng(aLat, alon), destination);
+        double bmeter = distance(new LatLng(bLat, blon), destination);
+
+        if((ameter - bmeter) <= 0.0){
+          return -1;
+        }else{
+          return 1;
+        }
+
+  }
+
+
+
+//
+//  if(a.key == globals.id) {
+//    return -1;
+//  }
+//
+
+}
+
+
 
 bool checkIfPostIsGhosted(Map post){
   if(post.containsKey('ghost')){
@@ -141,52 +210,26 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   TextEditingController commentController = new TextEditingController();
   double commentHeight = 40.0;
 
-
+  static Duration _kExpand = const Duration(milliseconds: 200);
+  CurvedAnimation _easeInAnimation;
+  AnimationController _controller;
+  Animation<double> _iconTurns;
 
   void initState() {
     super.initState();
     commentNode.addListener(_onFocusChange);
-    
     streamSubscription = widget.stream.listen((_) => someMethod());
 
+   _controller = new AnimationController(duration: _kExpand, vsync: this);
+    _easeInAnimation = new CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _iconTurns = new Tween<double>(begin: 0.0, end: 0.25).animate(_easeInAnimation);
 
   }
 
 
-  void someMethod(){
-    commentNode.unfocus(); // well, it's not pretty but neither is flutter state management...
-  }
-  void _onFocusChange(){
-    widget.uIcallback();
-  }
-
-  @override
-  void dispose() {
-    // Clean up the controller when the Widget is removed from the Widget tree
-
-    super.dispose();
-  }
-
-  @override
-  void didPopNext() {
-    // Covering route was popped off the navigator.
-  }
 
   @override
   Widget build(BuildContext context) {
-    CurvedAnimation _easeInAnimation;
-    Animation<double> _iconTurns;
-    const Duration _kExpand = const Duration(milliseconds: 200);
-
-    AnimationController _controller = new AnimationController(duration: _kExpand, vsync: this);
-
-    _easeInAnimation = new CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-
-    _iconTurns = new Tween<double>(begin: 0.0, end: 0.25).animate(_easeInAnimation);
-
-
-
-
 
     return new SizeTransition(
       sizeFactor: new CurvedAnimation(
@@ -217,21 +260,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                           suffixIcon: new IconButton(
                               icon: new Icon(Icons.send, color: Colors.grey,size: 18.0,),
                               onPressed: () async{
-                                if(commentController.text != null){
-                                  if(commentController.text != '' ){
-                                    await handleCommentNotificaitonList(widget.snapshot.key);
-                                    if(checkDateOfPost(widget.snapshot.value)){
-                                      sendComment(widget.snapshot.key, commentController.text);
-                                      incrementCommentCount(widget.snapshot.key);
-                                    }else{
-                                      sendExpiredComment(widget.snapshot.key, commentController.text);
-                                      incrementExpiredCommentCount(widget.snapshot.key);
-                                    }
-
-                                    commentController.clear();
-                                    commentNode.unfocus();
-                                  }
-                                }
+                                sendCommentHandler(widget.snapshot);
                               })),
                     ), focusNode: commentNode)
 
@@ -242,7 +271,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                   new Container(
                     height: checkCommentCountForCommentsOnly(widget.snapshot.value),
                     width: double.infinity,
-                    child: (checkCommentCountForCommentsOnly(widget.snapshot.value) != 1.0) ? (checkDateOfPost(widget.snapshot.value) ? commentStream(widget.snapshot.key) : expiredCommentStream(widget.snapshot.key)) : new Container()
+                    child: (checkCommentCountForCommentsOnly(widget.snapshot.value) != 1.0) ? checkDateOfPost(widget.snapshot.value) ? commentStream(widget.snapshot.value['key']) : commentStream("${widget.snapshot.value['key']}expired") : new Container()
                   )
 
                 ],
@@ -329,7 +358,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                           child: new GestureDetector(
                             child: FeedCellTitle(widget.snapshot.value),
                             onTap: (){
-                              showProfileSheet();
+                              showProfilePage();
                             },
                           ),
                         ),
@@ -346,7 +375,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                       new Padding(
                         padding: new EdgeInsets.only(
                             left: 7.0, top: 7.0, right: 7.0, bottom: 2.0),
-                        child: checkIfPostIsUpdated(widget.snapshot.value) ? new Text(widget.snapshot.value['post'], style: new TextStyle(fontSize: 20.0,color: Colors.grey[800])) : new Text(''),
+                        child: checkDateOfPost(widget.snapshot.value) ? new Text(widget.snapshot.value['post'], style: new TextStyle(fontSize: 20.0,color: Colors.grey[800])) : new Text(''),
                       ),
                       new Row(
                         children: <Widget>[
@@ -364,10 +393,13 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
                          new Padding(padding: new EdgeInsets.only(bottom:3.0),
                          child:  new RotationTransition(
-                           turns: _iconTurns,
+                           turns: _iconTurns, 
                            child: new Padding(padding: new EdgeInsets.all(2.0),
-                             child: new ImageIcon(commentIcon,size: 20.0,color: Colors.grey[600]),),
-                         ),),
+                             child: new ImageIcon(commentIcon,color: Colors.grey,size: 16.0,)
+
+                         ),
+                         ),
+                         ),
 
           (widget.snapshot.value['commentCount'] != null && checkDateOfPost(widget.snapshot.value)) ?
           new Padding(padding: new EdgeInsets.only(bottom: 5.0,top: 5.0),
@@ -393,53 +425,112 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   }
 
 
-  void sendExpiredComment(String id,String comment)async {
-    await grabUserInfo();
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-    String now = formatter.format(new DateTime.now());
-    Map msg = {
-      'time':now,
-      'comment': comment,
-      'sender': globals.id,
-      'imgURL': globals.imgURL,
-      'fullName': globals.fullName
-    };
-    ref.child('expiredComments').child(id).push().set(msg);
-  }
-  
-  
-  void sendComment(String id,String comment)async {
-    await grabUserInfo();
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-    String now = formatter.format(new DateTime.now());
-    Map msg = {
-      'time':now,
-      'comment': comment,
-      'sender': globals.id,
-      'imgURL': globals.imgURL,
-      'fullName': globals.fullName
-    };
-    ref.child('comments').child(id).push().set(msg);
+  Future<void> sendCommentHandler(DataSnapshot snap)async{
+    if(commentController.text != null){
+      if(commentController.text != '' ){
+        if(checkDateOfPost(widget.snapshot.value)){
+          await handleCommentNotificaitonList(snap.value['key'],snap.key );
+          sendComment(snap.value['key'], commentController.text, snap.key);
+          incrementCommentCount(snap.key, false );
+        }else{
+          await handleCommentNotificaitonList("${snap.value['key']}expired", snap.key);
+          sendComment("${snap.value['key']}expired",commentController.text,snap.key);
+          incrementCommentCount(snap.key, true );
+        }
+        commentController.clear();
+        commentNode.unfocus();
+      }
+    }
   }
 
-  Future<void>handleCommentNotificaitonList(String posterId)async{
+
+  void sendComment(String key,String comment, String postId)async {
+    await grabUserInfo();
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    DataSnapshot snap = await ref.child('commentLists').child(posterId).once();
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    String now = formatter.format(new DateTime.now());
+    if(globals.id != null && globals.imgURL != null && globals.fullName != null){
+      Map msg = {
+        'time':now,
+        'comment': comment,
+        'sender': globals.id,
+        'imgURL': globals.imgURL,
+        'fullName': globals.fullName,
+        'postId':postId  // so we can get back to the post when the user views the notification
+      };
+        ref.child('comments').child(key).push().set(msg);
+    }
+  }
+
+
+
+    void incrementCommentCount(String postId,bool expired)async {
+    if(!expired){
+      DatabaseReference ref = FirebaseDatabase.instance.reference();
+      DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').once();
+    if(snap.value != null){
+
+    int incremented = snap.value + 1;
+    ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(incremented);
+    }else{
+    ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(1);
+    }
+    }else{
+      DatabaseReference ref = FirebaseDatabase.instance.reference();
+      DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').once();
+    if(snap.value != null){
+    int incremented = snap.value + 1;
+    ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(incremented);
+    }else{
+    ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(1);
+    }
+    }
+    }
+
+
+    Future<void>handleCommentNotificaitonList(String key, String posterId)async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    DataSnapshot snap = await ref.child('commentLists').child(key).once();
+
     if(snap.value != null){
       List<String> commentList = List.from(snap.value);
       if(!commentList.contains(globals.id)){
         commentList.add(globals.id);
-          ref.child('commentLists').child(posterId).set([globals.id]);
+        ref.child('commentLists').child(key).set(commentList);
       }else{
         return; // the user is already involved in the convo....
       }
     }else{
-    ref.child('commentLists').child(posterId).set([globals.id, posterId]);
+      ref.child('commentLists').child(key).set([globals.id, posterId]);
+    }
   }
 
+
+
+  void someMethod(){
+    commentNode.unfocus(); // well, it's not pretty but neither is flutter state management...
   }
+  void _onFocusChange(){
+    widget.uIcallback();
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the Widget is removed from the Widget tree
+
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Covering route was popped off the navigator.
+  }
+
+
+  
+
+
+
 
   
   
@@ -453,7 +544,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     var fromHomeCity = true;
     // first check if the user is leaving from their home city, and the post is still up to date!!!
     if(post.containsKey('fromHome')){
-      if(!(post['fromHome']) && checkIfPostIsUpdated(post)){
+      if(!(post['fromHome']) && checkDateOfPost(post)){
 
         fromHomeCity = false;
       }
@@ -536,8 +627,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
   Future<void> grabUserInfo() async {
 
-    print(globals.id);
-
     if(globals.imgURL != null && globals.fullName != null){
      return;
     }
@@ -572,28 +661,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
           widget.commentNotificationCallback(); // kind of sly.... this will update every time there is an update to the comments, and set the notification flag accordingly to false... only thing is that it's a little complex
         }
        return commentCell(snapshot);
-
-        });
-  }
-  Widget expiredCommentStream(String id){
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    Query falQuery = ref.child('expiredComments').child(id).orderByKey();
-
-    return new FirebaseAnimatedList(
-        query: falQuery,
-        defaultChild: new Center(
-          child: new CircularProgressIndicator(),
-        ),
-        padding: new EdgeInsets.all(8.0),
-        reverse: false,
-        sort: (a, b) => (b.key.compareTo(a.key)),
-        itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
-          // here we can just look up every user from the snapshot, and then pass it into the chat message
-          Map post = snapshot.value;
-          if(id == globals.id){
-            widget.commentNotificationCallback(); // kind of sly.... this will update every time there is an update to the comments, and set the notification flag accordingly to false... only thing is that it's a little complex
-          }
-          return commentCell(snapshot);
 
         });
   }
@@ -706,30 +773,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     database.reference().child(globals.cityCode).child('posts').child(globals.id).child('ghost').remove();
   }
 
-  void incrementCommentCount(String id)async {
 
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(id).child('commentCount').once();
-
-    if(snap.value != null){
-      int incremented = snap.value + 1;
-      ref.child(globals.cityCode).child('posts').child(id).child('commentCount').set(incremented);
-    }else{
-      ref.child(globals.cityCode).child('posts').child(id).child('commentCount').set(1);
-    }
-  }
-
-  void incrementExpiredCommentCount(String id)async {
-
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(id).child('expiredCommentCount').once();
-    if(snap.value != null){
-      int incremented = snap.value + 1;
-      ref.child(globals.cityCode).child('posts').child(id).child('expiredCommentCount').set(incremented);
-    }else{
-      ref.child(globals.cityCode).child('posts').child(id).child('expiredCommentCount').set(1);
-    }
-  }
 
 
   String getDateOfMsg(String time){
@@ -775,24 +819,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
 
-
-  bool checkIfPostIsUpdated(Map post) {
-    // first check if the post is deleted using the new system for deletion
-    if (post.containsKey('deleted')) {
-      if (post['deleted'] == 'true') {
-        return false;
-      } else {
-        return (checkDate(post['leaveDate'])) ? true : false;
-      }
-    }
-    // now check if post is deleted using old meathod
-    if (post['post'] == 'deletedPost') {
-      return false;
-    } else {
-      return (checkDate(post['leaveDate'])) ? true : false;
-    }
-  }
-
   String formatDateForCellTitle(String date) {
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var postDate = formatter.parse(date);
@@ -803,12 +829,8 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     return newDate;
   }
 
-  void showProfileSheet(){
+  void showProfilePage(){
     Map post = widget.snapshot.value;
-  //  Navigator.push(context,
-        ///new MaterialPageRoute(builder: (context) => new UserProfile(postInfo: post, id: widget.snapshot.key,))).then((idk){
-//          widget.uIcallback();
-//    });
 
     Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: widget.snapshot.key,profilePicURL: post['imgURL'],)));
 
@@ -843,8 +865,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                 Navigator.of(context).pop(false);
               },
             ),
-
-
           ],
         );
       },

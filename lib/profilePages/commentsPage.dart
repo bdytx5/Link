@@ -12,7 +12,10 @@ class commentsPage extends StatefulWidget {
 
 
 final String id;
-commentsPage({this.id});
+final String commentKey;
+
+
+commentsPage({this.id,this.commentKey});
   _commentsPageState createState() => new _commentsPageState();
 
 
@@ -23,22 +26,60 @@ class _commentsPageState extends State<commentsPage> {
   TextEditingController commentController = new TextEditingController();
   bool userHasComments = true;
   DataSnapshot postSnap;
+  bool commentKeyIsUpdated = true;
+
+
 
   void initState() {
     super.initState();
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     grabPost(widget.id);
-
-//    final falQuery = ref.child('comments').child(widget.id).once().then((snap) {
-//      setState(() {
-//        if (snap.value != null) {
-//          userHasComments = true;
-//        } else {
-//          userHasComments = false;
-//        }
-//      });
-  //  });
   }
+
+
+
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+        appBar: new AppBar(
+          backgroundColor: Colors.yellowAccent,
+          iconTheme: new IconThemeData(color: Colors.black),
+          title: new Text('Comments', style: new TextStyle(color: Colors.black),),
+        ),
+        body: new ListView(
+          children: <Widget>[
+            new Container(
+                child: (postSnap != null) ? PostCell(postSnap) : new Container()
+            ),
+           commentInputBox(),
+           (postSnap != null)  ? new Container(
+             height: (!checkIfCommentKeyIsUpdated(postSnap.value)) ? 200.0 : MediaQuery.of(context).size.height,
+             width: double.infinity,
+             child: (checkIfCommentKeyIsUpdated(postSnap.value)) ? commentStream(widget.commentKey) : checkIfPostIsUpdated(postSnap.value) ? commentStream(postSnap.value['key']) : commentStream("${postSnap.value['key']}expired"),
+           ) : new Container(),
+
+            (postSnap != null) ?   (!checkIfCommentKeyIsUpdated(postSnap.value)) ? new Column(
+          children: <Widget>[
+            expiredBar(),
+            new Container(
+              height: 500.0,
+              width: double.infinity,
+              child: commentStream(widget.commentKey),
+            )
+          ],
+        ) : new Container() : new Container(),
+
+
+          ],
+        )
+    );
+  }
+
+
+
+
+
 
 
   Future<void>grabPost(String id)async{
@@ -49,99 +90,39 @@ class _commentsPageState extends State<commentsPage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return new Scaffold(
-        appBar: new AppBar(
-          backgroundColor: Colors.yellowAccent,
-          title: new Text('Comments', style: new TextStyle(color: Colors.black),),
-        ),
-        body: new Container(
-            child: new Column(
-
-              children: <Widget>[
-
-                new Container(
-                    child: (postSnap != null) ? PostCell(postSnap) : new Container()
-                ),
-                new Expanded(child: new Container(
-                  child:  commentStream(widget.id)
-                )),
-                new Divider(),
-              new Container(
-                margin: const EdgeInsets.symmetric(horizontal: 9.0),
-                    width:double.infinity,
-                    child: new TextField(
-                      controller: commentController,
-                      focusNode: commentNode,
-                      decoration: new InputDecoration(hintText: 'Enter a Comment!',suffixIcon: new IconButton(icon: new Icon(Icons.send), onPressed: (){
-                        if(commentController.text != null){
-                          if(commentController.text != "" && widget.id != null){
-                            sendComment(widget.id, commentController.text);
-                            commentController.clear();
-                            commentNode.unfocus();
-
-                          }
-                        }
-
-                      })),
-                    ),
-
-                )
-              ],
-            )
-        )
-    );
-  }
-
-  Widget PostCell(DataSnapshot snapshot){
-  return  new Padding(padding: new EdgeInsets.all(10.0),
-
-  child: new Card(
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        new InkWell(
-          child: new CircleAvatar(backgroundImage: new NetworkImage(snapshot.value['imgURL']),radius: 30.0,backgroundColor: Colors.transparent,),
-          onTap: (){
-            Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: snapshot.key,profilePicURL: snapshot.value['imgURL'])));
-          },
-        ),
-        new Expanded(
-            child: new Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                new FittedBox(
-                  child: new Container(
-                    child: FeedCellTitle(snapshot.value),
-                  ),
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                ),
-                new Padding(
-                  padding: new EdgeInsets.only(
-                      left: 7.0, top: 7.0, right: 7.0, bottom: 2.0),
-                  child: checkIfPostIsUpdated(snapshot.value) ? new Text(snapshot.value['post'], style: new TextStyle(fontSize: 20.0,color: Colors.grey[800])) : new Text(''),
-                ),
-                new Row(
-                  children: <Widget>[
 
 
-                  ],
-                )
-              ],
-            )
-        ),
-      ],
-    ),
-  )
-  );
+  bool checkIfCommentKeyIsUpdated(Map post){
+    if(post['key'] == widget.commentKey && checkIfPostIsUpdated(post)){
+      return true;
+    }
+    if("${post['key']}expired" == widget.commentKey && !checkIfPostIsUpdated(post)){
+      return true;
+    }
+
+    return false;
   }
 
 
-  void sendComment(String id,String comment)async {
+  bool checkIfPostIsUpdated(Map post) {
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    return checkDate(post['leaveDate']);
+    
+  }
+
+
+  bool checkDate(String date) {
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var postDate = formatter.parse(date);
+
+    if (postDate.isAfter(new DateTime.now())) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void sendComment(String key,String comment, String postId,bool expired)async {
     await grabUserInfo();
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
@@ -151,10 +132,39 @@ class _commentsPageState extends State<commentsPage> {
       'comment': comment,
       'sender': globals.id,
       'imgURL': globals.imgURL,
-      'fullName': globals.fullName
+      'fullName': globals.fullName,
+      'postId':postId
     };
-    ref.child('comments').child(id).push().set(msg);
+    await ref.child('comments').child(key).push().set(msg);
+    await incrementCommentCount(postId, expired);
+    
   }
+
+
+  Future<void> incrementCommentCount(String postId,bool expired)async {
+
+    if(!expired){
+      DatabaseReference ref = FirebaseDatabase.instance.reference();
+      DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').once();
+      if(snap.value != null){
+        int incremented = snap.value + 1;
+        ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(incremented);
+      }else{
+        ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(1);
+      }
+    }else{
+      DatabaseReference ref = FirebaseDatabase.instance.reference();
+      DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').once();
+      if(snap.value != null){
+        int incremented = snap.value + 1;
+        ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(incremented);
+      }else{
+        ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(1);
+      }
+    }
+  }
+  
+  
 
   Future<void> grabUserInfo() async {
     if(globals.imgURL != null && globals.fullName != null){
@@ -169,6 +179,55 @@ class _commentsPageState extends State<commentsPage> {
   }
 
 
+
+
+ 
+
+  String getDateOfMsg(String time){
+
+    String date = '';
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    DateTime recentMsgDate = formatter.parse(time);
+    var dayFormatter = new DateFormat('EEEE');
+    var shortDatFormatter = new DateFormat('M/d/yy');
+    var timeFormatter = new DateFormat('h:mm a');
+    var now = new DateTime.now();
+    Duration difference = now.difference(recentMsgDate);
+    var differenceInSeconds = difference.inSeconds;
+    // msg is less than a week old
+    if(differenceInSeconds < 86400){
+      date = timeFormatter.format(recentMsgDate);
+    }else{
+      date = shortDatFormatter.format(recentMsgDate);
+    }
+    return date;
+  }
+
+
+
+
+
+
+  String formatDateForCellTitle(String date) {
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var postDate = formatter.parse(date);
+
+    var shortDateFormatter = new DateFormat('M/d');
+    var newDate = shortDateFormatter.format(postDate);
+
+    return newDate;
+  }
+
+  Widget expiredBar(){
+    return  new Container(
+      height: 30.0,
+      width: double.infinity,
+      color: Colors.red,
+      child: new Center(
+        child: Text('Comments are Expired',style: new TextStyle(color: Colors.white),),
+      ),
+    );
+  }
 
 
   Widget FeedCellTitle(Map post) {
@@ -248,116 +307,51 @@ class _commentsPageState extends State<commentsPage> {
   }
 
 
-  bool checkDate(String date) {
-    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-    var postDate = formatter.parse(date);
+  Widget commentInputBox(){
+    return new Container(
+      margin: const EdgeInsets.symmetric(horizontal: 9.0),
+      width:double.infinity,
+      child: new TextField(
+        controller: commentController,
+        focusNode: commentNode,
+        decoration: new InputDecoration(hintText: 'Enter a Comment!',suffixIcon: new IconButton(icon: new Icon(Icons.send), onPressed: (){
+          if(commentController.text != null){
+            if(commentController.text != "" && widget.id != null){
+              if(checkIfPostIsUpdated(postSnap.value)){
+                sendComment(postSnap.value['key'], commentController.text,postSnap.key ,false);
+              }else{
+                sendComment("${postSnap.value['key']}expired",commentController.text,postSnap.key, true);
+              }
+              commentController.clear();
+              commentNode.unfocus();
 
-    if (postDate.isAfter(new DateTime.now())) {
-      return true;
-    } else {
-      return false;
-    }
+            }
+          }
+
+        })),
+      ),
+
+    );
   }
 
 
 
-  bool checkIfPostIsUpdated(Map post) {
-    // first check if the post is deleted using the new system for deletion
+  Widget PostCell(DataSnapshot snapshot){
+    return  new Padding(padding: new EdgeInsets.all(10.0),
 
-    if (post.containsKey('deleted')) {
-      if (post['deleted'] == 'true') {
-        return false;
-      } else {
-        return (checkDate(post['leaveDate'])) ? true : false;
-      }
-    }
-    // now check if post is deleted using old meathod
-    if (post['post'] == 'deletedPost') {
-      return false;
-    } else {
-      return (checkDate(post['leaveDate'])) ? true : false;
-    }
-  }
-
-
-
-
-
-  String formatDateForCellTitle(String date) {
-    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-    var postDate = formatter.parse(date);
-
-    var shortDateFormatter = new DateFormat('M/d');
-    var newDate = shortDateFormatter.format(postDate);
-
-    return newDate;
-  }
-
-
-
-//  FirebaseAnimatedList commentStream(BuildContext context, String userID) {
-//    DatabaseReference ref = FirebaseDatabase.instance.reference();
-//
-//    final falQuery = ref.child('comments').child(userID).orderByKey();
-//
-//    return new FirebaseAnimatedList(
-//        query: falQuery,
-//        defaultChild: new CircularProgressIndicator(),
-//        sort: (DataSnapshot a, DataSnapshot b) => b.key.compareTo(a.key),
-//        reverse: false,
-//        itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation,
-//            ___) {
-//          return new Container(
-//            child: new Row(
-//              children: <Widget>[
-//                new CircleAvatar(
-//                  backgroundImage: new NetworkImage(snapshot.value['imgURL']),
-//                ),
-//                new Text('New Comment From ${snapshot.value['fullName']}')
-//              ],
-//            )
-//
-//          );
-//        });
-//  }
-
-
-  Widget commentStream(String id){
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    Query falQuery = ref.child('comments').child(id).orderByKey();
-
-    return new FirebaseAnimatedList(
-        query: falQuery,
-
-        defaultChild: new Center(
-          child: new CircularProgressIndicator(),
-        ),
-        padding: new EdgeInsets.all(8.0),
-        reverse: false,
-        sort: (a, b) => (a.key.compareTo(b.key)),
-        itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
-          // here we can just look up every user from the snapshot, and then pass it into the chat message
-          Map post = snapshot.value;
-
-
-
-          return new Row(
+        child: new Card(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              new Padding(
-                padding: new EdgeInsets.only(left: 5.0, top: 2.0, right: 3.0),
-                child:new InkWell(
-                child:  new CircleAvatar(backgroundColor: Colors.transparent,radius: 20.0,
-                  backgroundImage: new NetworkImage(snapshot.value['imgURL']),
+              new InkWell(
+                child: Padding(
+                  padding: new EdgeInsets.all(5.0),
+                  child: new CircleAvatar(backgroundImage: new NetworkImage(snapshot.value['imgURL']),radius: 30.0,backgroundColor: Colors.transparent,),
                 ),
                 onTap: (){
-                Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: snapshot.value['sender'],profilePicURL: snapshot.value['imgURL'])));
+                  Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: snapshot.key,profilePicURL: snapshot.value['imgURL'])));
                 },
-                )
-
-
-
               ),
               new Expanded(
                   child: new Column(
@@ -366,47 +360,106 @@ class _commentsPageState extends State<commentsPage> {
                     children: <Widget>[
                       new FittedBox(
                         child: new Container(
-                            child: new Text(snapshot.value['fullName'],style: new TextStyle(fontWeight: FontWeight.bold),)
+                            child: new Padding(padding: new EdgeInsets.only(top: 5.0),
+
+                              child: FeedCellTitle(snapshot.value),
+                            )
                         ),
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                       ),
-                      new Text(getDateOfMsg(snapshot.value['time']),style: new TextStyle(fontSize: 11.0, color: Colors.grey[600]),),
-                      new Padding(
-                          padding: new EdgeInsets.only(
-                              left: 3.0, top: 3.0, right: 7.0, bottom: 8.0),
-                          child: new Text(snapshot.value['comment'])
+                      new Row(
+                        children: <Widget>[
+                          (snapshot.value['time'] != null) ? new Icon(Icons.language, size: 12.0,color: Colors.grey[600],) : new Container(),
+                          new Text((snapshot.value['time'] != null) ? "Updated ${getDateOfMsg(snapshot.value['time'])}" : '', style: new TextStyle(fontSize: 11.0,color: Colors.grey[600]),),
+                        ],
                       ),
+                      new Padding(
+                        padding: new EdgeInsets.only(
+                            left: 7.0, top: 7.0, right: 7.0, bottom: 2.0),
+                        child: checkIfPostIsUpdated(snapshot.value) ? new Text(snapshot.value['post'], style: new TextStyle(fontSize: 20.0,color: Colors.grey[800])) : new Text(''),
+                      ),
+                      new Row(
+                        children: <Widget>[
+
+
+                        ],
+                      )
                     ],
                   )
               ),
             ],
-          );
-
-        });
+          ),
+        )
+    );
   }
 
 
 
-  String getDateOfMsg(String time){
+  Widget commentStream(String key){
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    Query falQuery = ref.child('comments').child(key).orderByKey();
 
-    String date = '';
-    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-    DateTime recentMsgDate = formatter.parse(time);
-    var dayFormatter = new DateFormat('EEEE');
-    var shortDatFormatter = new DateFormat('M/d/yy');
-    var timeFormatter = new DateFormat('h:mm a');
-    var now = new DateTime.now();
-    Duration difference = now.difference(recentMsgDate);
-    var differenceInSeconds = difference.inSeconds;
-    // msg is less than a week old
-    if(differenceInSeconds < 86400){
-      date = timeFormatter.format(recentMsgDate);
-    }else{
-      date = shortDatFormatter.format(recentMsgDate);
-    }
-    return date;
+    return new Container(
+      child: FirebaseAnimatedList(
+          query: falQuery,
+          defaultChild: new Center(
+            child: new CircularProgressIndicator(),
+          ),
+          padding: new EdgeInsets.all(8.0),
+          reverse: false,
+          sort: (a, b) => (a.key.compareTo(b.key)),
+          itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
+            // here we can just look up every user from the snapshot, and then pass it into the chat message
+            Map post = snapshot.value;
+
+            return new Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                new Padding(
+                    padding: new EdgeInsets.only(left: 5.0, top: 2.0, right: 3.0),
+                    child:new InkWell(
+                      child:  new CircleAvatar(backgroundColor: Colors.transparent,radius: 20.0,
+                        backgroundImage: new NetworkImage(snapshot.value['imgURL']),
+                      ),
+                      onTap: (){
+                        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: snapshot.value['sender'],profilePicURL: snapshot.value['imgURL'])));
+                      },
+                    )
+
+
+
+                ),
+                new Expanded(
+                    child: new Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        new FittedBox(
+                          child: new Container(
+                              child: new Text(snapshot.value['fullName'],style: new TextStyle(fontWeight: FontWeight.bold),)
+                          ),
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                        ),
+                        new Text(getDateOfMsg(snapshot.value['time']),style: new TextStyle(fontSize: 11.0, color: Colors.grey[600]),),
+                        new Padding(
+                            padding: new EdgeInsets.only(
+                                left: 3.0, top: 3.0, right: 7.0, bottom: 8.0),
+                            child: new Text(snapshot.value['comment'])
+                        ),
+                      ],
+                    )
+                ),
+              ],
+            );
+
+          })
+    );
   }
+
+
 
 
 } 

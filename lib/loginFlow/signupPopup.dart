@@ -229,7 +229,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
                 if(!loading){
                   var post =  buildFirstPostForSnap(widget.placeInfo, widget.userInfo);
                   var info = buildUserInfo(widget.userInfo['url'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}' );
-                   uploadInfoForSnap('Rider', post, info, buildNotificationInfo(), widget.userInfo['id']);
+                   uploadInfoForSnap('Riding', post, info, buildNotificationInfo(), widget.userInfo['id']);
                   Navigator.pop(context);
                   return;
                 }
@@ -257,7 +257,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
                   });
                   var post =  await buildFirstPostForSnap(widget.placeInfo, widget.userInfo);
                   var info = await buildUserInfo(widget.userInfo['url'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}');
-                   uploadInfoForSnap('Driver', post, info, buildNotificationInfo(), widget.userInfo['id']);
+                   uploadInfoForSnap('Driving', post, info, buildNotificationInfo(), widget.userInfo['id']);
                 }
               },
             ),
@@ -273,42 +273,72 @@ class _SignupPopUpState extends State<SignupPopUp> {
     FirebaseDatabase database = FirebaseDatabase.instance;
 
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-    post['riderOrDriver'] = riderOrDriver;
+   var now = formatter.format(new DateTime.now());
+   var key = database.reference().push().key;
+
+   if(id == null || key == null || now == null){
+     _errorMenu('Error', 'Please Try again', "");
+     return;
+   }
+
     Map feedbackConvoInfo = {
       'convoID':id,
-    'formattedTime':formatter.format(new DateTime.now()),
+    'formattedTime':now,
     'imgURL':logoURL,
     'new':false,
     'recentMsg':'Tell us how we can improve!',
-    'recipFullName':'Thumbs-Out',
-    'recipID':'Thumbs-Out',
-    'time':database.reference().push().key,
+    'recipFullName':'Link Ridesharing',
+    'recipID':'Link',
+    'time':key,
     };
 
-//    ImageProperties properties = await FlutterNativeImage.getImageProperties(imgFile.path);
-    File resizeImg = await FlutterNativeImage.compressImage(widget.coverPhoto.path, quality: getCoverPicQualityPercentage(widget.coverPhoto.lengthSync()));
-    var cover = await uploadCoverPhoto(resizeImg, widget.userInfo['id']);
-    File backUpCoverSmall = await FlutterNativeImage.compressImage(widget.coverPhoto.path, targetHeight: 200, targetWidth: 200);
-    var backupProfilePic = await uploadCoverPhoto(backUpCoverSmall, widget.userInfo['id']);
 
+    File resizeImg;
+    var cover;
+    File backUpCoverSmall;
+    var backupProfilePic;
+    String bitmojiURL;
 
-    // burn the quota
-    database.reference().child("bios").child(id).set({'bio':widget.userInfo['bio']});
-    database.reference().child("gradYears").child(id).set(buildGraduationYear(gradYear));
-    String bitmojiURL = await uploadBitmoji(usersInfo['imgURL'], widget.userInfo['id']);
+    try{
+      resizeImg = await FlutterNativeImage.compressImage(widget.coverPhoto.path, quality: getCoverPicQualityPercentage(widget.coverPhoto.lengthSync()));
+      cover = await uploadCoverPhoto(resizeImg, widget.userInfo['id']);
+      backUpCoverSmall = await FlutterNativeImage.compressImage(widget.coverPhoto.path, targetHeight: 200, targetWidth: 200);
+      bitmojiURL  = await uploadBitmoji(usersInfo['imgURL'], widget.userInfo['id']);
+      backupProfilePic = await uploadCoverPhoto(backUpCoverSmall, widget.userInfo['id']);
+    }catch(e){
+      setState(() {loading = false;});
+      _errorMenu('Error', 'There was an error.', 'Please try again.');
+      return;
+    }
+
+    if(bitmojiURL ==null || cover ==null || backUpCoverSmall == null || backupProfilePic == null  || resizeImg == null){
+      _errorMenu('Error', 'There was an error, please try again later.', '');
+      return;
+    }
+
     usersInfo['imgURL'] = bitmojiURL;
     post['imgURL'] = bitmojiURL;
-    database.reference().child(widget.userInfo['cityCode']).child("posts").child(id).set(post);
-    database.reference().child(widget.userInfo['cityCode']).child("userInfo").child(id).set(usersInfo); // more efficient for grabbing entire userbase for a search
-    database.reference().child("notificationReciepts").child(id).set(notificationInfo);
-    database.reference().child("usersCities").child(id).set({'city':widget.userInfo["city"], 'cityCode':widget.userInfo["cityCode"], 'school':widget.userInfo['school']});
-    database.reference().child('commentNotificationReciepts').child(id).set({'newAlert':false});
-    database.reference().child('messageNotificationReciepts').child(id).set({'newAlert':false});
-    database.reference().child('rideNotificationReciepts').child(id).set({'newAlert':false});
-    database.reference().child("backupProfilePics").child(id).set({'imgURL':backupProfilePic});
-    database.reference().child("coverPhotos").child(id).set({'imgURL':cover});
-    database.reference().child('convoLists').child(id).child(id).set(feedbackConvoInfo);
-    database.reference().child('coordinates').child(widget.userInfo["cityCode"]).child(post['riderOrDriver']).child(id).set(buildCoordinatesInfo(widget.placeInfo));
+    post['riderOrDriver'] = riderOrDriver;
+
+    try{
+      await database.reference().child("bios").child(id).set({'bio':widget.userInfo['bio']});
+      await database.reference().child("gradYears").child(id).set(buildGraduationYear(gradYear));
+      await database.reference().child(widget.userInfo['cityCode']).child("posts").child(id).set(post);
+      await database.reference().child(widget.userInfo['cityCode']).child("userInfo").child(id).set(usersInfo); // more efficient for grabbing entire userbase for a search
+      await database.reference().child("notificationReciepts").child(id).set(notificationInfo);
+      await database.reference().child("usersCities").child(id).set({'city':widget.userInfo["city"], 'cityCode':widget.userInfo["cityCode"], 'school':widget.userInfo['school'], 'fullName':usersInfo['fullName'],'imgURL':usersInfo['imgURL']});
+      await database.reference().child('commentNotificationReciepts').child(id).set({'newAlert':false});
+      await database.reference().child('messageNotificationReciepts').child(id).set({'newAlert':false});
+      await database.reference().child('rideNotificationReciepts').child(id).set({'newAlert':false});
+      await database.reference().child("backupProfilePics").child(id).set({'imgURL':backupProfilePic});
+      await database.reference().child("coverPhotos").child(id).set({'imgURL':cover});
+      await database.reference().child('convoLists').child(id).child(id).set(feedbackConvoInfo);
+      await database.reference().child('coordinates').child(widget.userInfo["cityCode"]).child(post['riderOrDriver']).child(id).child('coordinates').set(buildCoordinatesInfo(widget.placeInfo));
+    }catch(e){
+      setState(() {loading = false;});
+      _errorMenu('error', 'Please try again.', '');
+      return;
+    }
     setState(() {loading = false;});
     final SharedPreferences prefs = await _prefs;
 
@@ -389,14 +419,17 @@ class _SignupPopUpState extends State<SignupPopUp> {
       'state': placeInfo['state'],
       'name': userInfo['firstName'],
       'key':nowKey,
-      'time':formatter.format(new DateTime.now())
+      'time':formatter.format(new DateTime.now()),
+      'coordinates':buildCoordinatesInfo(placeInfo),
 
     };
     return post;
   }
 
   Map buildCoordinatesInfo(Map placeInfo){
-    return placeInfo['coordinates'];
+    Map coordinate = placeInfo['coordinates'];
+    coordinate['time'] = FirebaseDatabase.instance.reference().push().key;
+    return coordinate;
   }
 
 
@@ -423,6 +456,35 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
   }
 
+
+
+  Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) async {
+    return showDialog<Null>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(primaryMsg),
+                new Text(secondaryMsg),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text('Okay', style: new TextStyle(color: Colors.black),),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
 
 

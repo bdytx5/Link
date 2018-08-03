@@ -109,6 +109,7 @@ class chatStream extends StatelessWidget {
   UIcallback dismissKeyboardCallback;
   AnimationController animationController;
   ScrollController listController = new ScrollController();
+
   final GlobalKey<AnimatedListState> _listKey = new GlobalKey<AnimatedListState>();
   chatStream(this.convoID, this.animationController, this.dismissKeyboardCallback);
 

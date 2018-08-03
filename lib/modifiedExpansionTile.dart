@@ -148,12 +148,13 @@ class _ModifiedExpansionTileState extends State<ModifiedExpansionTile> with Sing
       child: new Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          IconTheme.merge(
-              data: new IconThemeData(color: _iconColor.evaluate(_easeInAnimation)),
-              child:new InkWell(
+       //   IconTheme.merge(
+        //      data: new IconThemeData(color: _iconColor.evaluate(_easeInAnimation)),
+            //  child:
+      new InkWell(
                   child: widget.body,
                   onTap: _handleTap
-              )
+              ),
 
             // didnt like how the circle avatar was centered with the list tile, so I improvised
 
@@ -169,7 +170,7 @@ class _ModifiedExpansionTileState extends State<ModifiedExpansionTile> with Sing
 //                child: const Icon(Icons.expand_more),
 //              ),
 //            ),
-          ),
+     //     ),
           new ClipRect(
             child: new Align(
               heightFactor: _easeInAnimation.value,

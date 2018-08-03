@@ -63,7 +63,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Profile Picture Selection</string>
 	<key>SCSDKClientId</key>
-	<string>442352e4-c3d2-4934-a755-20f9e951d74a</string>
+	<string></string>
 	<key>SCSDKRedirectUrl</key>
 	<string>thumbsout://hey</string>
 	<key>SCSDKScopes</key>

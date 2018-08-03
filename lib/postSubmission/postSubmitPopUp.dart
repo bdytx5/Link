@@ -30,108 +30,27 @@ class PostPopUp extends StatefulWidget{
 class _PostPopUpState extends State<PostPopUp> {
   bool loading = false;
   bool selected = false;
-  String destination = '';
-  String state = '';
-  String name = '';
-  bool fromHome = true;
-  Map currentUsersPost = {};
-  Map coordinates = {};
+  String destination;
+  String state;
+  String name;
+  bool fromHome;
+  Map currentUsersPost;
+  var coordinates;
   DateTime currentlySelectedDate = new DateTime.now().add(new Duration(days: 1));
   TextEditingController postController = new TextEditingController();
   String originDescription = '';
   String destinationDescription = '';
   String logoURL = "https://is4-ssl.mzstatic.com/image/thumb/Purple125/v4/b2/a7/91/b2a7916a-35be-5a7e-4c91-45317fb40d9c/AppIcon-1x_U007emarketing-0-0-GLES2_U002c0-512MB-sRGB-0-0-0-85-220-0-0-0-3.png/246x0w.jpg";
 
-  void initState() {
-    super.initState();
-    if(globals.imgURL == null){
-      globals.imgURL = logoURL;
-      grabUsersImg();
-    }
-
-    if(globals.city == null){
-      globals.city = '';
-      getCurrentUsersCity().then((c){
-        getCurrentPost();
-
-      });
-    }else{
-      getCurrentPost();
-
-
-    }
-
-  }
-
-  Future<void> grabUsersImg()async{
-
-
-    FirebaseDatabase database = FirebaseDatabase.instance;
-    DataSnapshot snapshot = await database.reference().child(globals.cityCode).child('userInfo').child(globals.id).child('imgURL').once();
-    setState(() {
-      globals.imgURL = snapshot.value;
-    });
-  }
-
-  Future<void> getCurrentUsersCity()async{
-    FirebaseDatabase database = FirebaseDatabase.instance;
-    final snap = await  database.reference().child('usersCities').child(globals.id).child('city').once();
-    globals.city = snap.value;
-
-  }
-
-  Future<void>grabCoordinates(String riderOrDriver)async{
-    FirebaseDatabase database = FirebaseDatabase.instance;
-    final snap = await database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).child('coordinates').once();
-    setState(() {
-      coordinates = snap.value;
-    });
-  }
 
 
 
-  Future<void> getCurrentPost() async {
-
- //    get current users post info AKA "from home", "destination", "state", "post",and "destination coordinates".
-    // if the destination coordinates change, then we will have to update them,
-
-    FirebaseDatabase database = FirebaseDatabase.instance;
-    final snap = await  database.reference().child(globals.cityCode).child('posts').child(globals.id).once();
-    Map post = snap.value;
-    grabCoordinates(post['riderOrDriver']);
-
-    setState(() {
-
-      currentUsersPost = post;
-
-      if(post['fromHome']){
-        destinationDescription = "${post['destination']}, ${post['state']}";
-        originDescription = globals.city;
-      }else{
-        originDescription = "${post['destination']}, ${post['state']}";
-        destinationDescription = globals.city;
-      }
-
-      destination = post['destination'];
-      state = post['state'];
-      name = post['name'];
-    });
-
-  }
-
-
-  @override
-  void dispose() {
-    // Clean up the controller when the Widget is removed from the Widget tree
-    super.dispose();
-  }
-
-// popup menu
+  // popup menu
   @override
   Widget build(BuildContext context) {
     return new SimpleDialog(
       title: (!selected) ? new Text('When would you like to leave?', textAlign: TextAlign.center) : new Row(
-       // mainAxisAlignment: MainAxisAlignment.center,
+        // mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           new Padding(
             padding: new EdgeInsets.only(right: 30.0),
@@ -145,24 +64,24 @@ class _PostPopUpState extends State<PostPopUp> {
             ),
           ),
 
-     new Center(
-       child: new Text('Add a message'),
-     ),
+          new Center(
+            child: new Text('Add a message'),
+          ),
         ],
-    ),
+      ),
       children: <Widget>[
         (!selected) ? buildCalendar() :
-         new   Stack(
-            children: <Widget>[
-              buildPostSubmitScreen(),
-              new Center(
-                child: (loading) ? new CircularProgressIndicator() : new Container(),
-              )
-            ],
-          ),
+        new   Stack(
+          children: <Widget>[
+            buildPostSubmitScreen(),
+            new Center(
+              child: (loading) ? new CircularProgressIndicator() : new Container(),
+            )
+          ],
+        ),
 
 
-    (!selected) ? new InkWell(
+        (!selected) ? new InkWell(
           child: new Icon(Icons.arrow_forward),
           onTap: (){
             setState(() {
@@ -175,21 +94,208 @@ class _PostPopUpState extends State<PostPopUp> {
   }
 
 
+
+  void initState() {
+    super.initState();
+
+    getAllOfCurrentUsersInfo();
+
+  }
+
+
+
+  Future<void> getAllOfCurrentUsersInfo()async{
+    if(globals.imgURL == null){
+      await grabUsersImg();
+    }
+
+    if(globals.city == null){
+      getCurrentUsersCity().then((c){
+        getCurrentPost();
+      });
+    }else{
+      getCurrentPost();
+    }
+  }
+
+
+
+
+
+  Future<void> grabUsersImg()async{
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    DataSnapshot snapshot = await database.reference().child(globals.cityCode).child('userInfo').child(globals.id).child('imgURL').once();
+    setState(() {
+      globals.imgURL = snapshot.value;
+    });
+  }
+
+
+  Future<void> getCurrentUsersCity()async{
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    final snap = await  database.reference().child('usersCities').child(globals.id).child('city').once();
+    globals.city = snap.value;
+  }
+
+
+
+
+  Future<void> getCurrentPost() async {
+
+ //    get current users post info AKA "from home", "destination", "state", "post",and "destination coordinates".
+    // if the destination coordinates change, then we will have to update them,
+
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    final snap = await  database.reference().child(globals.cityCode).child('posts').child(globals.id).once();
+    Map post = snap.value;
+    grabCoordinates(post['riderOrDriver']);
+    fromHome = post['fromHome'];
+    setState(() {
+      currentUsersPost = post;
+      if(post['fromHome']){
+        destinationDescription = "${post['destination']}, ${post['state']}";
+        originDescription = globals.city;
+      }else{
+        originDescription = "${post['destination']}, ${post['state']}";
+        destinationDescription = globals.city;
+      }
+      destination = post['destination'];
+      state = post['state'];
+      name = post['name'];
+    });
+  }
+
+
+  Future<void>grabCoordinates(String riderOrDriver)async{
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    final snap = await database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).child('coordinates').once();
+    setState(() {
+      coordinates = snap.value;
+    });
+  }
+
+
+
+  void uploadPost(Map post, String riderOrDriver)async {
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var leaveDate = formatter.format(currentlySelectedDate);
+    var now = formatter.format(new DateTime.now());
+    var key = FirebaseDatabase.instance.reference().push().key;
+    // double check to make sure nothing failed...
+    print(makeSureAllPostDataIsPresent());
+    print(leaveDate);
+    print(now);
+    print(key);
+    print(globals.cityCode);
+    print(globals.id);
+    if(!makeSureAllPostDataIsPresent() || leaveDate == null || now == null || key == null || globals.cityCode == null || globals.id == null){
+      _errorMenu('Network Error', "Please message Thumbs-out.", '');
+      return;
+    }
+
+    setState(() {loading = true;});
+    post['leaveDate'] = leaveDate;
+    // add message text and riderOrDriver
+    post['post'] = postController.text;
+    post['riderOrDriver'] = riderOrDriver;
+    post['destination'] = destination;
+    post['state']= state;
+    post['name'] = name;
+    post['fromHome'] = fromHome;
+    post['commentCount'] = null;
+    post['key'] = key;
+    post['time'] = formatter.format(new DateTime.now());
+    post['expiredCommentCount'] = null;
+    post['coordinates'] = coordinates;
+    coordinates['time'] = FirebaseDatabase.instance.reference().push().key;
+
+
+
+
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    database.reference().child(globals.cityCode).child('posts').child(globals.id).set(post);
+
+     // allows the cloud function to be triggered.... idk any other way to do this but yeah...
+    database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).update({'coordinates':coordinates, });
+
+    database.reference().child('comments').child(globals.id).remove();
+    database.reference().child('expiredComments').child(globals.id).remove();
+    database.reference().child(globals.cityCode).child('posts').child(globals.id).child('ghost').remove();
+
+      if(riderOrDriver == 'Driving'){
+        database.reference().child('coordinates').child(globals.cityCode).child('Riding').child(globals.id).remove();
+      }else{
+        database.reference().child('coordinates').child(globals.cityCode).child('Driving').child(globals.id).remove();
+      }
+    setState(() {loading = false;});
+    Navigator.pop(context);
+
+  }
+
+  bool makeSureAllPostDataIsPresent(){
+    // must have the post, riderordriver, leavedate, destination, state, name, fromhome, now, key
+
+    print(destination);
+    print(state);
+    print(fromHome);
+    print(currentUsersPost);
+
+    if(coordinates == null || destination == null || state == null || fromHome == null || currentUsersPost == null){
+      return false;
+    }else{
+      return true;
+    }
+  }
+
+  Future<bool> checkIfThereAreComments()async{
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    DataSnapshot snap = await database.reference().child(globals.cityCode).child('posts').child(globals.id).child('commentCount').once();
+    if(snap.value == null){
+      return false;
+    }else{
+      return true;
+    }
+  }
+  
+  void _handleTransportButtonClick(String riderOrDriver)async{
+    if(postController.text == ''){
+      _errorMenu('Add a Message', "Don't be shy.", '');
+      return;
+    }
+    if(await checkIfThereAreComments()){
+    var decision = await _warningMenu('Warning', "Updating your status will delete all current coomments.", '');
+    if(decision == 'Okay'){
+    uploadPost(currentUsersPost, riderOrDriver);
+    }else{
+    return;
+    }
+    }else{
+    uploadPost(currentUsersPost, riderOrDriver);
+    }
+  }
+
+
+
+
+  @override
+  void dispose() {
+    // Clean up the controller when the Widget is removed from the Widget tree
+    super.dispose();
+  }
+
+
+
+
   Widget buildCalendar(){
-    DateTime berlinWallFell = new DateTime(2020, 11, 9);
+    DateTime lastDate = new DateTime(2020, 11, 9);
 
     return new MonthPicker(
-
       selectedDate: currentlySelectedDate,
-
         onChanged: (d) {
-
-      setState(() {
-       currentlySelectedDate = d;
-      });
+      setState(() {currentlySelectedDate = d;});
         },
         firstDate:new DateTime.now(),
-        lastDate: berlinWallFell,
+        lastDate: lastDate,
     );
   }
 
@@ -207,7 +313,7 @@ class _PostPopUpState extends State<PostPopUp> {
             child: new Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                new CircleAvatar(backgroundColor: Colors.yellowAccent, backgroundImage: new NetworkImage(globals.imgURL)),
+                new CircleAvatar(backgroundColor: Colors.yellowAccent, backgroundImage: new NetworkImage((globals.imgURL != null) ? globals.imgURL : logoURL)),
                 new Expanded(child: new Container(
                   height: 100.0,
                   width: 50.0,
@@ -258,22 +364,10 @@ class _PostPopUpState extends State<PostPopUp> {
     return   new Container(
             height: 40.0,
             width: 114.0,
-            child: new MaterialButton(onPressed: ()async{
-
-              if(await checkIfThereAreComments()){
-                var decision = await _warningMenu('Warning', "Updating your status will delete all current coomments.", '');
-                if(decision == 'Okay'){
-                  uploadPost(currentUsersPost, 'Riding');
-                }else{
-                  return;
-                }
-              }else{
-                uploadPost(currentUsersPost, 'Riding');
-
-              }
-
-            },color: Colors.yellowAccent,child: new Text("Passenger", maxLines: 1,),
-
+            child: new MaterialButton(onPressed: (){
+              _handleTransportButtonClick("Riding");
+            },
+              color: Colors.yellowAccent,child: new Text("Passenger", maxLines: 1,),
             )
     );
   }
@@ -282,24 +376,11 @@ class _PostPopUpState extends State<PostPopUp> {
     return  new Container(
             height: 40.0,
             width: 114.0,
-            child: new MaterialButton(onPressed: ()async{
-
-              if(await checkIfThereAreComments()){
-                var decision = await _warningMenu('Warning', "Updating your status will delete all current coomments.", '');
-                if(decision == 'Okay'){
-                  uploadPost(currentUsersPost, 'Driving');
-                }else{
-                  return;
-                }
-              }else{
-                uploadPost(currentUsersPost, 'Driving');
-              }
-
+            child: new MaterialButton(onPressed: () {
+              _handleTransportButtonClick('Driving');
             },
               color: Colors.yellowAccent,child: new Text("Driver"),)
     );
-
-
   }
 
   Widget buildLocationFields(bool origin){
@@ -373,77 +454,7 @@ class _PostPopUpState extends State<PostPopUp> {
     );
   }
 
-  void uploadPost(Map post, String riderOrDriver)async {
 
-      // var userLocationsAreOk = await checkThatHomeCityIsIncluded();
-    // format dates
-    if(postController.text == null){
-      _errorMenu('Add a Message', "Don't be shy.", '');
-    }
-
-    if(!makeSureAllPostDataIsPresent()){
-      _errorMenu('Network Error', "Pleae message thumbs-out.", '');
-    }
-
-      setState(() {loading = true;});
-      var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-      var leaveDate = formatter.format(currentlySelectedDate);
-      var now = formatter.format(new DateTime.now());
-      post['leaveDate'] = leaveDate;
-      // add message text and riderOrDriver
-      post['post'] = postController.text;
-      post['riderOrDriver'] = riderOrDriver;
-      post['destination'] = destination;
-      post['state']= state;
-      post['name'] = name;
-      post['fromHome'] = fromHome;
-      post['commentCount'] = null;
-      post['key'] = FirebaseDatabase.instance.reference().push().key;
-      post['time'] = formatter.format(new DateTime.now());
-      post['expiredCommentCount'] = null;
-
-      FirebaseDatabase database = FirebaseDatabase.instance;
-      database.reference().child(globals.cityCode).child('posts').child(globals.id).set(post);
-
-
-
-      coordinates = {'time': now};         // allows the cloud function to be triggered.... idk any other way to do this but yeah...
-      database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).update({'coordinates':coordinates});
-
-       database.reference().child('comments').child(globals.id).remove();
-       database.reference().child('expiredComments').child(globals.id).remove();
-       database.reference().child(globals.cityCode).child('posts').child(globals.id).child('ghost').remove();
-
-
-//      if(riderOrDriver == 'Driving'){
-//        database.reference().child('coordinates').child(globals.cityCode).child('Riding').child(globals.id).remove();
-//      }else{
-//        database.reference().child('coordinates').child(globals.cityCode).child('Driving').child(globals.id).remove();
-//      }
-    setState(() {loading = false;});
-    Navigator.pop(context);
-
-
-  }
-
-
-  Future<bool> checkIfThereAreComments()async{
-    FirebaseDatabase database = FirebaseDatabase.instance;
-    DataSnapshot snap = await database.reference().child(globals.cityCode).child('posts').child(globals.id).child('commentCount').once();
-    if(snap.value == null){
-      return false;
-    }else{
-      return true;
-    }
-  }
-
-  bool makeSureAllPostDataIsPresent(){
-    if(coordinates == {} || destination == '' || state == '' || fromHome == ''){
-      return false;
-    }else{
-      return true;
-    }
-  }
 
 
   Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) async {

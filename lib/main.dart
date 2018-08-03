@@ -54,6 +54,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+final RouteObserver<PageRoute> routeObserver = new RouteObserver<PageRoute>();
 
 Future<void> main() async {
 
@@ -191,6 +192,7 @@ await handleLogin();
    // home: customizeProfile({},{},app),
    //  home: ExpansionTileSample(),
     title: 'Flutter Database Example',
+    navigatorObservers: [routeObserver],
     theme: new ThemeData(
 
       accentColor: Colors.yellowAccent,

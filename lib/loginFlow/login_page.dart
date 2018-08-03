@@ -66,7 +66,7 @@ class _LoginState extends State<LoginPage> {
                         height: 275.0,
                         width: 175.0),
                   ),
-                  new Text("Thumbs-Out Ridesharing", style: new TextStyle(fontSize: 20.0)),
+                  new Text("Link Ridesharing", style: new TextStyle(fontSize: 20.0)),
                   new Padding(padding: new EdgeInsets.only(top: 20.0),
                     child: loginBtn(),
                   ),
