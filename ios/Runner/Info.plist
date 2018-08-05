@@ -63,7 +63,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Profile Picture Selection</string>
 	<key>SCSDKClientId</key>
-	<string></string>
+	<string>442352e4-c3d2-4934-a755-20f9e951d74a</string>
 	<key>SCSDKRedirectUrl</key>
 	<string>thumbsout://hey</string>
 	<key>SCSDKScopes</key>
@@ -95,5 +95,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+    <string>Can I use the camera please?</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Can I use the mic please?</string>
 </dict>
 </plist>

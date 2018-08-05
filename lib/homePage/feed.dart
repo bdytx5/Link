@@ -25,17 +25,19 @@ import '../notifications/notificationsPage.dart';
 import '../Chat/msgScreen.dart';
 import '../profilePages/commentsPage.dart';
 import 'home.dart';
+import 'package:latlong/latlong.dart';
 
 class Feed extends StatefulWidget {
  // MyHomePage({Key key, this.title}) : super(key: key);
 
   final UIcallback commentNotificationCallback;
 
-  Feed({this.app, this.userID, this.commentNotificationCallback,this.keyboardNeedsDismissed, this.streamController});
+  Feed({this.app, this.userID, this.commentNotificationCallback,this.keyboardNeedsDismissed, this.streamController, this.destination, this.transportMode});
     final FirebaseApp app;
     String userID;
     final bool keyboardNeedsDismissed;
-
+    final String transportMode;
+    final LatLng destination;
 
   final StreamController streamController;// for communicating down the widget tree to dismiss the keyboard
 
@@ -62,6 +64,8 @@ class _FeedState extends State<Feed> {
     BottomSheet _sheet;
     Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
     static const platform = const MethodChannel('thumbsOutChannel');
+    String transportMode;
+    LatLng destination;
 
 
     FirebaseMessaging _firMes = new FirebaseMessaging();
@@ -76,18 +80,14 @@ class _FeedState extends State<Feed> {
 
 
 
-  void _toggleFavorite() {
-    setState(() {
-      // If the lake is currently favorited, unfavorite it.
-      _btnTxt = "hello";
-      menuHeight = 400.0;
-    });
-  }
 
     void initState() {
     super.initState();
+    destination = widget.destination;
+    transportMode = widget.transportMode;
     handleNotifications();
     updateGlobalInfo(globals.id);
+
 
   }
 
@@ -102,11 +102,11 @@ class _FeedState extends State<Feed> {
       backgroundColor: Colors.transparent,
       body: new Center(
         child: new Container(
-          child: (globals.cityCode != null) ? new feedStream(_scaffoldKey, (){
+          child: (globals.cityCode != null && destination != null && transportMode != null) ? new feedStream(_scaffoldKey, (){
             setState(() {
               commenting = !commenting;
             });
-          },widget.commentNotificationCallback,widget.streamController) : new CircularProgressIndicator(),
+          },widget.commentNotificationCallback,widget.streamController,transportMode,destination) : new CircularProgressIndicator(),
         ),
       ),
       floatingActionButton: (!commenting) ? new FloatingActionButton(
@@ -119,7 +119,29 @@ class _FeedState extends State<Feed> {
     );
   }
 
-void updateGlobalInfo(String id) async {
+
+    Future<void> grabRiderOrDriverAndDestination()async{
+    DataSnapshot snap;
+    try{
+      snap = await FirebaseDatabase.instance.reference().child(globals.cityCode).child('posts').child(globals.id).once();
+    }catch(e){
+      _errorMenu('Error', 'There was an error', 'Please Try again later.');
+    }
+      setState(() {
+        if(snap.value['riderOrDriver'] == "Driving"){
+          transportMode = "Driving";
+        }else{
+          transportMode = "Riding";
+        }
+
+        Map coordinates = snap.value['coordinates'];
+        destination = new LatLng(double.parse(coordinates['lat']), double.parse(coordinates['lon']));
+
+      });
+    }
+
+
+    Future<void> updateGlobalInfo(String id) async {
      FirebaseDatabase database = FirebaseDatabase.instance;
       final snap = await database.reference().child('usersCities').child(id).once();
       Map info = snap.value;

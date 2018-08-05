@@ -15,7 +15,7 @@ import 'feed.dart';
 import 'chatList.dart';
 import '../profilePages/profilePage.dart';
 import '../textFieldFix.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import '../postSubmission/postSubmitPopUp.dart';
 import '../modifiedExpansionTile.dart';
 
@@ -38,8 +38,11 @@ class feedStream extends StatelessWidget {
   final UIcallback actionButtonCallback;
   final UIcallback commentNotificationCallback;
   final StreamController streamController;
+  final String transportMode;
+  final LatLng destination;
 
-    feedStream(this.scaffoldKey, this.actionButtonCallback, this.commentNotificationCallback,this.streamController);
+
+    feedStream(this.scaffoldKey, this.actionButtonCallback, this.commentNotificationCallback,this.streamController, this.transportMode, this.destination);
   @override
   Widget build(BuildContext context) {
 
@@ -65,7 +68,7 @@ class feedStream extends StatelessWidget {
         padding: new EdgeInsets.all(8.0),
         reverse: false,
       // sort: (DataSnapshot a, DataSnapshot b) => (a.key != globals.id) ? sortFeed(a, b) : -1,
-        sort: (DataSnapshot a, DataSnapshot b) => sortFeed(a, b),
+        sort: (DataSnapshot a, DataSnapshot b) => sortFeed(a, b, transportMode, destination),
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
           // here we can just look up every user from the snapshot, and then pass it into the chat message
           Map post = snapshot.value;
@@ -81,29 +84,18 @@ class feedStream extends StatelessWidget {
 }
 
 
-String transportMode = 'Driving';
-LatLng destination = new LatLng(39.0997265, -94.5785667);
 
 
-
-int sortFeed(DataSnapshot a, DataSnapshot b){
-  
-  // if the a.key == id, return -1 !
-  // else if a.distance is < 50k return -1
-  // else return time comparison
-
+int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destination){
   // we are sorting the array as follows
-
   // if user is a driver, we will put all riders first, and vice versa
   // then with those riders, we will see who if they are within a certain range
-
   if(a.key == globals.id){
     return -1;
   }
   if(b.key == globals.id){
     return 1;
   }
-
 
   if(a.value['riderOrDriver'] == transportMode && b.value['riderOrDriver'] != transportMode){
     return 1;
@@ -118,7 +110,7 @@ int sortFeed(DataSnapshot a, DataSnapshot b){
   if(a.value['riderOrDriver'] != transportMode && b.value['riderOrDriver'] != transportMode){
 
 
-        Map aCoordinates = a.value['coordinates'];
+    Map aCoordinates = a.value['coordinates'];
     Map bCoordinates = b.value['coordinates'];
     double aLat = double.parse(aCoordinates['lat']);
     double alon = double.parse(aCoordinates['lon']);
@@ -126,24 +118,16 @@ int sortFeed(DataSnapshot a, DataSnapshot b){
     double blon = double.parse(bCoordinates['lon']);
     final Distance distance = new Distance();
     double ameter = distance(new LatLng(aLat, alon), destination);
-        double bmeter = distance(new LatLng(bLat, blon), destination);
+    double bmeter = distance(new LatLng(bLat, blon), destination);
 
         if((ameter - bmeter) <= 0.0){
           return -1;
         }else{
           return 1;
         }
-
   }
 
-
-
-//
-//  if(a.key == globals.id) {
-//    return -1;
-//  }
-//
-
+  return 0;
 }
 
 
@@ -315,7 +299,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                   new Padding(padding: new EdgeInsets.all(8.0),
                     child:  new InkWell(
                       child: new CircleAvatar(backgroundColor: Colors.transparent,radius: 25.0,
-                          backgroundImage: new NetworkImage(widget.imgURL)
+                          backgroundImage: new CachedNetworkImageProvider(widget.snapshot.value['imgURL'],)
                       ),
                       onTap: (){
                         Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: widget.snapshot.key,profilePicURL: widget.snapshot.value['imgURL'])));
@@ -354,7 +338,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                       child: new FittedBox(
                         child: new Container(
                           padding: new EdgeInsets.only(right: 3.0),
-
                           child: new GestureDetector(
                             child: FeedCellTitle(widget.snapshot.value),
                             onTap: (){
@@ -363,7 +346,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                           ),
                         ),
                         fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
+
                       ),
                       ),
                      new Row(
@@ -423,6 +406,8 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
     );
   }
+
+
 
 
   Future<void> sendCommentHandler(DataSnapshot snap)async{

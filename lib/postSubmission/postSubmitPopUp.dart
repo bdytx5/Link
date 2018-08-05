@@ -182,12 +182,7 @@ class _PostPopUpState extends State<PostPopUp> {
     var now = formatter.format(new DateTime.now());
     var key = FirebaseDatabase.instance.reference().push().key;
     // double check to make sure nothing failed...
-    print(makeSureAllPostDataIsPresent());
-    print(leaveDate);
-    print(now);
-    print(key);
-    print(globals.cityCode);
-    print(globals.id);
+
     if(!makeSureAllPostDataIsPresent() || leaveDate == null || now == null || key == null || globals.cityCode == null || globals.id == null){
       _errorMenu('Network Error', "Please message Thumbs-out.", '');
       return;
@@ -204,42 +199,37 @@ class _PostPopUpState extends State<PostPopUp> {
     post['fromHome'] = fromHome;
     post['commentCount'] = null;
     post['key'] = key;
-    post['time'] = formatter.format(new DateTime.now());
+    post['time'] = now;
     post['expiredCommentCount'] = null;
     post['coordinates'] = coordinates;
-    coordinates['time'] = FirebaseDatabase.instance.reference().push().key;
 
-
-
+    coordinates['time'] = now;
 
     FirebaseDatabase database = FirebaseDatabase.instance;
-    database.reference().child(globals.cityCode).child('posts').child(globals.id).set(post);
-
-     // allows the cloud function to be triggered.... idk any other way to do this but yeah...
-    database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).update({'coordinates':coordinates, });
-
-    database.reference().child('comments').child(globals.id).remove();
-    database.reference().child('expiredComments').child(globals.id).remove();
-    database.reference().child(globals.cityCode).child('posts').child(globals.id).child('ghost').remove();
-
+    try{
+     await database.reference().child(globals.cityCode).child('posts').child(globals.id).set(post);
+     await database.reference().child('comments').child(globals.id).remove();
+     await database.reference().child('expiredComments').child(globals.id).remove();
+     await database.reference().child(globals.cityCode).child('posts').child(globals.id).child('ghost').remove();
       if(riderOrDriver == 'Driving'){
-        database.reference().child('coordinates').child(globals.cityCode).child('Riding').child(globals.id).remove();
+        await database.reference().child('coordinates').child(globals.cityCode).child('Riding').child(globals.id).remove();
       }else{
-        database.reference().child('coordinates').child(globals.cityCode).child('Driving').child(globals.id).remove();
+        await database.reference().child('coordinates').child(globals.cityCode).child('Driving').child(globals.id).remove();
       }
-    setState(() {loading = false;});
+     await database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).update({'coordinates':coordinates, });
+      setState(() {loading = false;});
+    }catch(e){
+      setState(() {loading = false;});
+      _errorMenu('Error', 'There was an error', ' Please try again later.');
+      return;
+    }
+
     Navigator.pop(context);
 
   }
 
   bool makeSureAllPostDataIsPresent(){
     // must have the post, riderordriver, leavedate, destination, state, name, fromhome, now, key
-
-    print(destination);
-    print(state);
-    print(fromHome);
-    print(currentUsersPost);
-
     if(coordinates == null || destination == null || state == null || fromHome == null || currentUsersPost == null){
       return false;
     }else{

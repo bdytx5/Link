@@ -32,16 +32,21 @@ FirebaseAnimatedList buildNotificationsStream(BuildContext context)  {
       itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
         // here we can just look up every user from the snapshot, and then pass it into the chat message
         Map notificaiton = snapshot.value;
-        return (notificaiton['type'] == 'ride') ? rideNotificationCell(notificaiton, context) : commentNotificationCell(notificaiton, context);
+        return (notificaiton['type'] == 'ride') ? rideNotificationCell(notificaiton, context) : (notificaiton['type'] == 'comment') ? commentNotificationCell(notificaiton, context) : signupNotification(notificaiton);
 
 
       });
 }
 
 
+
+
+
 Widget rideNotificationCell(Map notification, BuildContext context){
   return new Container(
 
+    height: 75.0,
+      width: double.infinity,
 
 
       child: new Card(
@@ -52,6 +57,8 @@ Widget rideNotificationCell(Map notification, BuildContext context){
                 new InkWell(
                   child:new Padding(padding:new EdgeInsets.all(5.0),
           child:  new CircleAvatar(
+            radius: 30.0,
+            backgroundColor: Colors.transparent,
             backgroundImage: new NetworkImage(notification['imgURL']),
           ),
           ),
@@ -59,36 +66,47 @@ Widget rideNotificationCell(Map notification, BuildContext context){
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: notification['id'],profilePicURL: notification['imgURL'],)));
                   },
                 ),
-                new Column(
+                new Expanded(child: new Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-
-                    new Padding(padding: new EdgeInsets.all(5.0),
-                      child: new RichText(text: new TextSpan(
-                        style: new TextStyle(fontSize: 14.0, color: Colors.black),
-                        children: <TextSpan>[
-                          new TextSpan(text: notification['fullName'], style: new TextStyle(fontWeight: FontWeight.bold)),
-                          new TextSpan(text: notification['message']),
-                        ],
-                      ),)
-
+                    new FittedBox(
+                      child: new Container(
+                        child:    new Padding(padding: new EdgeInsets.all(5.0),
+                            child: new RichText(text: new TextSpan(
+                              style: new TextStyle(fontSize: 14.0, color: Colors.black),
+                              children: <TextSpan>[
+                                new TextSpan(text: notification['name'], style: new TextStyle(fontWeight: FontWeight.bold)),
+                                new TextSpan(text: " ${notification['message']} "),
+                              ],
+                            ),)
+                        ),
+                      ),
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
                     ),
+
                     new Padding(padding: new EdgeInsets.only(left: 5.0),
                       child: new Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
                           new Icon(Icons.language, color: Colors.grey,size: 10.0,),
-                          Text(getDateOfMsg(notification), style: new TextStyle(color: Colors.grey, fontSize: 10.0),),
+                          Text(getDateOfMsg(notification['time']), style: new TextStyle(color: Colors.grey, fontSize: 10.0),),
                         ],
                       ),
                     ),
-                    new Divider()
+
                   ],
-                )
+                ))
               ],
             ),
-            onTap: (){
-              showCommentsPage(notification['id'],notification['commentNode'], context);
+            onTap: ()async{
+              DataSnapshot postSnap = await FirebaseDatabase.instance.reference().child(globals.cityCode).child('posts').child(notification['id']).once();
+              var commentKey = postSnap.value['key'];
+              if(checkIfPostIsUpdated(postSnap.value)){
+                showCommentsPage(notification['id'], commentKey,context);
+              }else{
+                showCommentsPage(notification['id'], "${commentKey}expired",context);
+              }
             },
           )
       )
@@ -101,6 +119,9 @@ Widget rideNotificationCell(Map notification, BuildContext context){
 Widget commentNotificationCell(Map notification, BuildContext context){
   return new Container(
 
+
+    height: 75.0,
+    width: double.infinity,
 
 
     child: new Card(
@@ -120,40 +141,42 @@ Widget commentNotificationCell(Map notification, BuildContext context){
                 Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: notification['id'],profilePicURL: notification['imgURL'],)));
               },
             ),
-            new Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
+        new Expanded(child: new Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
 
-                new Padding(padding: new EdgeInsets.all(5.0),
-                  child: new RichText(text: new TextSpan(
-                    style: new TextStyle(fontSize: 14.0, color: Colors.black),
-                     children: <TextSpan>[
-                       new TextSpan(text: notification['name'], style: new TextStyle(fontWeight: FontWeight.bold)),
-                       new TextSpan(text: ' left a comment!'),
-
-
-                     ],
-                  ),)
-
-                  //new Text('${notification['name']} left a comment!'),
+            new FittedBox(
+              child: new Container(
+                child:   new Padding(padding: new EdgeInsets.all(5.0),
+                    child: new RichText(text: new TextSpan(
+                      style: new TextStyle(fontSize: 14.0, color: Colors.black),
+                      children: <TextSpan>[
+                        new TextSpan(text: notification['name'], style: new TextStyle(fontWeight: FontWeight.bold)),
+                        new TextSpan(text: ' left a comment!'),
+                      ],
+                    ),) //new Text('${notification['name']} left a comment!'),
                 ),
-                new Padding(padding: new EdgeInsets.only(left: 5.0),
-                  child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      new Icon(Icons.language, color: Colors.grey,size: 10.0,),
-                      Text(getDateOfMsg(notification), style: new TextStyle(color: Colors.grey, fontSize: 10.0),),
-                    ],
-                  ),
-                ),
-                new Divider()
-              ],
-            )
+              ),
+            ),
+            new Padding(padding: new EdgeInsets.only(left: 5.0),
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  new Icon(Icons.language, color: Colors.grey,size: 10.0,),
+                  Text(getDateOfMsg(notification['time']), style: new TextStyle(color: Colors.grey, fontSize: 10.0),),
+                ],
+              ),
+            ),
+
+          ],
+        ))
           ],
         ),
-        onTap: (){
+        onTap: ()async {
+
           showCommentsPage(notification['postId'], notification['commentNode'],context);
+
         },
       )
     )
@@ -161,6 +184,36 @@ Widget commentNotificationCell(Map notification, BuildContext context){
 
   );
 }
+
+
+
+
+Widget signupNotification(Map not){
+  return new Container(
+    height: 75.0,
+    width: double.infinity,
+    child: new Card(
+      child: new Row(
+        children: <Widget>[
+          new Padding(padding: new EdgeInsets.all(5.0),
+          child: new CircleAvatar(radius: 30.0,
+            backgroundImage: new NetworkImage(not['imgURL']),
+          ),
+
+          ),
+          new Expanded(child: new Text(not['message'],style: new TextStyle(fontSize: 15.0),),)
+        ],
+      ),
+    ),
+  );
+}
+
+
+
+
+
+
+
 void showCommentsPage(String id, String commentKey,BuildContext context)async{
 
 
@@ -169,8 +222,7 @@ void showCommentsPage(String id, String commentKey,BuildContext context)async{
 }
 
 
-String getDateOfMsg(Map notification){
-  var time = notification['time'];
+String getDateOfMsg(String time){
 
   String date = '';
   var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
@@ -196,6 +248,23 @@ String getDateOfMsg(Map notification){
   return date;
 }
 
+bool checkIfPostIsUpdated(Map post) {
+  var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+  return checkDate(post['leaveDate']);
+
+}
+
+
+bool checkDate(String date) {
+  var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+  var postDate = formatter.parse(date);
+
+  if (postDate.isAfter(new DateTime.now())) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 
 //Widget rideNotificationCell(Map notification,BuildContext context){

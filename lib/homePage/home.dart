@@ -28,6 +28,7 @@ import 'dart:io';
 import '../main.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong/latlong.dart';
 
 
 //import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -64,6 +65,9 @@ final destinationTextContoller = new TextEditingController();
     bool messageNotification = false;
     io.File _image;
     bool bitmojiLoading = false;
+    String transportMode;
+    LatLng destination;
+
 Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 final changeNotifier = new StreamController.broadcast(); // for communicating down the widget tree to dismiss the keyboard
 
@@ -94,7 +98,9 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
 
     getToken();
 
-    updateCityCode(widget.userID);
+    updateCityCode(widget.userID).then((idk){
+      fetchTransportModeAndRiderOrDriver();
+    });
 
    }
 
@@ -230,7 +236,11 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
         controller: _tabController,
         children: <Widget>[
           new ChatList(stream: changeNotifier.stream),
-          new Feed(app: widget.app,userID: widget.userID, commentNotificationCallback:_commentNotificationCallback,streamController: changeNotifier),
+      (transportMode != null && destination != null ) ?  new Feed(app: widget.app,userID: widget.userID, commentNotificationCallback:_commentNotificationCallback,streamController: changeNotifier, destination: destination,transportMode: transportMode) : new Container(
+        child: new Center(
+          child: new CircularProgressIndicator()
+        )
+      ),
 
         ],
       ),
@@ -491,6 +501,20 @@ void grabUsersImgAndFullName()async{
 
 
 
+  void fetchTransportModeAndRiderOrDriver()async {
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    database.reference().child(globals.cityCode).child('posts').child(globals.id).onValue.listen((data)async{
+      setState(() {
+        if(data.snapshot.value != null ){
+          setState(() {
+            Map coordinates = data.snapshot.value['coordinates'];
+            destination = new LatLng(double.parse(coordinates['lat']), double.parse(coordinates['lon']));
+            transportMode = data.snapshot.value['riderOrDriver'];
+          });
+        }
+      });
+    });
+  }
 
 
 void fetchNotificationCommentStatuses()async {
@@ -581,7 +605,7 @@ void fetchRideNotificationStatuses()async {
 
 
 
-void updateCityCode(String id) async {
+Future<void> updateCityCode(String id) async {
 
   FirebaseDatabase database = FirebaseDatabase.instance;
   database.setPersistenceEnabled(true);

@@ -146,7 +146,6 @@ class chatStream extends StatelessWidget {
 
             return Msg(msg['imgURL']);
           }
-
       ),
     );
   }

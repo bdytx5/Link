@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'msgStream.dart';
@@ -10,8 +10,11 @@ import '../globals.dart' as globals;
 import '../homePage/feedStream.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
-
-
+import 'snap.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'viewPicScreen.dart';
 
 class ChatScreen extends StatefulWidget {
      final String convoID;
@@ -115,6 +118,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
           ),
         ],
       ),
+   
 
     );
   }
@@ -131,8 +135,20 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
 
           Map msg = snapshot.value;
-          //final animationController =  new AnimationController(duration: new Duration(milliseconds: 800), vsync: idk);
-          // return new Msg(msg['message'], msg['imgURL'], msg['name'], animationController, msg['formattedTime']);
+
+
+          //  GlimpseCell(this.msg, this.recipFullName, this.recipImgURL, this.convoId, this.glimpseKey);
+          if(msg['type'] != null && msg['from'] != globals.id ){
+
+              return GlimpseCell(msg, recipFullName, recipImgURL, widget.convoID,snapshot.key, true);
+
+          }
+          if(msg['type'] != null && msg['from'] == globals.id ){
+            return GlimpseCell(msg, senderFullName, senderImgURL, widget.convoID,snapshot.key, false);
+          }
+//          if(msg['type'] != null && msg['from'] != senderId ){
+//            return GlimpseCell(recipImgURL, recipFullName, msg['formattedTime'], msg['url']);
+//          }
 
           if(msg['from'] == senderId){
             return Msg(msg['message'], senderImgURL,senderFullName, msg['formattedTime']);
@@ -142,6 +158,8 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
         }
     );
   }
+
+
 
 
   Widget Msg(String txt, String imgURL, String name, String time) {
@@ -162,7 +180,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
             child: new Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                    new Text(name),
+                    new Text(name,style: new TextStyle(fontWeight: FontWeight.bold),),
                     new Padding(padding: new EdgeInsets.all(0.5),
                       child: new Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -195,35 +213,84 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
       child: new Container(
 
         margin: const EdgeInsets.symmetric(horizontal: 9.0),
-        child: new Row(
+        child: new Column(
           children: <Widget>[
-            
-            new Flexible(
-              child: new TextField(
-                maxLines: null,
-                focusNode: txtInputFocusNode,
-                controller: _textController,
-                onChanged: (String txt){
-                  setState(() {
-                    _isWriting = true;
+            new Row(
+              children: <Widget>[
 
-                  });
-                },
-                onSubmitted: _submitMsg,
-                decoration: new InputDecoration.collapsed(hintText: 'Enter a Message!'),
-              ),
+                new Flexible(
+                  child: new TextField(
+                    maxLines: null,
+                    focusNode: txtInputFocusNode,
+                    controller: _textController,
+                    onChanged: (String txt){
+                      setState(() {
+                        _isWriting = true;
+
+                      });
+                    },
+                    onSubmitted: _submitMsg,
+                    decoration: new InputDecoration.collapsed(hintText: 'Enter a Message!'),
+                  ),
+                ),
+                new Container(
+                    margin: new EdgeInsets.symmetric(horizontal: 3.0),
+                    child: Theme.of(context).platform == TargetPlatform.iOS ?
+                    new CupertinoButton(
+                        child: new Text('submit'),
+                        onPressed: (_isWriting && _textController.text != null) ? () => _submitMsg(_textController.text): (){}
+                    ) : new IconButton(
+                      icon: new Icon(Icons.message,color: Colors.grey,),
+                      onPressed: (_isWriting && _textController.text != null) ? () => _submitMsg(_textController.text) : (){},
+                    )
+                )
+              ],
             ),
+            new Divider(),
+
             new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 3.0),
-              child: Theme.of(context).platform == TargetPlatform.iOS ? 
-              new CupertinoButton(
-                child: new Text('submit'),
-                onPressed: (_isWriting && _textController.text != null) ? () => _submitMsg(_textController.text): (){}
-              ) : new IconButton(
-                icon: new Icon(Icons.message,color: Colors.grey,),
-                onPressed: (_isWriting && _textController.text != null) ? () => _submitMsg(_textController.text) : (){},
+              height: 55.0,
+              width: double.infinity,
+              child:new Padding(padding: new EdgeInsets.only(bottom: 15.0),
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  new Padding(padding: new EdgeInsets.only(right: 15.0),
+
+                    child: new IconButton(icon: new Icon(Icons.camera,color: Colors.grey), onPressed: (){}),
+                  ),
+
+                new Container(
+                  height: 30.0,
+                  width: 30.0,
+                  decoration: new BoxDecoration(
+                      color: Colors.yellowAccent,
+                      shape: BoxShape.circle,
+                      border: new Border.all(color: Colors.grey,width: 3.0)
+                  ),
+                  child: new InkWell(onTap: (){
+                                      Navigator.push(context,
+                      new MaterialPageRoute(
+                          builder: (context) => new SnapPage(widget.convoID,widget.recipID)));
+
+
+
+                  },),
+                ),
+
+                  new Padding(padding: new EdgeInsets.only(left: 15.0),
+
+                  child: new IconButton(icon: new Icon(Icons.tag_faces,color: Colors.grey), onPressed: (){}),
+                  )
+
+
+                ],
               )
+
+              )
+
             )
+
           ],
         ),
         decoration: Theme.of(context).platform == TargetPlatform.iOS ? 
@@ -235,12 +302,14 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
   }
 
 
+  String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
+
   void _submitMsg(String txt)async{
 
    if(!allInfoIsAvailable){
      return;
    }
-    if(widget.convoID == globals.id){
+    if(widget.convoID == 'CAESIO1RccwK34OLN30OhSd6kcVqAGQ08Nbot4Qcw03dkV3m'){
       sendFeedbackMsg();
     }else{
       if(newConvo){
@@ -254,11 +323,9 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
 }
 
 
-void addDismissKeyboardListener(){
-     listController.addListener((){
-       txtInputFocusNode.unfocus();
-     });
-  }
+
+
+
 
 
 
@@ -267,16 +334,20 @@ Future<void> sendRegularMsg(String id)async{
   var now = formatter.format(new DateTime.now());
   DatabaseReference ref = FirebaseDatabase.instance.reference();
   var key = ref.child('convos').child(widget.convoID).push().key;
+
   Map message = {'to':widget.recipID,'from':globals.id,'message':_textController.text, 'formattedTime':now};
-  ref.child('feedback').push().set(message);// CREATE MESSAGE
-  ref.child('convos').child(widget.convoID).push().set(message); // SEND THE MESSAGE
-  ref.child('convoLists').child(globals.id).child(widget.recipID).update({'recentMsg':_textController.text, 'time':key,'formattedTime':now});// IDK
-  ref.child('convoLists').child(widget.recipID).child(globals.id).update({'recentMsg':_textController.text, 'time':key,'formattedTime':now,'new':true});
-return;
+  try{
+    await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'recentMsg':_textController.text, 'time':key,'formattedTime':now});// IDK
+    await ref.child('convoLists').child(widget.recipID).child(globals.id).update({'recentMsg':_textController.text, 'time':key,'formattedTime':now,'new':true});
+    await ref.child('feedback').push().set(message);// CREATE MESSAGE
+    await ref.child('convos').child(widget.convoID).push().set(message); // SEND THE MESSAGE
+  }catch(e){
+    _errorMenu("Error", "There was an error sending your message.", '');
+  }
 
 }
 
-  void sendFeedbackMsg(){
+  Future<void> sendFeedbackMsg()async{
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var now = formatter.format(new DateTime.now());
 
@@ -284,9 +355,15 @@ return;
       return;
     }
 
-  DatabaseReference ref = FirebaseDatabase.instance.reference();
-  Map message = {'to':'thumbsout','from':globals.id,'message':_textController.text, 'formattedTime':now}; // CREATE MESSAGE
-  ref.child('convos').child(globals.id).push().set(message);
+   // Map brettsChatlist = { 'imgURL':senderImgURL, 'formattedTime':now, 'new': true, 'recentMsg':_textController.text, 'recipFullName':senderFullName, 'recipId':globals.id, 'convoId':FirebaseDatabase.instance.reference().push().key}
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+   // ref.child('convoLists').child('CAESIO1RccwK34OLN30OhSd6kcVqAGQ08Nbot4Qcw03dkV3m').child(globals.id).set(value)
+    Map message = {'to':'CAESIO1RccwK34OLN30OhSd6kcVqAGQ08Nbot4Qcw03dkV3m','from':globals.id,'message':_textController.text, 'formattedTime':now};
+    try{
+    ref.child('convos').child('').push().set(message);
+    }catch(e){
+      _errorMenu('Error', 'There was an error sending your message.', '');
+    }
 }
 
 
@@ -302,18 +379,23 @@ var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
   var now = formatter.format(new DateTime.now());
   DatabaseReference ref = FirebaseDatabase.instance.reference();
   newConvo = false;
-  ref.child('contacts').child(globals.id).child(widget.recipID).set({'name':getFirstName(recipFullName), 'imgURL':widget.recipImgURL});
 
 
-  Map convoInfoForSender = {'recipID':widget.recipID,'convoID':widget.convoID, 'time':widget.convoID, 'imgURL':recipImgURL,
-    'recipFullName': recipFullName, 'recentMsg':_textController.text,'formattedTime':now, 'new': false};
-  ref.child('convoLists').child(globals.id).child(widget.recipID).set(convoInfoForSender);
+  try{
+    ref.child('contacts').child(globals.id).child(widget.recipID).set({'name':getFirstName(recipFullName), 'imgURL':widget.recipImgURL});
 
-  Map convoInfoForRecipient = {'recipID':globals.id,'convoID':widget.convoID, 'time':widget.convoID, 'imgURL':senderImgURL, 'recipFullName':senderFullName,'recentMsg':_textController.text,'formattedTime':now, 'new':true};
-  ref.child('convoLists').child(widget.recipID).child(globals.id).set(convoInfoForRecipient);
+    Map convoInfoForSender = {'recipID':widget.recipID,'convoID':widget.convoID, 'time':widget.convoID, 'imgURL':recipImgURL,
+      'recipFullName': recipFullName, 'recentMsg':_textController.text,'formattedTime':now, 'new': false};
+    ref.child('convoLists').child(globals.id).child(widget.recipID).set(convoInfoForSender);
 
-  Map message = {'to':widget.recipID,'from':globals.id,'message':_textController.text,'formattedTime':now}; // CREATE MESSAG
-  ref.child('convos').child(widget.convoID).push().set(message); // SEND THE MESSAGE
+    Map convoInfoForRecipient = {'recipID':globals.id,'convoID':widget.convoID, 'time':widget.convoID, 'imgURL':senderImgURL, 'recipFullName':senderFullName,'recentMsg':_textController.text,'formattedTime':now, 'new':true};
+    ref.child('convoLists').child(widget.recipID).child(globals.id).set(convoInfoForRecipient);
+
+    Map message = {'to':widget.recipID,'from':globals.id,'message':_textController.text,'formattedTime':now}; // CREATE MESSAG
+    ref.child('convos').child(widget.convoID).push().set(message); // SEND THE MESSAGE
+  }catch(e){
+    _errorMenu('Error', 'There was an error sending your message.', '');
+  }
 }
 
 
@@ -343,22 +425,28 @@ var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
 
   Future<void> makeSureAllMsgScreenInfoIsAvailable()async{
     newConvo = widget.newConvo;
-
-
     /// senderInfo
-  await getSenderFullName();
-  await getSenderImgURL();
-  senderId = globals.id;
-  ///recipInfo
-    await getRecipFullName();
-    await getRecipImgURL();
+    try{
+      await getSenderFullName();
+      await getSenderImgURL();
+      senderId = globals.id;
+      ///recipInfo
+      await getRecipFullName();
+      await getRecipImgURL();
 
-    if(senderFullName != null && senderImgURL != null && recipImgURL != null && senderFullName != null){
-      setState(() {
-        allInfoIsAvailable = true;
-      });
-    }
+      if(senderFullName != null && senderImgURL != null && recipImgURL != null && senderFullName != null){
+        setState(() {
+          allInfoIsAvailable = true;
+        });
+      }
+    }catch(e){
+      Future.delayed(new Duration(seconds: 2)).then((e){
+        _errorMenu('Error', 'Database error, please contact Link Support.', '');
+    });
   }
+
+
+      }
 
 
 void setupStreamQuery(){
@@ -367,6 +455,11 @@ void setupStreamQuery(){
 }
 
 
+  void addDismissKeyboardListener(){
+    listController.addListener((){
+      txtInputFocusNode.unfocus();
+    });
+  }
 
 
   Future<void> getSenderImgURL()async{
@@ -376,9 +469,18 @@ void setupStreamQuery(){
       });
     }else {
       DatabaseReference ref = FirebaseDatabase.instance.reference();
-      DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).child('imgURL').once();
+      DataSnapshot snap;
+      try{
+         snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).child('imgURL').once();
+      }catch(e){
+        throw new Exception('Error');
+      }
       setState(() {
-        senderImgURL = snap.value;
+        if(snap.value != null){
+          senderImgURL = snap.value;
+        }else{
+          throw new Exception('Error');
+        }
       });
 
     }
@@ -393,9 +495,18 @@ void setupStreamQuery(){
       });
     }else{
       DatabaseReference ref = FirebaseDatabase.instance.reference();
-      DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).child('fullName').once();
+      DataSnapshot snap;
+    try{
+       snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).child('fullName').once();
+    }catch(e){
+      throw new Exception('Error');
+    }
       setState(() {
-        senderFullName = snap.value;
+        if(snap.value != null){
+          senderFullName = snap.value;
+        }else{
+          throw new Exception('Error');
+        }
 
       });
     }
@@ -407,16 +518,25 @@ void setupStreamQuery(){
     if(widget.recipFullName != null){
       setState(() {
         recipFullName = widget.recipFullName;
-
       });
     }else{
       DatabaseReference ref = FirebaseDatabase.instance.reference();
-      DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(widget.recipID).child('fullName').once();
+      DataSnapshot snap;
+
+      try{
+         snap = await ref.child(globals.cityCode).child('userInfo').child(widget.recipID).child('fullName').once();
+      }catch(e){
+       throw new Exception('Error');
+      }
       setState(() {
-        recipFullName = snap.value;
+        if(snap.value != null){
+          recipFullName = snap.value;
+        }else{
+          throw new Exception("Error");
+        }
       });
+      }
     }
-  }
 
   Future<void> getRecipImgURL()async{
     if(widget.recipImgURL != null){
@@ -426,19 +546,31 @@ void setupStreamQuery(){
       });
     }else{
       DatabaseReference ref = FirebaseDatabase.instance.reference();
-      DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(widget.recipID).child('imgURL').once();
+      DataSnapshot snap;
+      try{
+         snap = await ref.child(globals.cityCode).child('userInfo').child(widget.recipID).child('imgURL').once();
+      }catch(e){
+        throw new Exception('Error');
+      }
       setState(() {
-        recipImgURL = snap.value;
-
+        if(snap.value != null){
+          recipImgURL = snap.value;
+        }else{
+          throw new Exception('Error');
+        }
       });
     }
   }
 
 
-  void updateReadReceipts(){
+  Future<void> updateReadReceipts()async{
     if(!newConvo && widget.convoID != globals.id){
       DatabaseReference ref = FirebaseDatabase.instance.reference();
-      ref.child('convoLists').child(globals.id).child(widget.recipID).update({'new':false});// IDK
+      try{
+        await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'new':false});// IDK
+      }catch(e){
+        throw new Exception('Error');
+      }
       //   ref.child('convoLists').child(widget.recipID).child(globals.id).update({'new':'true','read':'true'});
     }
   }
@@ -456,12 +588,306 @@ void setupStreamQuery(){
     }
     return '';
   }
+
+
+
+
+  Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) async {
+    return showDialog<Null>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(primaryMsg),
+                new Text(secondaryMsg),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text('Okay', style: new TextStyle(color: Colors.black),),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 
 
+class GlimpseCell extends StatefulWidget {
+
+  GlimpseCell(this.msg, this.fullName, this.imgURL, this.convoId, this.glimpseKey,this.recipGlimpse);
+
+  final Map msg;
+  final String fullName;
+  final String imgURL;
+  final String convoId;
+  final String glimpseKey;
+  final bool recipGlimpse;
 
 
+
+
+  @override
+  _GlimpseCellState createState() => new _GlimpseCellState();
+
+}
+
+class _GlimpseCellState extends State<GlimpseCell> with TickerProviderStateMixin {
+
+
+bool loading = false;
+File img;
+IconData icon = Icons.file_download;
+bool loadedPic = false;
+bool viewedPic = false;
+
+String imgURL;
+String fullName;
+String time;
+String glimpseURL;
+String glimpseKey;
+String convoId;
+
+
+  @override
+  void initState() {
+    super.initState();
+    initializeData();
+  }
+
+  void initializeData(){
+    imgURL = widget.msg['imgURL'];
+    viewedPic = widget.msg['viewed'];
+    imgURL = widget.imgURL;
+    fullName = widget.fullName;
+    time = widget.msg['formattedTime'];
+    glimpseURL = widget.msg['url'];
+    glimpseKey = widget.glimpseKey;
+    convoId = widget.convoId;
+  }
+
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+
+String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      height: 60.0,
+        width: double.infinity,
+
+        margin: const EdgeInsets.symmetric(vertical: 2.0),
+        child:(widget.recipGlimpse) ? recipGlimpseCell() : senderGlimpseCell(),
+
+    );
+  }
+
+
+  Widget recipGlimpseCell(){
+    return new Card(
+      child:new InkWell(
+
+        onTap: ()async{
+
+          if(!loadedPic){
+            await loadGlimpse();
+          }else{
+            if(loadedPic && !viewedPic){
+              await viewGlimpse();
+            }
+          }
+        },
+
+        child:  new Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            new Expanded(
+                child: new Column(
+                  children: <Widget>[
+                    new Row(
+                      children: <Widget>[
+                        new Container(
+                          child: new CircleAvatar(
+                            backgroundImage: new NetworkImage(imgURL),
+                          ),
+                        ),
+                        new Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            new Padding(padding: new EdgeInsets.only(left: 10.0),
+                              child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
+
+                            ),
+                            //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+
+                            new Padding(padding: new EdgeInsets.only(left: 10.0),
+                              child: new Text( (loadedPic && !viewedPic) ? 'New Glimpse, tap to view!':(!loadedPic && !viewedPic) ? 'New Glimpse, tap to download!' : 'Already Viewed Glimpse!', ),
+                            )
+                          ],
+                        )
+                      ],
+                    )
+                  ],
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                )
+            ),
+
+            (!viewedPic) ? new Padding(padding: new EdgeInsets.all(15.0),
+              child: new Container(
+                  height: 30.0,
+                  width: 30.0,
+                  child: (loading) ? new CircularProgressIndicator(): (loadedPic && img != null) ? new Icon(Icons.image) : (!loadedPic && !viewedPic) ? new Icon(Icons.file_download) : new Icon(Icons.check)
+              ),
+            ) : new Container(),
+          ],
+        ),
+      )
+    );
+  }
+
+
+
+
+
+Widget senderGlimpseCell(){
+  return new Container(
+
+    child: InkWell(
+
+        onTap: ()async{
+
+          await loadGlimpse();
+        },
+
+        child:  new Card(
+          child: new Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              new Expanded(
+                  child: new Column(
+                    children: <Widget>[
+                      new Row(
+                        children: <Widget>[
+                     new Padding(padding: new EdgeInsets.all(5.0),
+                     child:  new CircleAvatar(
+                       backgroundImage: new NetworkImage(imgURL),
+                     ),
+                     ),
+
+                          new Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
+
+                              ),
+                              //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+
+                              new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                child: new Text( (!viewedPic) ? 'Sent Glimpse!': 'Glimpse has been opened!',
+                                ),
+                              )
+                            ],
+                          )
+                        ],
+                      )
+                    ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                  )
+              ),
+
+//        (!viewedPic) ? new Padding(padding: new EdgeInsets.all(15.0),
+//          child: new Container(
+//              height: 20.0,
+//              width: 20.0,
+//              child: (loading) ? new Center(child: CircularProgressIndicator(),) : (loadedPic && img != null ) ? new Container(height: 20.0,width: 20.0,child: new IconButton(icon: new Icon(Icons.image), onPressed: ()async{
+//                await viewGlimpse();
+//              }),) : new Icon(Icons.file_download)
+//          ),
+//        ) : new Container(),
+            ],
+          ),
+        )
+    )
+  );
+}
+
+  Future<void> viewGlimpse()async{
+    Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(img))).then((D)async{
+      setState(() {viewedPic = true;});
+
+      try{
+        await FirebaseDatabase.instance.reference().child('convos').child(widget.convoId).child(widget.glimpseKey).update({'viewed':true});
+      }catch(e){
+        print('error');
+        return;
+      }
+    });
+
+  }
+
+
+  Future<void> loadGlimpse()async{
+    setState(() {
+      loading = true;
+    });
+    try{
+      http.Response imgRes = await http.get(glimpseURL);
+      var bytes = imgRes.bodyBytes;
+      final Directory extDir = await getTemporaryDirectory();
+      final String dirPath = '${extDir.path}/Pictures/flutter_test';
+      await new Directory(dirPath).create(recursive: true);
+      String time = timestamp();
+      img = new File('$dirPath/${time}.png');
+      img.writeAsBytes(bytes);
+
+    }catch(e){
+      setState(() {loading = false;});
+    }
+
+    setState(() {loading = false;
+    loadedPic = true;
+    });
+
+
+
+  }
+String getDateOfMsg(String time){
+
+  String date = '';
+  var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+  DateTime recentMsgDate = formatter.parse(time);
+  var dayFormatter = new DateFormat('EEEE');
+  var shortDatFormatter = new DateFormat('M/d/yy');
+  var timeFormatter = new DateFormat('h:mm a');
+  var now = new DateTime.now();
+  Duration difference = now.difference(recentMsgDate);
+  var differenceInSeconds = difference.inSeconds;
+  // msg is less than a week old
+  if(differenceInSeconds < 86400){
+    date = timeFormatter.format(recentMsgDate);
+  }else{
+    date = shortDatFormatter.format(recentMsgDate);
+  }
+  return date;
+}
+
+}
 
 //Widget Msg(String url, String Name){
 //    return new Container(

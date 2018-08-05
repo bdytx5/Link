@@ -177,7 +177,9 @@ bool hasContacts = false;
                           )
                         )
                     )
-                ) : new Container()
+                ) : new Container(),
+                
+                new Icon(Icons.edit)
               ],
             ),
             new Align(

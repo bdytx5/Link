@@ -20,7 +20,7 @@ import 'loginFlow/customizeProfile.dart';
 import 'package:flutter/services.dart';
 import 'profilePages/commentsPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:camera/camera.dart';
 
 class MyApp extends StatelessWidget {
 
@@ -54,7 +54,11 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// all globals (except for userInfo globals)
+
 final RouteObserver<PageRoute> routeObserver = new RouteObserver<PageRoute>();
+List<CameraDescription> cameras;
+
 
 Future<void> main() async {
 
@@ -172,12 +176,7 @@ Future<void> main() async {
 
 await handleLogin();
 
-
-
-
-
-
-
+  cameras = await availableCameras();
 
    runApp(new MaterialApp(
        // routes: routes,

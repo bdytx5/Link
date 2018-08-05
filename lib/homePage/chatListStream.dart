@@ -112,11 +112,11 @@ class chatListStream extends StatelessWidget {
                   ),
                 ),
                 new InkWell(
-                  child: new CircleAvatar(
+                  child: (convoInfo['imgURL'] != null) ? new CircleAvatar(
                     radius: 30.0,
                     backgroundColor: Colors.transparent,
                     backgroundImage: new NetworkImage(convoInfo['imgURL']),
-                  ),
+                  ) : new Container(),
                   onTap: (){
                     User user = new User(convoInfo['recipFullName'], convoInfo['recipID'], convoInfo['imgURL']);
                     if(convoInfo['convoID'] != globals.id){

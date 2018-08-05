@@ -334,6 +334,9 @@ class _SignupPopUpState extends State<SignupPopUp> {
       await database.reference().child("coverPhotos").child(id).set({'imgURL':cover});
       await database.reference().child('convoLists').child(id).child(id).set(feedbackConvoInfo);
       await database.reference().child('coordinates').child(widget.userInfo["cityCode"]).child(post['riderOrDriver']).child(id).child('coordinates').set(buildCoordinatesInfo(widget.placeInfo));
+      await database.reference().child('notifications').child(widget.userInfo['id']).push().set(buildFirstNotificaiton());
+
+
     }catch(e){
       setState(() {loading = false;});
       _errorMenu('error', 'Please try again.', '');
@@ -388,7 +391,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
   }
 
   Map buildNotificationInfo() {
-    return {'newAlert': false};
+    return {'newAlert': true};
   }
 
 
@@ -420,7 +423,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
       'name': userInfo['firstName'],
       'key':nowKey,
       'time':formatter.format(new DateTime.now()),
-      'coordinates':buildCoordinatesInfo(placeInfo),
+      'coordinates':buildCoordinatesForPost(placeInfo),
 
     };
     return post;
@@ -428,8 +431,24 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
   Map buildCoordinatesInfo(Map placeInfo){
     Map coordinate = placeInfo['coordinates'];
-    coordinate['time'] = FirebaseDatabase.instance.reference().push().key;
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var now = formatter.format(new DateTime.now());
     return coordinate;
+  }
+
+
+  Map buildCoordinatesForPost(Map placeInfo){
+    Map coordinate = placeInfo['coordinates'];
+    return coordinate;
+  }
+
+  Map buildFirstNotificaiton(){
+    Map notification = {
+      'imgURL':logoURL,
+      'type':'signup',
+      'message':'Welcome to Link!! This is where you will check recieve notificaitons about new comments or ride alerts, when someone is going to a city near your destination.'
+    };
+    return notification;
   }
 
 
