@@ -37,12 +37,12 @@ class feedStream extends StatelessWidget {
   GlobalKey<ScaffoldState> scaffoldKey;
   final UIcallback actionButtonCallback;
   final UIcallback commentNotificationCallback;
-  final StreamController streamController;
+  final StreamController keyboardDismissalStreamController;
   final String transportMode;
   final LatLng destination;
 
 
-    feedStream(this.scaffoldKey, this.actionButtonCallback, this.commentNotificationCallback,this.streamController, this.transportMode, this.destination);
+    feedStream(this.scaffoldKey, this.actionButtonCallback, this.commentNotificationCallback,this.keyboardDismissalStreamController, this.transportMode, this.destination);
   @override
   Widget build(BuildContext context) {
 
@@ -72,15 +72,17 @@ class feedStream extends StatelessWidget {
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
           // here we can just look up every user from the snapshot, and then pass it into the chat message
           Map post = snapshot.value;
+          if(post['coordinates'] == null|| post['imgURL'] == null || post['fromHome'] == null || post['name'] == null || post['state'] == null || post['time'] == null){
+            return new Container();
+          }
                           // current post and ghost mode
-          return   ((checkIfPostIsGhosted(snapshot.value)) && (snapshot.key == globals.id)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: true,ghostMode: true,stream: this.streamController.stream,)
-              : (!(checkIfPostIsGhosted(snapshot.value)) && (snapshot.key == globals.id)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: true,ghostMode: false,stream: this.streamController.stream,) :
-          (!checkIfPostIsGhosted(snapshot.value)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: false,ghostMode: false,stream: this.streamController.stream,) :
+          return  ((checkIfPostIsGhosted(snapshot.value)) && (snapshot.key == globals.id)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: true,ghostMode: true,stream: this.keyboardDismissalStreamController.stream,)
+              : (!(checkIfPostIsGhosted(snapshot.value)) && (snapshot.key == globals.id)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: true,ghostMode: false,stream: this.keyboardDismissalStreamController.stream,) :
+          (!checkIfPostIsGhosted(snapshot.value)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: false,ghostMode: false,stream: this.keyboardDismissalStreamController.stream,) :
           new Container();
 
         });
     }
-
 }
 
 
@@ -90,6 +92,16 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
   // we are sorting the array as follows
   // if user is a driver, we will put all riders first, and vice versa
   // then with those riders, we will see who if they are within a certain range
+
+
+  if(a.value['coordinates'] == null){
+    return 1;
+  }
+  if(b.value['coordinates'] == null){
+    return -1;
+  }
+
+
   if(a.key == globals.id){
     return -1;
   }
@@ -112,6 +124,14 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
 
     Map aCoordinates = a.value['coordinates'];
     Map bCoordinates = b.value['coordinates'];
+
+    if(aCoordinates['lat'] == null || aCoordinates['lon'] == null){
+      return 1;
+    }
+    if(bCoordinates['lat'] == null || bCoordinates['lon'] == null){
+      return -1;
+    }
+
     double aLat = double.parse(aCoordinates['lat']);
     double alon = double.parse(aCoordinates['lon']);
     double bLat = double.parse(bCoordinates['lat']);
@@ -119,6 +139,11 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
     final Distance distance = new Distance();
     double ameter = distance(new LatLng(aLat, alon), destination);
     double bmeter = distance(new LatLng(bLat, blon), destination);
+    print(ameter);
+
+      if(ameter == bmeter){
+        return 0;
+      }
 
         if((ameter - bmeter) <= 0.0){
           return -1;
@@ -127,12 +152,14 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
         }
   }
 
-  return 0;
+
 }
 
 
 
 bool checkIfPostIsGhosted(Map post){
+
+
   if(post.containsKey('ghost')){
     var ghostTime = post['ghost'];
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
@@ -160,9 +187,9 @@ class FeedCell extends StatefulWidget{
   final DataSnapshot snapshot;
   final Animation animation;
   String imgURL;
-  Color read = Colors.black;
-  UIcallback uIcallback;
-  UIcallback commentNotificationCallback;
+
+  final UIcallback uIcallback;
+  final UIcallback commentNotificationCallback;
   final bool currentUsersPost;
   final bool ghostMode;
   final Stream stream;
@@ -181,7 +208,7 @@ class FeedCell extends StatefulWidget{
 
 class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   PersistentBottomSheetController controller;
-  StreamSubscription streamSubscription;
+  StreamSubscription keyboardDismissalStreamSubscription;
 
   AssetImage commentIcon = new AssetImage('assets/comment50.png');
 
@@ -202,7 +229,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   void initState() {
     super.initState();
     commentNode.addListener(_onFocusChange);
-    streamSubscription = widget.stream.listen((_) => someMethod());
+    keyboardDismissalStreamSubscription = widget.stream.listen((_) => someMethod());
 
    _controller = new AnimationController(duration: _kExpand, vsync: this);
     _easeInAnimation = new CurvedAnimation(parent: _controller, curve: Curves.easeIn);
@@ -299,7 +326,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                   new Padding(padding: new EdgeInsets.all(8.0),
                     child:  new InkWell(
                       child: new CircleAvatar(backgroundColor: Colors.transparent,radius: 25.0,
-                          backgroundImage: new CachedNetworkImageProvider(widget.snapshot.value['imgURL'],)
+                          backgroundImage: (widget.snapshot.value['imgURL'] != null ) ? new CachedNetworkImageProvider(widget.snapshot.value['imgURL']) : new Container()
                       ),
                       onTap: (){
                         Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: widget.snapshot.key,profilePicURL: widget.snapshot.value['imgURL'])));
@@ -322,7 +349,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                           enterGhostMode();
                         }
                       },
-                      child: new Padding(padding: new EdgeInsets.only(right: 10.0),
+                      child: new Padding(padding: new EdgeInsets.only(right: 10.0,bottom: 5.0),
                         child: new Icon(Icons.mode_edit, size: 17.0,color: Colors.grey[600],),
                       )
                   ) : new Container(),)
@@ -339,7 +366,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                         child: new Container(
                           padding: new EdgeInsets.only(right: 3.0),
                           child: new GestureDetector(
-                            child: FeedCellTitle(widget.snapshot.value),
+                            child:  FeedCellTitle(widget.snapshot.value),
                             onTap: (){
                               showProfilePage();
                             },
@@ -411,6 +438,9 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
   Future<void> sendCommentHandler(DataSnapshot snap)async{
+    if(snap.value['key'] == null || snap.key == null){
+      return;
+    }
     if(commentController.text != null){
       if(commentController.text != '' ){
         if(checkDateOfPost(widget.snapshot.value)){
@@ -443,51 +473,66 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
         'fullName': globals.fullName,
         'postId':postId  // so we can get back to the post when the user views the notification
       };
+      try{
         ref.child('comments').child(key).push().set(msg);
+      }catch(e){
+        return;
+      }
     }
   }
 
 
 
     void incrementCommentCount(String postId,bool expired)async {
-    if(!expired){
-      DatabaseReference ref = FirebaseDatabase.instance.reference();
-      DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').once();
-    if(snap.value != null){
 
-    int incremented = snap.value + 1;
-    ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(incremented);
-    }else{
-    ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(1);
-    }
-    }else{
-      DatabaseReference ref = FirebaseDatabase.instance.reference();
-      DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').once();
-    if(snap.value != null){
-    int incremented = snap.value + 1;
-    ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(incremented);
-    }else{
-    ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(1);
-    }
-    }
+        try{
+          if(!expired){
+            DatabaseReference ref = FirebaseDatabase.instance.reference();
+            DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').once();
+            if(snap.value != null){
+
+              int incremented = snap.value + 1;
+              ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(incremented);
+            }else{
+              ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(1);
+            }
+          }else{
+            DatabaseReference ref = FirebaseDatabase.instance.reference();
+            DataSnapshot snap = await ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').once();
+            if(snap.value != null){
+              int incremented = snap.value + 1;
+              ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(incremented);
+            }else{
+              ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(1);
+            }
+          }
+        }catch(e){
+          return;
+        }
     }
 
 
     Future<void>handleCommentNotificaitonList(String key, String posterId)async{
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    DataSnapshot snap = await ref.child('commentLists').child(key).once();
 
-    if(snap.value != null){
-      List<String> commentList = List.from(snap.value);
-      if(!commentList.contains(globals.id)){
-        commentList.add(globals.id);
-        ref.child('commentLists').child(key).set(commentList);
+    try{
+      DataSnapshot snap = await ref.child('commentLists').child(key).once();
+
+      if(snap.value != null){
+        List<String> commentList = List.from(snap.value);
+        if(!commentList.contains(globals.id)){
+          commentList.add(globals.id);
+          ref.child('commentLists').child(key).set(commentList);
+        }else{
+          return; // the user is already involved in the convo....
+        }
       }else{
-        return; // the user is already involved in the convo....
+        ref.child('commentLists').child(key).set([globals.id, posterId]);
       }
-    }else{
-      ref.child('commentLists').child(key).set([globals.id, posterId]);
+    }catch(e){
+      return;
     }
+
   }
 
 
@@ -523,6 +568,8 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
   Widget FeedCellTitle(Map post) {
+
+
     String date = formatDateForCellTitle(post['leaveDate']);
 //    bool updated = checkIfPostIsUpdated(post);
     bool updated = checkDateOfPost(post);
@@ -530,11 +577,10 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     // first check if the user is leaving from their home city, and the post is still up to date!!!
     if(post.containsKey('fromHome')){
       if(!(post['fromHome']) && checkDateOfPost(post)){
-
         fromHomeCity = false;
       }
     }
-    if (post['riderOrDriver'] == 'Riding') {
+    if (post['riderOrDriver'] == 'Riding'){
       return new RichText(
         maxLines: 1,
         textAlign: TextAlign.left,
@@ -599,6 +645,9 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
   bool checkDate(String date) {
+    if(date == null){
+      return false;
+    }
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var postDate = formatter.parse(date);
 
@@ -615,13 +664,17 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     if(globals.imgURL != null && globals.fullName != null){
      return;
     }
-    print(globals.id);
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).once();
-    setState(() {
-      globals.fullName = snap.value['fullName'];
-      globals.imgURL = snap.value['imgURL'];
-    });
+
+    try{
+      DatabaseReference ref = FirebaseDatabase.instance.reference();
+      DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).once();
+      setState(() {
+        globals.fullName = snap.value['fullName'];
+        globals.imgURL = snap.value['imgURL'];
+      });
+    }catch(e){
+      return;
+    }
   }
 
 
@@ -651,6 +704,10 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   }
 
   Widget commentCell(DataSnapshot snapshot){
+    if(snapshot.value['fullName'] == null || snapshot.value['imgURL'] == null || snapshot.value['time'] == null || snapshot.value['comment'] == null){
+      return new Container();
+    }
+
     return new Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,19 +806,32 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var now = new DateTime.now();
     var ghostEndDate = now.add(new Duration(days: 14));
-    database.reference().child(globals.cityCode).child('posts').child(globals.id).update({'ghost':formatter.format(ghostEndDate)});
+    try{
+      database.reference().child(globals.cityCode).child('posts').child(globals.id).update({'ghost':formatter.format(ghostEndDate)});
+    }catch(e){
+      return;
+    }
   }
 
   void exitGhostMode(){
     FirebaseDatabase database = FirebaseDatabase.instance;
-   
-    database.reference().child(globals.cityCode).child('posts').child(globals.id).child('ghost').remove();
+   try{
+     database.reference().child(globals.cityCode).child('posts').child(globals.id).child('ghost').remove();
+   }catch(e){
+     return;
+   }
   }
 
 
 
 
   String getDateOfMsg(String time){
+    if(time == null){
+      return '';
+    }
+    if(time == ''){
+      return '';
+    }
 
     String date = '';
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
@@ -792,6 +862,13 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
   bool checkDateOfPost(Map post){
     // post will check if the post is on time
+    if(post['leaveDate'] == null){
+      return false;
+    }
+    if(post['leaveDate'] == ''){
+      return false;
+    }
+
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var expireDate = post['leaveDate'];
     if(formatter.parse(expireDate).isAfter(new DateTime.now())){
@@ -805,6 +882,12 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
   String formatDateForCellTitle(String date) {
+    if(date == null){
+      return '';
+    }
+    if(date == ''){
+      return '';
+    }
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var postDate = formatter.parse(date);
 
@@ -816,6 +899,9 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
   void showProfilePage(){
     Map post = widget.snapshot.value;
+    if(post['imgURL'] == null || widget.snapshot.key == null){
+      return;
+    }
 
     Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: widget.snapshot.key,profilePicURL: post['imgURL'],)));
 

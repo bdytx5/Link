@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../globals.dart' as globals;
 import 'package:firebase_auth/firebase_auth.dart';

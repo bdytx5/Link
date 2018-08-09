@@ -104,6 +104,8 @@ Future<void> main() async {
 
 
 
+
+
   Future<bool> checkSnapLoginStatus()async{
     var userIsLoggedIn;
     try{

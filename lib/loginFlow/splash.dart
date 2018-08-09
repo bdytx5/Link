@@ -14,6 +14,7 @@ import '../homePage/feed.dart';
 import 'package:flutter/cupertino.dart';
 import '../homePage/home.dart';
 import 'selectSchool.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 
 

@@ -19,6 +19,8 @@ import 'customizeProfile.dart';
 import '../homePage/home.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+
 // select school will accept push the placeInfo and the snap graph to the profile customization page....
 
 class BitmojiPicker extends StatefulWidget {

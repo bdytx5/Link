@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'login_page.dart';
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import '../main.dart';

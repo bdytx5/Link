@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import '../globals.dart' as globals;
 import '../profilePages/profilePage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class commentsPage extends StatefulWidget {
 
@@ -347,7 +348,7 @@ class _commentsPageState extends State<commentsPage> {
               new InkWell(
                 child: Padding(
                   padding: new EdgeInsets.all(5.0),
-                  child: new CircleAvatar(backgroundImage: new NetworkImage(snapshot.value['imgURL']),radius: 30.0,backgroundColor: Colors.transparent,),
+                  child: new CircleAvatar(backgroundImage: new CachedNetworkImageProvider(snapshot.value['imgURL']),radius: 30.0,backgroundColor: Colors.transparent,),
                 ),
                 onTap: (){
                   Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: snapshot.key,profilePicURL: snapshot.value['imgURL'])));
@@ -421,7 +422,7 @@ class _commentsPageState extends State<commentsPage> {
                     padding: new EdgeInsets.only(left: 5.0, top: 2.0, right: 3.0),
                     child:new InkWell(
                       child:  new CircleAvatar(backgroundColor: Colors.transparent,radius: 20.0,
-                        backgroundImage: new NetworkImage(snapshot.value['imgURL']),
+                        backgroundImage: new CachedNetworkImageProvider(snapshot.value['imgURL']),
                       ),
                       onTap: (){
                         Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: snapshot.value['sender'],profilePicURL: snapshot.value['imgURL'])));

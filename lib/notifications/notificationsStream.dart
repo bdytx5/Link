@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../globals.dart' as globals;
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,7 +60,7 @@ Widget rideNotificationCell(Map notification, BuildContext context){
           child:  new CircleAvatar(
             radius: 30.0,
             backgroundColor: Colors.transparent,
-            backgroundImage: new NetworkImage(notification['imgURL']),
+            backgroundImage: new CachedNetworkImageProvider(notification['imgURL']),
           ),
           ),
                   onTap: (){
@@ -132,7 +133,7 @@ Widget commentNotificationCell(Map notification, BuildContext context){
             new InkWell(
               child: new Padding(padding:new EdgeInsets.all(5.0),
                 child:  new CircleAvatar(
-                  backgroundImage: new NetworkImage(notification['imgURL']),
+                  backgroundImage: new CachedNetworkImageProvider(notification['imgURL']),
                   radius: 30.0,
                   backgroundColor: Colors.transparent,
                 ),
@@ -190,14 +191,13 @@ Widget commentNotificationCell(Map notification, BuildContext context){
 
 Widget signupNotification(Map not){
   return new Container(
-    height: 75.0,
-    width: double.infinity,
+
     child: new Card(
       child: new Row(
         children: <Widget>[
           new Padding(padding: new EdgeInsets.all(5.0),
           child: new CircleAvatar(radius: 30.0,
-            backgroundImage: new NetworkImage(not['imgURL']),
+            backgroundImage: new CachedNetworkImageProvider(not['imgURL']),
           ),
 
           ),

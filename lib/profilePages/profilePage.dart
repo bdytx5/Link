@@ -8,11 +8,16 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../Chat/msgScreen.dart';
-
+import 'editProfilePopup.dart';
 import 'package:flutter/material.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:secure_string/secure_string.dart';
+import 'dart:io';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 
 
 
@@ -51,6 +56,11 @@ String school;
 String bio;
 String riderOrDriver;
 bool hasContacts = false;
+Map contactNameInfo = new Map();
+Map contactImgInfo = new Map();
+List<String> contactsList = new List();
+SecureString secureString = new SecureString();
+
 
 
 
@@ -58,6 +68,7 @@ bool hasContacts = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
         body: new Stack(
           alignment: Alignment.bottomCenter,
 
@@ -66,7 +77,7 @@ bool hasContacts = false;
               height: double.infinity,
               width: double.infinity,
               decoration: new BoxDecoration(image: new DecorationImage(
-                  image:  new NetworkImage((coverPhoto != null) ? coverPhoto : widget.coverPlaceholder),
+                  image:  new CachedNetworkImageProvider((coverPhoto != null) ? coverPhoto : widget.coverPlaceholder),
                   fit: BoxFit.cover)),
             ) : new Container(child:new Center(
               child: new CircularProgressIndicator(),
@@ -80,7 +91,17 @@ bool hasContacts = false;
                   }),
             ),
 
-            profileView()
+
+            profileView(),
+
+
+            new Align(
+              alignment: (globals.id == widget.id) ? new Alignment(0.9, -0.9) : new Alignment(0.94, -1.2) ,
+              child: new IconButton(icon: new Icon(Icons.edit,color: Colors.yellowAccent,),
+                  onPressed: (){
+                  changeCoverPhoto();
+                  }),
+            )
 
 
           ],
@@ -104,10 +125,28 @@ bool hasContacts = false;
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     new Padding(padding: new EdgeInsets.only(top: 8.0,left: 8.0),
-                    child: new CircleAvatar(radius: 35.0,
-                    backgroundImage: new NetworkImage(widget.profilePicURL),
-                      backgroundColor: Colors.transparent,// this should never be null!
-                    ),
+                    child: new Column(
+                      children: <Widget>[
+                        new CircleAvatar(radius: 35.0,
+                          backgroundImage: new CachedNetworkImageProvider(widget.profilePicURL),
+                          backgroundColor: Colors.transparent,// this should never be null!
+                        ),
+                        (globals.id == widget.id) ? new Padding(padding: new EdgeInsets.only(top: 5.0),
+                        child: GestureDetector(
+                            child: new Icon(Icons.edit, size: 15.0,), onTap: (){
+                          showDialog(context: context, builder: (BuildContext context) => new EditProfilePopup()).then((changed){
+                            if(changed ==null){
+                              return;
+                            }
+                            if(changed){
+                              grabBio();
+                            }
+                          });
+
+                        })
+                        ) : new Container()
+                      ],
+                    )
                     ),
                     new Column(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -169,17 +208,21 @@ bool hasContacts = false;
       (fullName != null && hasContacts) ? new Text("${getFirstName(fullName)}'s contacts", style: new TextStyle(
                     fontWeight: FontWeight.bold, color: Colors.grey[600]),) : (fullName != null) ? new Text("${getFirstName(fullName)}'s doesn't have any contacts yet",style: new TextStyle(
           fontWeight: FontWeight.bold, color: Colors.grey[600])) : new Text(''),
+
+
+
                 (hasContacts) ?  new Expanded(
-                    child: new Container(
-                        child: new Center(
-                          child: new Padding(padding: new EdgeInsets.only(bottom: 15.0),
-                          child: buildContactsList(context),
-                          )
-                        )
-                    )
-                ) : new Container(),
-                
-                new Icon(Icons.edit)
+
+                  child: new Padding(padding:new EdgeInsets.only(bottom: 15.0),
+
+                  child: new Container(
+                      child: new Center(
+                        child: contactsListBuilder(),
+                      )
+                  ),
+                  )
+                )
+                 : new Container(),
               ],
             ),
             new Align(
@@ -197,7 +240,8 @@ bool hasContacts = false;
                       }
                     }),
               ),
-            )
+            ),
+
           ],
         )
 
@@ -212,13 +256,13 @@ void initState() {
   grabCoverPhoto();
   grabBio();
   grabSchoolAndGradYear();
-  checkForContacts();
+  getContactInfo();
   makeSureAllDataIsLoaded();
-
-
-
-
 }
+
+
+
+
 
 Future<void>makeSureAllDataIsLoaded(){
   fullName = widget.fullName;
@@ -267,16 +311,7 @@ Future<void> grabDestination() async {
   });
 }
 
-Future<void>checkForContacts()async{
-  DatabaseReference ref = FirebaseDatabase.instance.reference();
-  DataSnapshot snap = await ref.child('contacts').child(widget.id).once();
-  if(snap.value != null){
-    setState(() {
-      hasContacts = true;
-    });
-  }
 
-}
 
 Future<void> grabCoverPhoto() async {
   DatabaseReference ref = FirebaseDatabase().reference();
@@ -337,22 +372,74 @@ String getFirstName(String fullName) {
     if (fullName == null) {
      await grabFullName();
     }
-
     if(snap.value != null){
-
       Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoID: snap.value,newConvo: false,recipFullName: fullName,recipID: widget.id,recipImgURL: widget.profilePicURL)));
-
     }else{
     var key = ref.push().key;
-
     Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoID: key,newConvo: true,recipFullName: fullName,recipID: widget.id,recipImgURL: widget.profilePicURL)));
     }
   }
 
 
 
+Future<void> getContactInfo()async{
+  DatabaseReference ref = FirebaseDatabase.instance.reference();
+  DataSnapshot snap = await ref.child('contacts').child(widget.id).once();
+  if(snap.value != null){
+    List<String> contacts = List.from(snap.value);
+    contacts.forEach((id)async{
+      var usersInfo = await ref.child(globals.cityCode).child('userInfo').child(id).once();
+      setState(() {
+        contactsList.add(id);
+        contactImgInfo[id] = usersInfo.value['imgURL'];
+        contactNameInfo[id] = usersInfo.value['fullName'];
+        hasContacts = true;
+      });
+    });
+//    setState(() {hasContacts = true;});
 
-FirebaseAnimatedList buildContactsList(BuildContext context)  {
+  }
+
+}
+
+
+
+Widget contactsListBuilder(){
+    return new Container(
+      child: new ListView.builder(
+        scrollDirection: Axis.horizontal,
+        shrinkWrap: true,
+        itemCount: contactsList.length,
+          itemBuilder: (BuildContext context, int index){
+            return new InkWell(
+              onTap: (){
+                Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: contactsList[index],profilePicURL: contactImgInfo[contactsList[index]],)));
+              },
+              child: new Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  new Padding(padding: new EdgeInsets.all(5.0),
+                    child: new CircleAvatar(
+                      radius: 23.0,
+                      backgroundImage: new CachedNetworkImageProvider(contactImgInfo[contactsList[index]]),
+                      backgroundColor: Colors.transparent,
+                    ),
+                  ),
+                  new Text(contactNameInfo[contactsList[index]], style: new TextStyle(fontSize: 11.0,color: Colors.grey[800], fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            );
+          }
+
+      )
+    );
+
+}
+
+
+
+FirebaseAnimatedList buildContactsList(BuildContext context){
   DatabaseReference ref = FirebaseDatabase.instance.reference();
   print(globals.id);
   final contactsQuery = ref.child('contacts').child(widget.id).orderByKey();
@@ -361,7 +448,6 @@ FirebaseAnimatedList buildContactsList(BuildContext context)  {
       scrollDirection: Axis.horizontal,
       shrinkWrap: true,
       reverse: false,
-
       itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
          Map user = snapshot.value;
         return new InkWell(
@@ -374,12 +460,11 @@ FirebaseAnimatedList buildContactsList(BuildContext context)  {
               new Padding(padding: new EdgeInsets.all(5.0),
                 child: new CircleAvatar(
                   radius: 23.0,
-                  backgroundImage: new NetworkImage(user['imgURL']),
+                  backgroundImage: new CachedNetworkImageProvider(user['imgURL']),
+                  backgroundColor: Colors.transparent,
                 ),
               ),
               new Text(user['name'], style: new TextStyle(fontSize: 11.0,color: Colors.grey[800], fontWeight: FontWeight.bold),
-
-
               ),
             ],
           ),
@@ -389,9 +474,78 @@ FirebaseAnimatedList buildContactsList(BuildContext context)  {
 
 
 
+Future<void> changeCoverPhoto()async{
+    File newCover = await _pickImage();
+    File resizeImg = await FlutterNativeImage.compressImage(newCover.path, quality: getCoverPicQualityPercentage(newCover.lengthSync()));
+    String coverURL = await uploadCoverPhoto(resizeImg, globals.id);
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    await ref.child('coverPhotos').child(globals.id).update({'imgURL':coverURL});
+
+    setState(() {
+      coverPhoto = coverURL;
+    });
+}
+
+
+
+Future<File> _pickImage() async {
+
+  var imageFile = await  ImagePicker.pickImage(source: ImageSource.gallery);
+  return imageFile;
+}
+
+Future<String> uploadCoverPhoto(File img, String id) async {
+
+  try{
+    final StorageReference ref = await FirebaseStorage.instance.ref().child("coverPhotos").child(id).child(secureString.generate(length: 10,charList: ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s']));
+    final dataRes = await ref.putData(img.readAsBytesSync());
+    final dwldUrl = await dataRes.future;
+    return dwldUrl.downloadUrl.toString();
+
+  }catch(e){
+    print(e);
+    throw new Exception(e);
+  }
 
 }
 
+int  getCoverPicQualityPercentage(int size){
+  var qualityPercentage = 100;
+
+  if(size > 6000000){
+    qualityPercentage = 80;
+  }
+  if(size <= 6000000 && size > 4000000){
+    qualityPercentage = 85;
+  }
+  if(size <= 4000000 && size > 2000000){
+    qualityPercentage = 90;
+  }
+  if(size <= 2000000 && size > 1000000){
+    qualityPercentage = 95;
+  }
+  if(size <= 1000000){
+    qualityPercentage = 100;
+  }
+
+  return qualityPercentage;
+
+}
+
+
+}
+
+
+//Future<void>checkForContacts()async{
+//  DatabaseReference ref = FirebaseDatabase.instance.reference();
+//  DataSnapshot snap = await ref.child('contacts').child(widget.id).once();
+//  if(snap.value != null){
+//    setState(() {
+//      hasContacts = true;
+//    });
+//  }
+//
+//}
 
 
 

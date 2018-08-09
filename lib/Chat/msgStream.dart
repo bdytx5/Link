@@ -9,7 +9,7 @@ import '../globals.dart' as globals;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import '../homePage/feedStream.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
 
 
 //class Msg extends StatelessWidget{
@@ -98,7 +98,7 @@ import '../homePage/feedStream.dart';
 
 Widget Msg(String url){
   return new Container(
-    child: new Image(image: new NetworkImage(url)),
+    child: new Image(image: new CachedNetworkImageProvider(url)),
   );
 }
 

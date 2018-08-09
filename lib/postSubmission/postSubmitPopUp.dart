@@ -10,6 +10,7 @@ import 'placepicker.dart';
 import '../globals.dart' as globals;
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 //hey
 
@@ -202,8 +203,13 @@ class _PostPopUpState extends State<PostPopUp> {
     post['time'] = now;
     post['expiredCommentCount'] = null;
     post['coordinates'] = coordinates;
-
+    // modify coordinates
     coordinates['time'] = now;
+    if(!fromHome){
+      coordinates['reverseRoute'] = true;
+    }else{
+      coordinates['reverseRoute'] = null;
+    }
 
     FirebaseDatabase database = FirebaseDatabase.instance;
     try{
@@ -303,7 +309,7 @@ class _PostPopUpState extends State<PostPopUp> {
             child: new Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                new CircleAvatar(backgroundColor: Colors.yellowAccent, backgroundImage: new NetworkImage((globals.imgURL != null) ? globals.imgURL : logoURL)),
+                new CircleAvatar(backgroundColor: Colors.yellowAccent, backgroundImage: new CachedNetworkImageProvider((globals.imgURL != null) ? globals.imgURL : logoURL)),
                 new Expanded(child: new Container(
                   height: 100.0,
                   width: 50.0,

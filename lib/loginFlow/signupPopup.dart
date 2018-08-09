@@ -16,6 +16,7 @@ import '../postSubmission/placepicker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:secure_string/secure_string.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../globals.dart' as globals;
 import '../homePage/home.dart';
@@ -282,7 +283,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
    }
 
     Map feedbackConvoInfo = {
-      'convoID':id,
+     'convoID':id,
     'formattedTime':now,
     'imgURL':logoURL,
     'new':false,
@@ -446,7 +447,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
     Map notification = {
       'imgURL':logoURL,
       'type':'signup',
-      'message':'Welcome to Link!! This is where you will check recieve notificaitons about new comments or ride alerts, when someone is going to a city near your destination.'
+      'message':'Welcome to Link!! This is where you will recieve ride alerts, when someone is going to a city near your destination.'
     };
     return notification;
   }

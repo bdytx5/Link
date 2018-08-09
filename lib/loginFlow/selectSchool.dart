@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'login_page.dart';
 import 'dart:async';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import '../main.dart';
@@ -159,6 +160,9 @@ class _SelectSchoolState extends State<SelectSchool> {
     );
   }
 
+
+
+
   Future<void> handleSnapLogin()async{
     var result;
     try{
@@ -184,6 +188,14 @@ class _SelectSchoolState extends State<SelectSchool> {
     }
 
   }
+
+  // need a facebook login function that logs in, and gets the id of the user.
+
+
+
+
+
+
 
 
   Future<void> handleContinue()async{

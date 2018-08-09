@@ -17,16 +17,19 @@ import 'chatListStream.dart';
 import 'userSearch.dart';
 import 'feedStream.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 class ChatList extends StatefulWidget{
 
   final Stream stream;
 
   _chatListState createState() => new _chatListState();
 
-  ChatList({this.stream});
+  ChatList({this.stream,this.updateChatListCallback});
 
      FirebaseApp app;
 
+  final UIcallback updateChatListCallback;
 
 
 
@@ -60,7 +63,7 @@ class _chatListState extends State<ChatList> {
   Icon actionBtnIconChat = new Icon(Icons.chat, color: Colors.black);
   String logoURL = "https://is4-ssl.mzstatic.com/image/thumb/Purple125/v4/b2/a7/91/b2a7916a-35be-5a7e-4c91-45317fb40d9c/AppIcon-1x_U007emarketing-0-0-GLES2_U002c0-512MB-sRGB-0-0-0-85-220-0-0-0-3.png/246x0w.jpg";
   FocusNode searchNode = new FocusNode();
-  StreamSubscription streamSubscription;
+  StreamSubscription keyboardDissmissalStreamSubscription;
 
 
 
@@ -83,7 +86,8 @@ class _chatListState extends State<ChatList> {
     filteredUsers.clear();
 
     returnedUsers.forEach((user) {
-      if (user.fullName.contains(searchController.text)) {
+      // ignore caps
+      if (user.fullName.toUpperCase().contains(searchController.text.toUpperCase())) {
         setState(() {
           filteredUsers.add(user);
           print('added');
@@ -106,7 +110,7 @@ class _chatListState extends State<ChatList> {
     print(globals.id);
  //   handleNotifications();
 
-    streamSubscription = widget.stream.listen((_) => dismissKeyboard());
+    keyboardDissmissalStreamSubscription = widget.stream.listen((_) => dismissKeyboard());
 
     searchController.addListener(updateSearchResults);
 
@@ -153,18 +157,17 @@ class _chatListState extends State<ChatList> {
           new Expanded(
               child: new Container(
                   color: Colors.white,
-                  child: (userIsSearching) ? new userSearchStream(
-                      filteredUsers, _scaffoldKey, (hidden) {}) : new Column(
+                  child: (userIsSearching) ? new userSearchStream(userList: filteredUsers,userCallback: (u){},groupChatUsage: false,) : new Column(
                     mainAxisAlignment: MainAxisAlignment.start,
-
                     children: <Widget>[
-
                       new Padding(padding: new EdgeInsets.only(top: 8.0)),
                       new Expanded(child: new chatListStream(_scaffoldKey, () {
                         setState(() {
                           userIsViewingProfile = !userIsViewingProfile;
                         });
-                      }, () {}),)
+                      }, () {
+                        widget.updateChatListCallback();
+                      }),)
 
                     ],
                   )
@@ -185,8 +188,7 @@ class _chatListState extends State<ChatList> {
               userIsViewingProfile = false;
             } else {
               userIsSearching = true;
-              final FirebaseDatabase database = new FirebaseDatabase(
-                  app: widget.app);
+              final FirebaseDatabase database = FirebaseDatabase.instance;
               database.reference().child(globals.cityCode).child('userInfo')
                   .orderByKey().once()
                   .then((snap) {

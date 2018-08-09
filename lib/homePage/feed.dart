@@ -26,20 +26,21 @@ import '../Chat/msgScreen.dart';
 import '../profilePages/commentsPage.dart';
 import 'home.dart';
 import 'package:latlong/latlong.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Feed extends StatefulWidget {
  // MyHomePage({Key key, this.title}) : super(key: key);
 
   final UIcallback commentNotificationCallback;
 
-  Feed({this.app, this.userID, this.commentNotificationCallback,this.keyboardNeedsDismissed, this.streamController, this.destination, this.transportMode});
+  Feed({this.app, this.userID, this.commentNotificationCallback,this.keyboardNeedsDismissed, this.keyboardDismissalStreamController, this.destination, this.transportMode});
     final FirebaseApp app;
     String userID;
     final bool keyboardNeedsDismissed;
     final String transportMode;
     final LatLng destination;
 
-  final StreamController streamController;// for communicating down the widget tree to dismiss the keyboard
+  final StreamController keyboardDismissalStreamController;// for communicating down the widget tree to dismiss the keyboard
 
 
 
@@ -106,7 +107,7 @@ class _FeedState extends State<Feed> {
             setState(() {
               commenting = !commenting;
             });
-          },widget.commentNotificationCallback,widget.streamController,transportMode,destination) : new CircularProgressIndicator(),
+          },widget.commentNotificationCallback,widget.keyboardDismissalStreamController,transportMode,destination) : new CircularProgressIndicator(),
         ),
       ),
       floatingActionButton: (!commenting) ? new FloatingActionButton(

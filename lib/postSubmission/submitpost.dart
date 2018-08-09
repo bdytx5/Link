@@ -7,6 +7,7 @@ import 'dart:io' show Platform;
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import '../main.dart';
 import 'placepicker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 
 //hey

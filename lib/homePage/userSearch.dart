@@ -11,7 +11,9 @@ import '../Chat/msgScreen.dart';
 import 'feedStream.dart';
 import 'profileSheet.dart';
 import '../profilePages/profilePage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
+typedef void UserSearchCallback(User user);
 
 
 class userSearchStream extends StatefulWidget {
@@ -19,12 +21,13 @@ class userSearchStream extends StatefulWidget {
   GlobalKey<ScaffoldState> scaffoldKey;
 
   final ActionButtonCallback actionButtonCallback;
+  final List<User> userList;
+  final bool groupChatUsage;
+  UserSearchCallback userCallback;
 
 
 
-  List<User> results;
-  userSearchStream(this.userList, this.scaffoldKey, this.actionButtonCallback,);
-  List<User> userList;
+  userSearchStream({this.userList, this.scaffoldKey, this.actionButtonCallback,this.groupChatUsage, this.userCallback});
 
   _userSearchStreamState createState() => new _userSearchStreamState();
 
@@ -54,22 +57,27 @@ class _userSearchStreamState extends State<userSearchStream> {
   }
 
   Widget userCell(User user){
-    return new InkWell(
-      child: new Row(
-        children: <Widget>[
+    return new Container(
+      child:  InkWell(
+        child: new Row(
+          children: <Widget>[
 
-          new Padding(padding: new EdgeInsets.all(10.0),
-          child: new CircleAvatar(backgroundImage: new NetworkImage(user.imgUrl),),
-          ),
-          new Text(user.fullName),
-        ],
-      ),
+            new Padding(padding: new EdgeInsets.all(10.0),
+              child: new CircleAvatar(backgroundImage: new CachedNetworkImageProvider(user.imgUrl),),
+            ),
+            new Text(user.fullName),
+          ],
+        ),
 
-      onTap: (){
-
-        showProfilePage(user);
-
+        onTap: (){
+          if(!widget.groupChatUsage){
+            showProfilePage(user);
+          }else{
+            // use callback to pas user back user!!
+            widget.userCallback(user);
+          }
         },
+      )
     );
 
 

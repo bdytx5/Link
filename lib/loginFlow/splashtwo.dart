@@ -154,7 +154,7 @@ class _splashtwoState extends State<splashtwo> with TickerProviderStateMixin{
              width: double.infinity,
              child: (title) ? new Center(
                child: new AnimatedOpacity(opacity: (firstTitleShowing) ? animation.value : 1.0, duration: new Duration(seconds: 1),
-                 child: (firstTitleShowing) ? new Text('Meet New People', style: new TextStyle(fontSize: 18.0),) : (secondTitleShowing) ? Text('Get Home', style: new TextStyle(fontSize: 18.0),) : Text('Thumbs-Out Ridesharing', style: new TextStyle(fontSize: 18.0),)
+                 child: (firstTitleShowing) ? new Text('Meet New People', style: new TextStyle(fontSize: 18.0),) : (secondTitleShowing) ? Text('Get Home', style: new TextStyle(fontSize: 18.0),) : Text('Link Ridesharing', style: new TextStyle(fontSize: 18.0),)
                ),
              ) : new Container(),
            ),

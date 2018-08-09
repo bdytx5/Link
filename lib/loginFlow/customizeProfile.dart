@@ -22,6 +22,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'bitmojiPicker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+
 
 
 class customizeProfile extends StatefulWidget {
@@ -49,8 +51,10 @@ class _customizeProfileState extends State<customizeProfile> {
 
   bool loading = false;
   TextEditingController firstNameController = new TextEditingController();
+  TextEditingController lastNameController = new TextEditingController();
   TextEditingController bioController = new TextEditingController();
   FocusNode firstNameNode = new FocusNode();
+  FocusNode lastNameNode = new FocusNode();
   FocusNode bioNode = new FocusNode();
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   String bitmojiURL;
@@ -61,18 +65,12 @@ class _customizeProfileState extends State<customizeProfile> {
 
   void initState() {
     super.initState();
-
     firstName = widget.userInfo['name'];
-
     firstNameController.text = firstName;
-
     if(widget.userInfo['url'] != null){
       bitmojiURL = widget.userInfo['url'];
     }
-
     userInfo = widget.userInfo;
-
-
   }
 
 
@@ -113,8 +111,6 @@ class _customizeProfileState extends State<customizeProfile> {
              child: new MediaQuery.removePadding(context: context,removeRight: true, child:
              new Stack(
                children: <Widget>[
-
-
 
             new Align(
               alignment: Alignment.center,
@@ -196,7 +192,7 @@ class _customizeProfileState extends State<customizeProfile> {
                 (bitmojiURL != null) ?
                 new InkWell(
                   child: new CircleAvatar(radius: 45.0,
-                    backgroundImage:  new NetworkImage(bitmojiURL),
+                    backgroundImage:  new CachedNetworkImageProvider(bitmojiURL),
                     backgroundColor: Colors.transparent,),
                   onTap: (){
                     BitmojiPicker picker = new BitmojiPicker();
@@ -238,8 +234,14 @@ class _customizeProfileState extends State<customizeProfile> {
                 ),
                     new Column(
                       children: <Widget>[
-                        new EnsureVisibleWhenFocused(child: firstNameField(), focusNode: firstNameNode),
-                        new EnsureVisibleWhenFocused(child: lastNameField(), focusNode: bioNode),
+                        new Expanded(child: new Row(
+                          children: <Widget>[
+                            firstNameField(),
+                            lastNameField()
+
+                          ],
+                        ),),
+                        new EnsureVisibleWhenFocused(child: bioField(), focusNode: bioNode),
                         continueBtn()
                       ],
                     ),
@@ -350,18 +352,19 @@ class _customizeProfileState extends State<customizeProfile> {
     return new Padding(padding: new EdgeInsets.all(5.0),
 
       child:new Container(
-        width: 200.0,
         height: 55.0,
+        width: 100.0,
         decoration: new BoxDecoration(border: new Border(bottom: new BorderSide(color: Colors.grey[600])),),
         child: new EnsureVisibleWhenFocused(
             focusNode:firstNameNode,
             child: new Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                new Text('Full Name',style: new TextStyle(fontSize: 11.0,color: Colors.grey),),
+                new Text('First Name',style: new TextStyle(fontSize: 11.0,color: Colors.grey),),
                 new TextField(
+
                   onSubmitted: (txt){
-                    FocusScope.of(context).requestFocus(bioNode);
+                    FocusScope.of(context).requestFocus(lastNameNode);
                   },
                   style: new TextStyle(fontSize: 14.0,color: Colors.black,),
                   textAlign: TextAlign.left,
@@ -376,10 +379,41 @@ class _customizeProfileState extends State<customizeProfile> {
       ),
     );
   }
-
-
-
   Widget lastNameField(){
+    return new Padding(padding: new EdgeInsets.all(5.0),
+
+      child:new Container(
+        height: 55.0,
+        width: 100.0,
+        decoration: new BoxDecoration(border: new Border(bottom: new BorderSide(color: Colors.grey[600])),),
+        child: new EnsureVisibleWhenFocused(
+            focusNode:lastNameNode,
+            child: new Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                new Text('Last Name',style: new TextStyle(fontSize: 11.0,color: Colors.grey),),
+                new TextField(
+
+                  onSubmitted: (txt){
+                    FocusScope.of(context).requestFocus(bioNode);
+                  },
+                  style: new TextStyle(fontSize: 14.0,color: Colors.black,),
+                  textAlign: TextAlign.left,
+                  focusNode: lastNameNode,
+                  decoration: new InputDecoration( border:InputBorder.none, ),
+                  onChanged:(k){_firstNameChange();},
+                  controller: lastNameController,
+                ),
+              ],
+            )
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget bioField(){
     return new Padding(padding: new EdgeInsets.all(5.0),
 
       child:new Container(
@@ -448,7 +482,10 @@ class _customizeProfileState extends State<customizeProfile> {
   void continueToSignUpPopup(Map userInfo, Map placeInfo) async{
 
     Map nameInfo = sortName(firstNameController.text);
-    if(nameInfo != null && bioController.text != '' && imgFile != null){
+    var firstName = firstNameController.text;
+    var lastName = lastNameController.text;
+    var bio = bioController.text;
+    if(firstName != null && lastName != null && bio != '' && imgFile != null ){
       userInfo['url'] = bitmojiURL;
 
 

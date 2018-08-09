@@ -15,7 +15,7 @@ dev_dependencies:
 
   flutter_test:
     sdk: flutter
-  firebase_database: "^0.4.5"
+  firebase_database: "^1.0.3"
   css_colors: ^1.0.0
   firebase_core: "^0.2.3"
   flutter_facebook_login: "^1.1.1"
@@ -67,6 +67,9 @@ flutter:
    - assets/comment50.png
    - assets/maleIcon65.png
    - assets/femaleIcon65.png
+   - assets/switchCamera65.png
+   - assets/appIcon83.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

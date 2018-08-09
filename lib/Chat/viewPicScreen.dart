@@ -16,10 +16,15 @@ List<CameraDescription> cameras;
 
 
 class viewPic extends StatefulWidget {
-  viewPic(this.img);
+  viewPic(this.img,this.duration,this.fromCameraRoll);
   final File img;
   final String title;
   Offset postition = Offset(0.0, 0.0);
+  final int duration;
+  final bool fromCameraRoll;
+
+
+
   @override
   _viewPicState createState() => new _viewPicState();
 }
@@ -48,9 +53,12 @@ class _viewPicState extends State<viewPic> with TickerProviderStateMixin {
 
     _controller.forward(from: 0.0);
 
-    Future.delayed(new Duration(seconds: 10)).then((E){
-      Navigator.pop(context);
-    });
+    if(widget.duration != 100){
+      Future.delayed(new Duration(seconds: widget.duration)).then((E){
+        Navigator.pop(context);
+      });
+    }
+
   }
 
 
@@ -69,28 +77,52 @@ class _viewPicState extends State<viewPic> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        body: new Stack(
-          children: <Widget>[
+        body: new InkWell(
+          child: new Stack(
+            children: <Widget>[
 
-            new Container(
-              height: double.infinity,
-              width: double.infinity,
-              decoration: new BoxDecoration(
-                image: new DecorationImage(image: FileImage(widget.img))
-              ),
-            ),
+              (!widget.fromCameraRoll) ?  new Container(
+                height: double.infinity,
+                width: double.infinity,
+                decoration: new BoxDecoration(
+                    image: new DecorationImage(image: FileImage(widget.img),fit: BoxFit.cover)
+                ),
+              ) : new Stack(
+                children: <Widget>[
+                  new Container(
+                    height: double.infinity,
+                    width: double.infinity,
+                    decoration: new BoxDecoration(
+                        border: new Border(top: new BorderSide(color: Colors.white,width: 50.0),bottom:new BorderSide(color: Colors.white,width: 50.0) ),
+                        image: new DecorationImage(image: FileImage(widget.img),)
+                    ),
+                  ),
+                  new Align(
+                    alignment: new Alignment(0.0, .95),
+                    child: new Text('FROM CAMERA ROLL!',style: new TextStyle(fontWeight: FontWeight.bold,color: Colors.black),),
+                  )
+                ],
+              ) ,
 
-            new Align(
-              alignment: new Alignment(0.9, 0.9),
-              child:new Countdown(
-                animation: new StepTween(
-                  begin: kStartValue,
-                  end: 0,
-                ).animate(_controller),
-              ),
-            ),
+          (widget.duration != 100) ?   new Align(
+                alignment: new Alignment(0.9, 0.9),
+                child:new Countdown(
+                  fromCameraRoll: widget.fromCameraRoll,
+                  animation: new StepTween(
+                    begin: kStartValue,
+                    end: 0,
+                  ).animate(_controller),
+                ),
+              ) : new Align(
+    alignment: new Alignment(0.9, 0.9),
+    child:new Text('infiniti',style: new TextStyle(fontWeight: FontWeight.bold,color: (!widget.fromCameraRoll) ? Colors.white : Colors.black),))
 
-          ],
+
+    ],
+          ),
+          onTap: (){
+            Navigator.pop(context);
+          },
         )
     );
   }
@@ -98,14 +130,15 @@ class _viewPicState extends State<viewPic> with TickerProviderStateMixin {
 }
 
 class Countdown extends AnimatedWidget {
-  Countdown({ Key key, this.animation }) : super(key: key, listenable: animation);
+  final bool fromCameraRoll;
+  Countdown({ Key key, this.animation,this.fromCameraRoll }) : super(key: key, listenable: animation);
   Animation<int> animation;
 
   @override
   build(BuildContext context){
     return new Text(
       animation.value.toString(),
-      style: new TextStyle(fontSize: 15.0,color: Colors.white),
+      style: new TextStyle(fontSize: 15.0,color: (!fromCameraRoll) ? Colors.black : Colors.white),
     );
   }
 

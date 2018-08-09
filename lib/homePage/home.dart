@@ -29,6 +29,7 @@ import '../main.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong/latlong.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 
 //import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -69,7 +70,7 @@ final destinationTextContoller = new TextEditingController();
     LatLng destination;
 
 Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-final changeNotifier = new StreamController.broadcast(); // for communicating down the widget tree to dismiss the keyboard
+final keyboardDismissalChangeNotifier = new StreamController.broadcast(); // for communicating down the widget tree to dismiss the keyboard
 
 FirebaseMessaging _firMes = new FirebaseMessaging();
 //FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -235,8 +236,12 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
       body: new TabBarView(
         controller: _tabController,
         children: <Widget>[
-          new ChatList(stream: changeNotifier.stream),
-      (transportMode != null && destination != null ) ?  new Feed(app: widget.app,userID: widget.userID, commentNotificationCallback:_commentNotificationCallback,streamController: changeNotifier, destination: destination,transportMode: transportMode) : new Container(
+          new ChatList(stream: keyboardDismissalChangeNotifier.stream,updateChatListCallback: (){
+            setState(() {
+
+            });
+          },),
+      (transportMode != null && destination != null ) ?  new Feed(app: widget.app,userID: widget.userID, commentNotificationCallback:_commentNotificationCallback,keyboardDismissalStreamController: keyboardDismissalChangeNotifier, destination: destination,transportMode: transportMode) : new Container(
         child: new Center(
           child: new CircularProgressIndicator()
         )
@@ -269,9 +274,15 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                           child: new InkWell(
                             child: (globals.imgURL != null ) ? new CircleAvatar(radius: 25.0,backgroundColor: Colors.transparent,backgroundImage: new NetworkImage((globals.imgURL != null) ? globals.imgURL : logoURL),
                                 child: new Center(
-                                  child: (bitmojiLoading) ? new CircularProgressIndicator() : new Container(),
+                                  child: (bitmojiLoading) ? new Container(
+                                    height: 25.0,
+                                    width: 25.0,
+                                    child: CircularProgressIndicator(),
+                                  ) : new Container(),
                                 )
-                            ) : new CircularProgressIndicator(),
+                            ) : new Center(
+                              child:CircularProgressIndicator() ,
+                            ),
                             onTap: ()async{
                               var res = await   _warningMenu('Update Bitmoji?', 'Are You Sure You want to update your Bitmoji?', "This CANNOT be undone.");
                               if(res){
@@ -503,7 +514,7 @@ void grabUsersImgAndFullName()async{
 
   void fetchTransportModeAndRiderOrDriver()async {
     FirebaseDatabase database = FirebaseDatabase.instance;
-    database.reference().child(globals.cityCode).child('posts').child(globals.id).onValue.listen((data)async{
+     database.reference().child(globals.cityCode).child('posts').child(globals.id).onValue.listen((data)async{
       setState(() {
         if(data.snapshot.value != null ){
           setState(() {
@@ -514,6 +525,7 @@ void grabUsersImgAndFullName()async{
         }
       });
     });
+
   }
 
 
@@ -672,7 +684,7 @@ void _messageNotificationCallback(){
 
 void _tabIndexChanged(){
 
-  changeNotifier.sink.add(null);
+  keyboardDismissalChangeNotifier.sink.add(null);
 
      if(_tabController.index == 0){
        _messageNotificationCallback();
