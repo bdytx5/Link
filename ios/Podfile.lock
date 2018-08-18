@@ -123,6 +123,8 @@ PODS:
 
 DEPENDENCIES:
   - camera (from `.symlinks/plugins/camera/ios`)
+  - Firebase/Core
+  - Firebase/Storage
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_database (from `.symlinks/plugins/firebase_database/ios`)
@@ -230,6 +232,6 @@ SPEC CHECKSUMS:
   TOCropViewController: 6d972f2c609372312648f96758e13a7f689efbc0
   YYImage: 1e1b62a9997399593e4b9c4ecfbbabbf1d3f3b54
 
-PODFILE CHECKSUM: 435704cd6749e2f8b46f2e369ed36c70c9eac573
+PODFILE CHECKSUM: 457f7f1af09c4309c96706d27e259fc3db81ee17
 
 COCOAPODS: 1.5.3

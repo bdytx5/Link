@@ -23,6 +23,7 @@ import 'bitmojiPicker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 
 
 
@@ -47,6 +48,7 @@ class _customizeProfileState extends State<customizeProfile> {
   String url;
   File imgFile;
   String firstName = '';
+  String lastName = '';
   String bio = '';
 
   bool loading = false;
@@ -57,20 +59,27 @@ class _customizeProfileState extends State<customizeProfile> {
   FocusNode lastNameNode = new FocusNode();
   FocusNode bioNode = new FocusNode();
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  String bitmojiURL;
+  String profileImgURL;
   Map userInfo;
+  File profilePic;
+  String link;
 
 
 
 
   void initState() {
     super.initState();
-    firstName = widget.userInfo['name'];
+    downloadProfilePicAndAssignIt(widget.userInfo['imgURL']);
+    firstName = widget.userInfo['first_name'];
+    lastName = widget.userInfo['last_name'];
+    link = widget.userInfo['link'];
     firstNameController.text = firstName;
-    if(widget.userInfo['url'] != null){
-      bitmojiURL = widget.userInfo['url'];
+    lastNameController.text = lastName;
+    if(widget.userInfo['imgURL'] != null){
+      profileImgURL = widget.userInfo['imgURL'];
     }
     userInfo = widget.userInfo;
+
   }
 
 
@@ -89,10 +98,7 @@ class _customizeProfileState extends State<customizeProfile> {
               ],
             )
         )
-
-
-
-    ),
+      ),
     );
   }
   
@@ -122,15 +128,17 @@ class _customizeProfileState extends State<customizeProfile> {
                       new IconButton(
                           icon: new Icon(Icons.camera_alt, color: Colors.black,),
                           onPressed: ()async {
+                            try{
+                              File im =  await _pickImage();
+                              File croppedImg = await _cropImage(im);
+                              setState(() {
+                                imgFile = croppedImg;
+                              });
+                            }catch(e){
+                              _errorMenu('Error', 'There was an error handling your image.', '');
+                              return;
+                            }
 
-                            // File im = await  _cropImage(await _pickImage());
-                            File im =  await _pickImage();
-                            // var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-
-                            setState(() {
-                              imgFile = im;
-                              //  imgFile = imageFile;
-                            });
                           }),
                       new Text('Add Cover Photo',style: new TextStyle(fontSize: 11.0),)
                     ],
@@ -143,28 +151,6 @@ class _customizeProfileState extends State<customizeProfile> {
               child: (imgFile != null) ? new Image.file(imgFile,fit: BoxFit.cover,) : new Container(),
             ),
 
-//             (imgFile == null)  ?  new Align(
-//                     alignment: new Alignment(0.0, 0.0),
-//                     child: new Column(
-//                       mainAxisAlignment: MainAxisAlignment.center,
-//                       children: <Widget>[
-//                         new IconButton(
-//                             icon: new Icon(Icons.camera_alt, color: Colors.black,),
-//                             onPressed: ()async {
-//
-//                              // File im = await  _cropImage(await _pickImage());
-//                               File im =  await _pickImage();
-//                               // var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-//
-//                               setState(() {
-//                               imgFile = im;
-//                               //  imgFile = imageFile;
-//                               });
-//                             }),
-//                         new Text('Add Cover Photo',style: new TextStyle(fontSize: 11.0),)
-//                       ],
-//                     )
-//                 ) : new Container(),
                  new Align(
                    alignment: new Alignment(-0.95, -0.9),
                    child: new IconButton(
@@ -189,46 +175,34 @@ class _customizeProfileState extends State<customizeProfile> {
             child: new Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                (bitmojiURL != null) ?
-                new InkWell(
-                  child: new CircleAvatar(radius: 45.0,
-                    backgroundImage:  new CachedNetworkImageProvider(bitmojiURL),
-                    backgroundColor: Colors.transparent,),
-                  onTap: (){
-                    BitmojiPicker picker = new BitmojiPicker();
-                    Navigator.push(context, new MaterialPageRoute(builder: (context) => picker)).then((url){
-                      if(url != null){
-                        setState(() {
-                          bitmojiURL = url;
-                        });
-                      }
-                    });
-                  },
-                )
+                (profilePic == null) ?
+               new Padding(padding: new EdgeInsets.all(5.0),
+               child:  new InkWell(
+                 child: (profilePic == null) ? new CircleAvatar(radius: 45.0,
+                   backgroundImage:  new CachedNetworkImageProvider(profileImgURL),
+                   backgroundColor: Colors.transparent,) : new CircleAvatar(
+                   radius: 45.0,
+                   backgroundColor: Colors.yellowAccent,
+                   child: new Center(
+                     child: new CircularProgressIndicator(),
+                   ),
+                 ),
+                 onTap: (){
+                    // show image picker
+
+                 },
+               ),
+               )
                     : new Padding(padding: new EdgeInsets.all(5.0),
                 child: new InkWell(
-                  child: CircleAvatar(
-                      radius: 45.0,backgroundColor: Colors.yellowAccent,
-                      child: new Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          new Icon(Icons.camera_alt, color: Colors.black,),
-                          new Text('Add Avatar',style: new TextStyle(color: Colors.black, fontSize: 11.0),)
-                        ],
-                      )
-                  ),
-
+                  child: new CircleAvatar(radius: 45.0,
+                    backgroundImage:  new FileImage(profilePic),
+                    backgroundColor: Colors.transparent,) ,
                   onTap: (){
-                    BitmojiPicker picker = new BitmojiPicker();
-                    globals.cityCode = widget.userInfo['cityCode'];
-                    Navigator.push(context, new MaterialPageRoute(builder: (context) => picker)).then((url){
-                      if(url != null){
-                        setState(() {bitmojiURL = url;});
-                      }
+                    // show image picker
 
-                    });
                   },
-                ),
+                )
 
 
                 ),
@@ -264,6 +238,18 @@ class _customizeProfileState extends State<customizeProfile> {
 
 
 
+  Future<File> _cropImage(File imageFile) async {
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      ratioX: 1.0,
+      ratioY: 2.0,
+
+    );
+
+    return croppedFile;
+  }
+
+
 
 
 
@@ -282,20 +268,8 @@ class _customizeProfileState extends State<customizeProfile> {
 
   }
 
-  Map sortName(String fullName) {
-    int i;
-    String firstName;
-    String lastName;
-    for (i = 0; i < fullName.length; i++) {
-      if (fullName[i] == " " && fullName[i+1] != " ") {
-        String firstName = fullName.substring(0, i);
-        String lastName = fullName.substring(i + 1, fullName.length);
-        return {"firstName":firstName, "lastName":lastName};
-    }
-  }
- return null;
 
-    }
+
 
   Future<File> _pickImage() async {
 
@@ -306,15 +280,47 @@ class _customizeProfileState extends State<customizeProfile> {
     return imageFile;
   }
 
-  Future<File> _cropImage(File file) async {
-    File croppedFile = await ImageCropper.cropImage(
-        sourcePath: file.path,
-        ratioX: 1.0,
-        ratioY: 2.0,
-        toolbarTitle: 'Cropper',
-        toolbarColor: Colors.yellowAccent
-    );
-    return croppedFile;
+  Future<void> changeProfilePic()async{
+
+    File pic = await _pickImage();
+    File resizeImg = await FlutterNativeImage.compressImage(pic.path, quality: 100,targetWidth: 200,targetHeight: 200);
+
+    profilePic = resizeImg;
+
+  }
+  String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
+
+
+  Future<String> uploadProfilePicWithFile(File img, String userID) async {
+
+    try{
+      File resizeImg = await FlutterNativeImage.compressImage(img.path, quality: 100);
+      final StorageReference ref = await FirebaseStorage.instance.ref().child("profilePics").child(userID).child(timestamp());
+      final dataRes = await ref.putData(resizeImg.readAsBytesSync());
+      final dwldUrl = await dataRes.future;
+      return dwldUrl.downloadUrl.toString();
+    }catch(e){
+      print(e);
+      throw new Exception(e);
+    }
+  }
+
+
+
+  Future<void> downloadProfilePicAndAssignIt(String url)async{
+    try {
+      var response = await http.get(url);
+      final Directory extDir = await getTemporaryDirectory();
+      final String dirPath = '${extDir.path}/${timestamp()}';
+      await new Directory(dirPath).create(recursive: true);
+      final String filePath = '$dirPath/${timestamp()}.jpg';
+      profilePic = await new File('${filePath}.png').create();
+      await profilePic.writeAsBytes(response.bodyBytes);
+        setState(() {});
+    }catch(e){
+      return;
+    }
+
   }
 
   Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) async {
@@ -454,16 +460,19 @@ class _customizeProfileState extends State<customizeProfile> {
                   loading = false;
                 });
                 _errorMenu("Error", "Please add a Cover Photo, a First Name, a Last Name, and a Bio!", '');
-                return;
+
+                return;;
               }
-              if(bitmojiURL == null){
-                _errorMenu("Error", "Please select a bitmoji!", '');
+              if(profilePic == null){
+                setState(() {loading = false;});
+
+                _errorMenu("Error", "There was an error loading your profile pic!", '');
+                return;
+
               }
               setState(() {loading = true;});
 
               //28237
-
-
 
               continueToSignUpPopup(userInfo, widget.placeInfo);
 
@@ -481,18 +490,15 @@ class _customizeProfileState extends State<customizeProfile> {
 
   void continueToSignUpPopup(Map userInfo, Map placeInfo) async{
 
-    Map nameInfo = sortName(firstNameController.text);
+   // Map nameInfo = sortName(firstNameController.text);
     var firstName = firstNameController.text;
     var lastName = lastNameController.text;
     var bio = bioController.text;
     if(firstName != null && lastName != null && bio != '' && imgFile != null ){
-      userInfo['url'] = bitmojiURL;
-
-
-
+      userInfo['imgURL'] = await uploadProfilePicWithFile(profilePic, widget.userInfo['id']);
       // good to go, we can now upload the users info
-      userInfo['firstName'] = nameInfo['firstName'];
-      userInfo['lastName'] = nameInfo['lastName'];
+      userInfo['firstName'] = firstName;
+      userInfo['lastName'] = lastName;
       userInfo['bio'] = bioController.text;
       setState(() {loading = false;});
       showDialog(context: context, barrierDismissible: false, builder: (BuildContext context) => new SignupPopUp(userInfo,placeInfo, imgFile)).then((val)async{
@@ -507,7 +513,6 @@ class _customizeProfileState extends State<customizeProfile> {
         }else{
           _errorMenu("Error", "Please try again.", '');
           setState(() {loading = false;});
-
         }
       });
     }else{
@@ -765,3 +770,18 @@ class _customizeProfileState extends State<customizeProfile> {
 //  }
 //
 //}
+//
+//
+//Map sortName(String fullName) {
+//  int i;
+//  String firstName;
+//  String lastName;
+//  for (i = 0; i < fullName.length; i++) {
+//    if (fullName[i] == " " && fullName[i+1] != " ") {
+//      String firstName = fullName.substring(0, i);
+//      String lastName = fullName.substring(i + 1, fullName.length);
+//      return {"firstName":firstName, "lastName":lastName};
+//    }
+//  }
+//  return null;
+//}s

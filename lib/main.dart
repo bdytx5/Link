@@ -27,6 +27,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: '',
       theme: new ThemeData(
       accentTextTheme: new TextTheme(
@@ -50,7 +51,26 @@ class MyApp extends StatelessWidget {
         ),
       ),
     ),
+
     );
+  }
+}
+
+
+class MyCustomRoute<T> extends MaterialPageRoute<T> {
+  MyCustomRoute({ WidgetBuilder builder, RouteSettings settings })
+      : super(builder: builder, settings: settings);
+
+  @override
+  Widget buildTransitions(BuildContext context,
+      Animation<double> animation,
+      Animation<double> secondaryAnimation,
+      Widget child) {
+    if (settings.isInitialRoute)
+      return child;
+    // Fades between routes. (If you don't want any animation,
+    // just return child.)
+    return new FadeTransition(opacity: animation, child: child);
   }
 }
 
@@ -86,7 +106,7 @@ Future<void> main() async {
 
    final FirebaseAuth _auth = FirebaseAuth.instance;
 
-
+   await _auth.signInAnonymously();
 
 
 
@@ -105,21 +125,30 @@ Future<void> main() async {
 
 
 
-
-  Future<bool> checkSnapLoginStatus()async{
-    var userIsLoggedIn;
-    try{
-      userIsLoggedIn = await platform.invokeMethod("checkSnapchatLoginStatus");
-    }catch(e){
-      throw new Exception(e);
-    }
-
-    if(userIsLoggedIn == "true") {
-      return true;
-    }else{
-      return false;
-    }
-  }
+//
+//
+//  Future<bool> checkSnapLoginStatus()async{
+//    var userIsLoggedIn;
+//    try{
+//      userIsLoggedIn = await platform.invokeMethod("checkSnapchatLoginStatus");
+//    }catch(e){
+//      throw new Exception(e);
+//    }
+//
+//    if(userIsLoggedIn == "true") {
+//      return true;
+//    }else{
+//      return false;
+//    }
+//  }
+//
+//  // check FB login status
+//
+//
+//
+//
+//
+//
 
   bool checkIfUserHasOpened(){
     var firstOpen =  prefs.getBool("opened");
@@ -129,45 +158,83 @@ Future<void> main() async {
       return false;
     }
   }
+//
+//  // the native function will throw an error if the user is not loggen in, thus returning false
+//  Future<bool> getSnapId()async{
+//    try{
+//      id = await platform.invokeMethod("getSnapId");
+//      return true;
+//    }catch(e){
+//      return false;
+//    }
+//  }
+//
+//
+//
+//
+//
+//
+//  Future<void> handleLogin()async{
+//    // 0) authenticate identitiy with database !
+//    await _auth.signInAnonymously();
+//    // 1) check opened bool, to see if the user has opened the app
+//    if(!checkIfUserHasOpened()){
+//      goToSplashScreen = true;
+//    }else{
+//      // 2) check if the user is NOT logged In!!
+//      var userIsLoggedIn = await checkSnapLoginStatus();
+//      if(!userIsLoggedIn){
+//        goToLoginScreen = true;
+//      }else{
+//        // 3) make sure that the "lastUser" is not null
+//        if(await getSnapId()){
+//        if(prefs.getString('lastUser') == id){
+//          goToHomeScreen = true;
+//        }else{
+//          // should never happen, but go to the login screen anyway...
+//          goToLoginScreen = true;
+//        }
+//        }
+//
+//      }
+//    }
+//  }
+//
+//
+//
+//
+//
+//
+//    await handleLogin();
 
-  // the native function will throw an error if the user is not loggen in, thus returning false
-  Future<bool> getSnapId()async{
-    try{
-      id = await platform.invokeMethod("getSnapId");
-      return true;
-    }catch(e){
-      return false;
+   cameras = await availableCameras();
+
+
+
+
+
+
+
+   final FacebookLogin facebookSignIn = new FacebookLogin();
+
+
+  var fbLoggedIn = await facebookSignIn.isLoggedIn;
+  if(fbLoggedIn){
+    // need to see if the user has completed signup
+    FacebookAccessToken currentAccessToken = await facebookSignIn.currentAccessToken;
+    id = currentAccessToken.userId;
+    if(prefs.getString('lastUser') == currentAccessToken.userId){
+      goToHomeScreen = true;
+    }else{
+      goToLoginScreen = true;
     }
-  }
-
-
-
-
-
-
-  Future<void> handleLogin()async{
-    // 0) authenticate identitiy with database !
-    await _auth.signInAnonymously();
-    // 1) check opened bool, to see if the user has opened the app
-    if(!checkIfUserHasOpened()){
+  }else{
+    // check first open
+    bool opened = await checkIfUserHasOpened();
+    if(!opened){
       goToSplashScreen = true;
     }else{
-      // 2) check if the user is NOT logged In!!
-      var userIsLoggedIn = await checkSnapLoginStatus();
-      if(!userIsLoggedIn){
-        goToLoginScreen = true;
-      }else{
-        // 3) make sure that the "lastUser" is not null
-        if(await getSnapId()){
-        if(prefs.getString('lastUser') == id){
-          goToHomeScreen = true;
-        }else{
-          // should never happen, but go to the login screen anyway...
-          goToLoginScreen = true;
-        }
-        }
-
-      }
+      goToLoginScreen;
     }
   }
 
@@ -176,9 +243,25 @@ Future<void> main() async {
 
 
 
-await handleLogin();
 
-  cameras = await availableCameras();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
    runApp(new MaterialApp(
        // routes: routes,
@@ -189,10 +272,10 @@ await handleLogin();
   //  home: new cropImage(),
     // home: new HeroPage(),
     //home: new customizeProfile({}, {}),
-    home: (goToHomeScreen) ? new Home(app, id,false) : (goToSplashScreen) ? new splashtwo(app: app) : new LoginPage(app: app),
+    home: (goToHomeScreen) ? new Home(app,id,false) : (goToSplashScreen) ? new splashtwo(app: app) : new LoginPage(app: app),
    // home: customizeProfile({},{},app),
    //  home: ExpansionTileSample(),
-    title: 'Flutter Database Example',
+    title: 'Link',
     navigatorObservers: [routeObserver],
     theme: new ThemeData(
 

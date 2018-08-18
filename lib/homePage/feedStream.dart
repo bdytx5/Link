@@ -71,11 +71,14 @@ class feedStream extends StatelessWidget {
         sort: (DataSnapshot a, DataSnapshot b) => sortFeed(a, b, transportMode, destination),
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
           // here we can just look up every user from the snapshot, and then pass it into the chat message
+
+
+
           Map post = snapshot.value;
           if(post['coordinates'] == null|| post['imgURL'] == null || post['fromHome'] == null || post['name'] == null || post['state'] == null || post['time'] == null){
             return new Container();
           }
-                          // current post and ghost mode
+                 // current post and ghost mode
           return  ((checkIfPostIsGhosted(snapshot.value)) && (snapshot.key == globals.id)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: true,ghostMode: true,stream: this.keyboardDismissalStreamController.stream,)
               : (!(checkIfPostIsGhosted(snapshot.value)) && (snapshot.key == globals.id)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: true,ghostMode: false,stream: this.keyboardDismissalStreamController.stream,) :
           (!checkIfPostIsGhosted(snapshot.value)) ? new FeedCell(snapshot: snapshot,animation: animation, imgURL:post['imgURL'], scaffoldKey: this.scaffoldKey, uIcallback: this.actionButtonCallback, commentNotificationCallback: this.commentNotificationCallback, currentUsersPost: false,ghostMode: false,stream: this.keyboardDismissalStreamController.stream,) :
@@ -522,12 +525,17 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
         List<String> commentList = List.from(snap.value);
         if(!commentList.contains(globals.id)){
           commentList.add(globals.id);
-          ref.child('commentLists').child(key).set(commentList);
+          await ref.child('commentLists').child(key).set(commentList);
         }else{
           return; // the user is already involved in the convo....
         }
       }else{
-        ref.child('commentLists').child(key).set([globals.id, posterId]);
+        if(posterId != globals.id){
+         await ref.child('commentLists').child(key).set([globals.id, posterId]);
+        }else{
+          // the user is adding a comment to their own post, that has no prior comments
+         await ref.child('commentLists').child(key).set([globals.id]);
+        }
       }
     }catch(e){
       return;
@@ -708,8 +716,10 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
       return new Container();
     }
 
-    return new Row(
-      mainAxisAlignment: MainAxisAlignment.start,
+    return new Column(
+      children: <Widget>[
+    new Row(
+    mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         new Padding(
@@ -730,15 +740,18 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                 ),
-                new Text(getDateOfMsg(snapshot.value['time']),style: new TextStyle(fontSize: 11.0, color: Colors.grey[600]),),
+                new Text(getDateOfMsg(snapshot.value['time']),style: new TextStyle(fontSize: 10.0, color: Colors.grey[600]),),
                 new Padding(
-                    padding: new EdgeInsets.only(
-                        left: 3.0, top: 3.0, right: 7.0, bottom: 8.0),
-                    child: new Text(snapshot.value['comment'])
+                    padding: new EdgeInsets.only(left: 1.0),
+                    child: new Text(snapshot.value['comment'],style: new TextStyle(fontSize: 15.0),)
                 ),
+
               ],
             )
         ),
+      ],
+    ),
+        new Divider()
       ],
     );
   }

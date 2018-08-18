@@ -40,6 +40,7 @@ class _LoginState extends State<LoginPage> {
   bool userClickedFB = false;
   bool userClickedSC = false;
 
+  AssetImage fbIcon = new AssetImage('assets/fb.png');
 
   _LoginState({this.app});
 
@@ -94,8 +95,8 @@ class _LoginState extends State<LoginPage> {
           height: 85.0,
           width: 300.0,
           child: new RaisedButton(
-            color: Color(0xFFFFFC00),
-            onPressed: (userClickedSC) ? () {} : () async {handleSnapLogin();},
+            color: Colors.blue,
+            onPressed: (userClickedSC) ? () {} : () async {handleFbLogin();},
             child: new Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
@@ -103,10 +104,10 @@ class _LoginState extends State<LoginPage> {
                     child: new Container(
                       height: 40.0,
                       width: 40.0,
-                      child: new Image.network("https://docs.snapchat.com/static/ghostlogo@2x-7619bf5537237fa6abac3ddcfc1d379b-038d0.png"),
+                      child: new Image(image: fbIcon,color: Colors.white,)
                     )
                 ),
-                new Text("Continue With Snachat!", style: new TextStyle(color: Colors.black, fontWeight: FontWeight.bold),)
+                new Text("Continue With Facebook!", style: new TextStyle(color: Colors.white, fontWeight: FontWeight.bold),)
               ],
             ),
           ),
@@ -148,6 +149,57 @@ class _LoginState extends State<LoginPage> {
     }
   }
 
+  Future<void> handleFbLogin()async{
+    FacebookLoginResult result;
+    try{
+      result = await facebookSignIn.logInWithReadPermissions(['public_profile', 'user_link']);
+    }catch(e){
+      _errorMenu("error", "There was an error logging in.", " Please make sure your Snap credentials are correct");
+      return;
+    }
+    if(result.accessToken == null){
+      return;
+    }
+
+    bool userExists = await checkIfUserExists(result.accessToken.userId);
+    if(userExists){
+      Home homePage = Home(widget.app, result.accessToken.userId,true);
+      globals.id = result.accessToken.userId;
+      globals.cityCode = await getUserCityCode(result.accessToken.userId);
+      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => homePage));
+      return;
+    }else{
+      // add selected user data to snap data
+      //do facebook graph stuff
+      Map userInfo = new Map();
+      var fbInfo = await graphFb(result.accessToken.token);
+      userInfo['first_name'] = fbInfo['first_name'];
+      userInfo['last_name'] = fbInfo['last_name'];
+      userInfo['id'] = fbInfo['id'];
+      userInfo['imgURL'] = fbInfo['url'];
+      if(fbInfo.containsKey('link')){
+        userInfo['link'] = fbInfo['link'];
+      }
+
+      SelectSchool selectSchool = SelectSchool(app: app, userHasAlreadySignedIn: true, userInfo: userInfo);
+      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => selectSchool),);
+    }
+
+  }
+
+  Future<String>getUserCityCode(String id)async{
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    DataSnapshot snap = await database.reference().child('usersCities').child(id).child('cityCode').once();
+    return snap.value;
+  }
+
+
+  Future<Map>graphFb(String token)async{
+
+    FbGraph graph = FbGraph(token);
+    Map info = await graph.me(['id', 'name', 'first_name', 'last_name', 'picture.type(large)', 'email','link']);
+    return info;
+  }
 
 
 

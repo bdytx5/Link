@@ -18,9 +18,13 @@ import 'viewPicScreen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'addUser.dart';
 import 'groupMsgScreen.dart';
+import 'package:flutter/services.dart';
+import '../pageTransitions.dart';
+
+typedef glimpseLoadedCB = void Function(File glimpseKey);
 
 class ChatScreen extends StatefulWidget {
-     final String convoID;
+     final String convoId;
      final bool newConvo;
      ///critical info
      final String recipFullName;
@@ -31,7 +35,7 @@ class ChatScreen extends StatefulWidget {
      final String senderImgURL;
      
 
-  ChatScreen({this.recipID,this.convoID, this.newConvo, this.recipImgURL, this.recipFullName, this.senderFullName, this.senderImgURL});
+  ChatScreen({this.recipID,this.convoId, this.newConvo, this.recipImgURL, this.recipFullName, this.senderFullName, this.senderImgURL});
 
      _chatScreenState createState() => new _chatScreenState();
 
@@ -58,7 +62,9 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
   File pictureBeingSent;
   bool glimpseLoading = false;
   bool userHasSentAtLeastOneMsg = false;
+  Map glimpseLoadLog = new Map();
 
+  static const platform = const MethodChannel('thumbsOutChannel');
 
 
 
@@ -66,6 +72,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
 
    void initState() {
     super.initState();
+    newConvo = widget.newConvo;
     makeSureAllMsgScreenInfoIsAvailable();
     addDismissKeyboardListener();
     setupStreamQuery();
@@ -96,7 +103,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
         backgroundColor: Colors.yellowAccent,
         actions: <Widget>[
 
-          (widget.convoID != globals.id && senderImgURL != null) ?  new FlatButton.icon(onPressed: (){
+          (widget.convoId != globals.id && senderImgURL != null) ?  new FlatButton.icon(onPressed: (){
     Navigator.push(context, new MaterialPageRoute(builder: (context) => new AddUser(firstUser: widget.recipID,groupImg:senderImgURL,newConvo: true,))).then((convoInfo) {
       //  Map convoInfo = {'convoID': widget.convoId,'newConvo': true,'groupMembers': widget.members, 'groupName': controller.text,'groupImg':widget.groupImgURL};
 
@@ -144,7 +151,9 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
           ),
           new Divider(height: 1.0,),
           new Container(
+            child: new Padding(padding: new EdgeInsets.only(bottom: 8.0),
             child: _buildComposer(),
+    ),
             decoration: new BoxDecoration(color: Colors.white),
           ),
         ],
@@ -167,6 +176,10 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
 
           Map msg = snapshot.value;
 
+          if(newConvo){
+            newConvo = false;
+          }
+
           if(msg['from'] == globals.id){
               userHasSentAtLeastOneMsg = true;
 
@@ -177,15 +190,13 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
 
           if(msg['type'] != null && msg['from'] != globals.id ){
 
-                if(msg.containsKey('fromCameraRoll')){
+                  return recipGlimpseCell(msg,widget.convoId,snapshot.key,recipFullName,recipImgURL);
 
-                  return recipGlimpseCell(recipImgURL, msg['viewed'], recipFullName, msg['formattedTime'], msg['url'], snapshot.key, widget.convoID, widget.recipID, true, msg['duration'],);
-                }else{
-                  return recipGlimpseCell(recipImgURL, msg['viewed'], recipFullName, msg['formattedTime'], msg['url'], snapshot.key, widget.convoID, widget.recipID, false, msg['duration'],);
-                }
           }
           if(msg['type'] != null && msg['from'] == globals.id ){
-            return GlimpseCell(msg, senderFullName, senderImgURL, widget.convoID,snapshot.key, false, widget.recipID,msg['duration'],false);
+           // return GlimpseCell(msg, senderFullName, senderImgURL, widget.convoId,snapshot.key, false, widget.recipID,msg['duration'],false);
+
+            return senderGlimpseCell(msg['viewed'],senderFullName, senderImgURL);
           }
 
 //          if(msg['type'] != null && msg['from'] != senderId ){
@@ -214,7 +225,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           new Container(
-            margin: const EdgeInsets.only(right: 18.0),
+            margin: const EdgeInsets.only(right: 5.0),
             child: new CircleAvatar(
               backgroundImage: new NetworkImage(imgURL),
               backgroundColor: Colors.transparent,            
@@ -232,10 +243,8 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                           Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
                         ],
                       ),
-
-
                 new Container(
-                  margin: const EdgeInsets.only(top: 6.0),
+                  margin: const EdgeInsets.only(top: 3.0),
                   child: new Text(txt),
                 )
               ],
@@ -285,7 +294,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                       onPressed: (_isWriting && _textController.text != null) ? () => _submitMsg(_textController.text) : (){},
                     )
                 ),
-      (widget.convoID != globals.id) ? new Container(
+      (widget.convoId != globals.id) ? new Container(
                   height: 30.0,
                   width: 30.0,
                   decoration: new BoxDecoration(
@@ -294,42 +303,23 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                       border: new Border.all(color: Colors.grey,width: 3.0)
                   ),
                   child: new InkWell(onTap: (){
-                    Navigator.push(context,
-                        new MaterialPageRoute(
-                            builder: (context) => new SnapPage(widget.convoID,widget.recipID,recipImgURL, recipFullName)));
 
-                  },),
+                    Navigator.push(context,
+                        new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
+
+
+
+
+//                   platform.invokeMethod('showCamera').then((res){
+//                     print(res);
+//                   });
+
+
+                     },
+                  ),
                 ) : new Container(),
               ],
             ),
-            //new Divider(),
-
-            new Container(
-              height: 10.0,
-              width: double.infinity,
-//              child:new Padding(padding: new EdgeInsets.only(bottom: 15.0),
-//              child: new Row(
-//                mainAxisAlignment: MainAxisAlignment.center,
-//                children: <Widget>[
-//                  new Padding(padding: new EdgeInsets.only(right: 15.0),
-//
-//                    child: new IconButton(icon: new Icon(Icons.camera,color: Colors.grey), onPressed: (){}),
-//                  ),
-//
-//
-//
-//                  new Padding(padding: new EdgeInsets.only(left: 15.0),
-//
-//                  child: new IconButton(icon: new Icon(Icons.tag_faces,color: Colors.grey), onPressed: (){}),
-//                  )
-//
-//
-//                ],
-//              )
-//
-//              )
-
-            )
 
           ],
         ),
@@ -350,8 +340,8 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
    if(!allInfoIsAvailable){
      return;
    }
-    if(widget.convoID == globals.id){
-      sendFeedbackMsg();
+    if(widget.convoId == globals.id){
+     await sendFeedbackMsg();
     }else{
       if(newConvo){
        await sendNewConvoMsg();
@@ -375,13 +365,13 @@ Future<void> sendRegularMsg(String id)async{
   var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
   var now = formatter.format(new DateTime.now());
   DatabaseReference ref = FirebaseDatabase.instance.reference();
-  var key = ref.child('convos').child(widget.convoID).push().key;
+  var key = ref.child('convos').child(widget.convoId).push().key;
 
   Map message = {'to':widget.recipID,'from':globals.id,'message':_textController.text, 'formattedTime':now};
   try{
     await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'recentMsg':_textController.text, 'time':key,'formattedTime':now});// IDK
     await ref.child('convoLists').child(widget.recipID).child(globals.id).update({'recentMsg':_textController.text, 'time':key,'formattedTime':now,'new':true});
-    await ref.child('convos').child(widget.convoID).push().set(message); // SEND THE MESSAGE
+    await ref.child('convos').child(widget.convoId).push().set(message); // SEND THE MESSAGE
   }catch(e){
     _errorMenu("Error", "There was an error sending your message.", '');
   }
@@ -398,7 +388,7 @@ Future<void> sendRegularMsg(String id)async{
 
    // Map brettsChatlist = { 'imgURL':senderImgURL, 'formattedTime':now, 'new': true, 'recentMsg':_textController.text, 'recipFullName':senderFullName, 'recipId':globals.id, 'convoId':FirebaseDatabase.instance.reference().push().key}
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    Map message = {'to':'CAESIO1RccwK34OLN30OhSd6kcVqAGQ08Nbot4Qcw03dkV3m','from':globals.id,'message':_textController.text, 'formattedTime':now};
+    Map message = {'from':globals.id,'message':_textController.text, 'formattedTime':now};
     try{
       ref.child('feedback').child('admin').push().set(message); // for meee
       ref.child('feedback').child(globals.id).push().set(message);
@@ -439,15 +429,15 @@ var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
 
   try{
     await handleContactsList();
-    Map convoInfoForSender = {'recipID':widget.recipID,'convoID':widget.convoID, 'time':widget.convoID, 'imgURL':recipImgURL,
+    Map convoInfoForSender = {'recipID':widget.recipID,'convoID':widget.convoId, 'time':widget.convoId, 'imgURL':recipImgURL,
       'recipFullName': recipFullName, 'recentMsg':_textController.text,'formattedTime':now, 'new': false};
     ref.child('convoLists').child(globals.id).child(widget.recipID).set(convoInfoForSender);
 
-    Map convoInfoForRecipient = {'recipID':globals.id,'convoID':widget.convoID, 'time':widget.convoID, 'imgURL':senderImgURL, 'recipFullName':senderFullName,'recentMsg':_textController.text,'formattedTime':now, 'new':true};
+    Map convoInfoForRecipient = {'recipID':globals.id,'convoID':widget.convoId, 'time':widget.convoId, 'imgURL':senderImgURL, 'recipFullName':senderFullName,'recentMsg':_textController.text,'formattedTime':now, 'new':true};
     ref.child('convoLists').child(widget.recipID).child(globals.id).set(convoInfoForRecipient);
 
     Map message = {'to':widget.recipID,'from':globals.id,'message':_textController.text,'formattedTime':now}; // CREATE MESSAG
-    ref.child('convos').child(widget.convoID).push().set(message); // SEND THE MESSAGE
+    ref.child('convos').child(widget.convoId).push().set(message); // SEND THE MESSAGE
   }catch(e){
     _errorMenu('Error', 'There was an error sending your message.', '');
   }
@@ -524,10 +514,10 @@ Future<void> handleContactsList()async{
 
 void setupStreamQuery(){
   DatabaseReference ref = FirebaseDatabase.instance.reference();
-  if(widget.convoID == globals.id){
+  if(widget.convoId == globals.id){
     chatQuery = ref.child('feedback').child(globals.id);
   }else{
-    chatQuery = ref.child('convos').child(widget.convoID);
+    chatQuery = ref.child('convos').child(widget.convoId);
   }
 }
 
@@ -641,7 +631,7 @@ void setupStreamQuery(){
 
 
   Future<void> updateReadReceipts()async{
-    if(!newConvo && widget.convoID != globals.id){
+    if(!newConvo && widget.convoId != globals.id){
       DatabaseReference ref = FirebaseDatabase.instance.reference();
       try{
         await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'new':false});// IDK
@@ -716,35 +706,317 @@ void setupStreamQuery(){
 
 
 
+  Widget recipGlimpseCell(Map msg, String convoId, String glimpseKey, String fullName, String imgURL){
+    return new Card(
+        child:new InkWell(
+
+          onTap: ()async {
+            if(!msg['viewed']){
+              viewGlimpse(glimpseKey, msg);
+            }else{
+               Navigator.push(context,
+                    new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
+            }
+
+          },
+          child:  new Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              new Expanded(
+                  child: new Column(
+                    children: <Widget>[
+                      new Row(
+                        children: <Widget>[
+                          new Padding(padding: new EdgeInsets.all(5.0),
+                            child:  new CircleAvatar(
+                              backgroundImage: new CachedNetworkImageProvider(imgURL),
+                              backgroundColor: Colors.transparent,
+                            ),
+                          ),
+                          new Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
+
+                              ),
+                              //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+
+                              new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                child: new Text( (!msg['viewed']) ? 'New Glimpse, tap to view!': 'Tap to Reply!!' ),
+                              )
+                            ],
+                          )
+                        ],
+                      )
+                    ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                  )
+              ),
+
+
+            ],
+          ),
+        )
+    );
+  }
+
+
+
+  Widget senderGlimpseCell(bool recipViewed, String senderName, String imgURL ){
+    return new Container(
+
+        child: InkWell(
+
+            onTap: ()async{
+
+              // nothing
+            },
+
+            child:  new Card(
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  new Expanded(
+                      child: new Column(
+                        children: <Widget>[
+                          new Row(
+                            children: <Widget>[
+                              new Padding(padding: new EdgeInsets.all(5.0),
+                                child:  new CircleAvatar(
+                                  backgroundImage: new CachedNetworkImageProvider(imgURL),
+                                  backgroundColor: Colors.transparent,
+                                ),
+                              ),
+
+                              new Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                    child: new Text(senderName,style: new TextStyle(fontWeight: FontWeight.bold),),
+
+                                  ),
+                                  //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+
+                                  new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                    child: new Text( (!recipViewed) ? 'Sent Glimpse!': 'Glimpse has been opened!',
+                                    ),
+                                  )
+                                ],
+                              )
+                            ],
+                          )
+                        ],
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      )
+                  ),
+
+                ],
+              ),
+            )
+        )
+    );
+  }
+
+
+
+  Future<void> viewGlimpse(String glimpseKey, Map msg)async{
+
+    if(msg.containsKey('fromCameraRoll')){
+      Navigator.push(context, ShowRoute(widget: viewPic(msg['url'],msg['duration'], true,widget.convoId,glimpseKey)),);
+    }else{
+        Navigator.push(context, ShowRoute(widget: viewPic(msg['url'],msg['duration'], false,widget.convoId,glimpseKey)),
+        );
+    }
+  }
+
+//
+//  Future<void> viewGlimpse(String glimpseURL, String glimpseKey, bool fromCameraRoll, bool, int duration)async{
+//
+//    if(fromCameraRoll){
+//      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(glimpseURL,duration, true,widget.convoId,glimpseKey))).then((D)async{
+//      });
+//    }else{
+//      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(glimpseURL,duration, false,widget.convoId,glimpseKey))).then((D)async{
+//      });
+//    }
+//  }
+
+
+
+
+
+//  Future<void> viewGlimpse(String convoId, String glimpseKey, int duration, String img,bool fromCameraRoll)async{
+//
+//    if(fromCameraRoll){
+//      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(img,duration, true)));
+//    }else{
+//      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPicx(img,duration, false)));
+//    }
+//    try{
+//      await FirebaseDatabase.instance.reference().child('convos').child(convoId).child(glimpseKey).update({'viewed':true});
+//    }catch(e){
+//      return;
+//    };
+//
+//  }
+
+
+
+
+}
+
+
+
+class GlimpseCell extends StatefulWidget {
+
+ // GlimpseCell(this.msg, this.fullName, this.imgURL, this.convoId, this.glimpseKey,this.recipGlimpse, this.id,this.duration, this.fromCameraRoll);
+   GlimpseCell(this.msg, this.glimpseKey, this.convoId, this.fullName, this.imgURL,this.glimpseLog, this.loadedCB);
+  // child:recipGlimpseCell(widget.imgURL, widget.msg['viewed'], fullName, time, glimpseURL, glimpseKey, convoId, widget.msg['from'], widget.fromCameraRoll, widget.msg['duration'], )
+
+
+  final Map msg;
+  final String convoId;
+  final String glimpseKey;
+  final String fullName;
+  final String imgURL;
+  final glimpseLoadedCB loadedCB;
+  final Map glimpseLog;
+
+
+
+
+
+  @override
+  _GlimpseCellState createState() => new _GlimpseCellState();
+
+}
+
+class _GlimpseCellState extends State<GlimpseCell> with TickerProviderStateMixin {
+
+
+bool loading = false;
+
+IconData icon = Icons.file_download;
+
+
+File glimpseFile;
+bool glimpseLoaded = false;
+bool viewed;
+  @override
+  void initState() {
+    super.initState();
+    viewed = widget.msg['viewed'];
+    if(widget.glimpseLog.containsKey(widget.glimpseKey)){
+      setState(() {
+        glimpseFile = widget.glimpseLog[widget.glimpseKey];
+        glimpseLoaded = true;
+      });
+    }
+  }
+
+
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+
+String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      height: 60.0,
+        width: double.infinity,
+
+        margin: const EdgeInsets.symmetric(vertical: 2.0),
+        child:recipGlimpseCell(widget.imgURL, viewed, widget.fullName, widget.msg['formattedTime'], widget.msg['url'], widget.glimpseKey, widget.convoId, widget.msg['from'], widget.msg['fromCameraRoll'], widget.msg['duration'])
+
+    );
+  }
+//
+//
+//  Widget recipGlimpseCell(){
+//    return new Card(
+//      child:new InkWell(
+//        onTap: (){
+//          if(viewedPic){
+//            // tap to reply
+//          }else{
+//            viewGlimpse(glimpseURL);
+//          }
+//        },
+//        child:  new Row(
+//          mainAxisAlignment: MainAxisAlignment.start,
+//          children: <Widget>[
+//            new Expanded(
+//                child: new Column(
+//                  children: <Widget>[
+//                    new Row(
+//                      children: <Widget>[
+//                        new Container(
+//                          child: new CircleAvatar(
+//
+//                            backgroundImage: new CachedNetworkImageProvider(imgURL),
+//                            backgroundColor: Colors.transparent,
+//                          ),
+//                        ),
+//                        new Column(
+//                          crossAxisAlignment: CrossAxisAlignment.start,
+//                          children: <Widget>[
+//                            new Padding(padding: new EdgeInsets.only(left: 10.0),
+//                              child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
+//
+//                            ),
+//                            //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+//
+//                            new Padding(padding: new EdgeInsets.only(left: 10.0),
+//                              child: new Text( (loadedPic && !viewedPic) ? 'New Glimpse, tap to view!': (!loadedPic && !viewedPic) ? 'New Glimpse, tap to download!' : (viewedPic) ? 'Tap to Reply!!' : new Text(''), ),
+//                            )
+//                          ],
+//                        )
+//                      ],
+//                    )
+//                  ],
+//                  crossAxisAlignment: CrossAxisAlignment.start,
+//                )
+//            ),
+//
+////            (!viewedPic) ? new Padding(padding: new EdgeInsets.all(15.0),
+////              child: new Container(
+////                  height: 30.0,
+////                  width: 30.0,
+////                  child: (loading) ? new CircularProgressIndicator(): (loadedPic && img != null) ? new Icon(Icons.image) : (!loadedPic && !viewedPic) ? new Icon(Icons.file_download) : new Icon(Icons.check)
+////              ),
+////            ) : new Container(),
+//          ],
+//        ),
+//      )
+//    );
+//  }
+//
+
+
+
+
+
   Widget recipGlimpseCell(String imgURL, bool viewed, String fullName, String time, String glimpseURL, String glimpseKey, String convoId, String id, bool fromCameraRoll,int duration,){
     return new Card(
         child:new InkWell(
 
           onTap: ()async {
-            if (!glimpseLoading && !viewed) {
-              setState(() {
-                glimpseLoading = true;
-              });
-              var img;
-              try {
-                img = await loadGlimpse(glimpseURL);
-              } catch (e) {
-                setState(() {
-                  glimpseLoading = false;
-                  return;
-                });
-              }
-              setState(() {
-                glimpseLoading = false;
-              });
-              viewGlimpse(convoId, glimpseKey, duration, img,fromCameraRoll );
+
+          //  viewGlimpse(glimpseURL, glimpseKey, fromCameraRoll, bool, duration);
+            if(!loading && !glimpseLoaded){
+              await loadGlimpse();
             }else{
-              if(!glimpseLoading && viewed){
-
-                Navigator.push(context,
-                    new MaterialPageRoute(
-                        builder: (context) => new SnapPage(widget.convoID,widget.recipID,recipImgURL, recipFullName)));
-
+              if(!viewed && glimpseLoaded && glimpseFile != null){
+                setState(() {
+                  viewed = true;
+                });
+            //    viewGlimpse('');
               }
             }
 
@@ -764,20 +1036,28 @@ void setupStreamQuery(){
                               backgroundColor: Colors.transparent,
                             ),
                           ),
-                          new Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              new Padding(padding: new EdgeInsets.only(left: 10.0),
-                                child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
+                         new Expanded(child:  new Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: <Widget>[
+                         new Padding(padding: new EdgeInsets.only(left: 10.0),
+                         child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
 
-                              ),
-                              //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+                         ),
+                         //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
 
-                              new Padding(padding: new EdgeInsets.only(left: 10.0),
-                                child: new Text( (!viewed) ? 'New Glimpse, tap to view!': 'Tap to Reply!!' ),
-                              )
-                            ],
-                          )
+                         new Padding(padding: new EdgeInsets.only(left: 10.0),
+                         child: new Text( (!viewed && !glimpseLoaded) ? 'New Glimpse, tap to Load!': (!viewed && glimpseLoaded) ? 'Tap to view' : 'Tap to Reply!!' ),
+    )
+    ],
+    ),),
+
+
+    (!viewed) ? new Padding(padding: new EdgeInsets.all(15.0),
+                child: new Container(
+                    height: 30.0,
+                    width: 30.0,
+                    child: (loading) ? new CircularProgressIndicator() : new Container(),
+    )):new Container()
                         ],
                       )
                     ],
@@ -793,6 +1073,154 @@ void setupStreamQuery(){
   }
 
 
+
+
+
+  Widget senderGlimpseCell(){
+  return new Container(
+
+    child: InkWell(
+
+        onTap: ()async{
+        },
+
+        child:  new Card(
+          child: new Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              new Expanded(
+                  child: new Column(
+                    children: <Widget>[
+                      new Row(
+                        children: <Widget>[
+                     new Padding(padding: new EdgeInsets.all(5.0),
+                     child:  new CircleAvatar(
+                       backgroundImage: new CachedNetworkImageProvider(widget.imgURL),
+                       backgroundColor: Colors.transparent,
+                     ),
+                     ),
+
+                          new Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                child: new Text(widget.fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
+
+                              ),
+                              //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+
+                              new Padding(padding: new EdgeInsets.only(left: 10.0),
+                                child: new Text( (!widget.msg['viewed']) ? 'Sent Glimpse!': 'Glimpse has been opened!',
+                                ),
+                              )
+                            ],
+                          )
+                        ],
+                      )
+                    ],
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                  )
+              ),
+
+//        (!viewedPic) ? new Padding(padding: new EdgeInsets.all(15.0),
+//          child: new Container(
+//              height: 20.0,
+//              width: 20.0,
+//              child: (loading) ? new Center(child: CircularProgressIndicator(),) : (loadedPic && img != null ) ? new Container(height: 20.0,width: 20.0,child: new IconButton(icon: new Icon(Icons.image), onPressed: ()async{
+//                await viewGlimpse();
+//              }),) : new Icon(Icons.file_download)
+//          ),
+//        ) : new Container(),
+            ],
+          ),
+        )
+    )
+  );
+}
+
+//  Future<void> viewGlimpse(String glimpseURL)async{
+//
+//    if(widget.msg.containsKey('fromCameraRoll')){
+//      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(glimpseFile,widget.msg['duration'], true,widget.convoId,widget.glimpseKey))).then((D)async{
+//        setState(() {viewed = true;});
+//      });
+//          }else{
+//      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(glimpseFile,widget.msg['duration'], false,widget.convoId,widget.glimpseKey))).then((D)async{
+//       setState(() {viewed = true;});
+//      });
+//    }
+//
+//
+//  }
+
+
+  Future<void> loadGlimpse()async{
+    setState(() {
+      loading = true;
+    });
+    try{
+      http.Response imgRes = await http.get(widget.msg['url']);
+      var bytes = imgRes.bodyBytes;
+      final Directory extDir = await getTemporaryDirectory();
+      final String dirPath = '${extDir.path}/Pictures/flutter_test';
+      await new Directory(dirPath).create(recursive: true);
+      String time = timestamp();
+      glimpseFile = new File('$dirPath/${time}.png');
+      glimpseFile.writeAsBytes(bytes);
+
+    }catch(e){
+      setState(() {
+        loading = false;
+      }
+        );
+      return;
+    }
+
+    setState(() {
+      widget.loadedCB(glimpseFile);
+      loading = false;
+    glimpseLoaded = true;
+    });
+
+  }
+String getDateOfMsg(String time){
+
+  String date = '';
+  var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+  DateTime recentMsgDate = formatter.parse(time);
+  var dayFormatter = new DateFormat('EEEE');
+  var shortDatFormatter = new DateFormat('M/d/yy');
+  var timeFormatter = new DateFormat('h:mm a');
+  var now = new DateTime.now();
+  Duration difference = now.difference(recentMsgDate);
+  var differenceInSeconds = difference.inSeconds;
+  // msg is less than a week old
+  if(differenceInSeconds < 86400){
+    date = timeFormatter.format(recentMsgDate);
+  }else{
+    date = shortDatFormatter.format(recentMsgDate);
+  }
+  return date;
+}
+
+}
+
+//Widget Msg(String url, String Name){
+//    return new Container(
+//      child: new Row(
+//        children: <Widget>[
+//          new CircleAvatar(
+//            backgroundImage: new NetworkImage(url),
+//          ),
+//          new Column(
+//            children: <Widget>[
+//            //  new Text(name, style: new TextStyle(fontWeight: FontWeight.bold, ),)
+//            ],
+//          )
+//        ],
+//      )
+//    );
+//  }
 
 
 
@@ -858,363 +1286,3 @@ void setupStreamQuery(){
 //  }
 
 
-
-
-  Future<void> viewGlimpse(String convoId, String glimpseKey, int duration, File img,bool fromCameraRoll)async{
-
-    if(fromCameraRoll){
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(img,duration, true))).then((D)async{
-
-      });
-    }else{
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(img,duration, false))).then((D)async{
-      });
-    }
-
-    try{
-      await FirebaseDatabase.instance.reference().child('convos').child(convoId).child(glimpseKey).update({'viewed':true});
-    }catch(e){
-      print('error');
-      return;
-    };
-
-  }
-
-
-  Future<File> loadGlimpse(String glimpseURL)async{
-    setState(() {
-      glimpseLoading = true;
-    });
-    try{
-      File img;
-      http.Response imgRes = await http.get(glimpseURL);
-      var bytes = imgRes.bodyBytes;
-      final Directory extDir = await getTemporaryDirectory();
-      final String dirPath = '${extDir.path}/Pictures/flutter_test';
-      await new Directory(dirPath).create(recursive: true);
-      String time = timestamp();
-      img = new File('$dirPath/${time}.png');
-      img.writeAsBytes(bytes);
-      return img;
-
-    }catch(e){
-      setState(() {glimpseLoading = false;});
-      throw new Exception();
-    }
-
-    setState(() {glimpseLoading = false;
-
-    });
-
-
-
-  }
-
-
-
-
-}
-
-
-
-class GlimpseCell extends StatefulWidget {
-
-  GlimpseCell(this.msg, this.fullName, this.imgURL, this.convoId, this.glimpseKey,this.recipGlimpse, this.id,this.duration, this.fromCameraRoll);
-
- final int duration;
-  final Map msg;
-  final String fullName;
-  final String imgURL;
-  final String convoId;
-  final String glimpseKey;
-  final bool recipGlimpse;
-  final String id;
-  final bool fromCameraRoll;
-
-
-
-
-  @override
-  _GlimpseCellState createState() => new _GlimpseCellState();
-
-}
-
-class _GlimpseCellState extends State<GlimpseCell> with TickerProviderStateMixin {
-
-
-bool loading = false;
-File img;
-IconData icon = Icons.file_download;
-bool loadedPic = false;
-bool viewedPic = false;
-
-String imgURL;
-String fullName;
-String time;
-String glimpseURL;
-String glimpseKey;
-String convoId;
-
-
-  @override
-  void initState() {
-    super.initState();
-    initializeData();
-  }
-
-  void initializeData(){
-    imgURL = widget.msg['imgURL'];
-    viewedPic = widget.msg['viewed'];
-    imgURL = widget.imgURL;
-    fullName = widget.fullName;
-    time = widget.msg['formattedTime'];
-    glimpseURL = widget.msg['url'];
-    glimpseKey = widget.glimpseKey;
-    convoId = widget.convoId;
-  }
-
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-  }
-
-String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
-
-  @override
-  Widget build(BuildContext context) {
-    return new Container(
-      height: 60.0,
-        width: double.infinity,
-
-        margin: const EdgeInsets.symmetric(vertical: 2.0),
-        child:(widget.recipGlimpse) ? recipGlimpseCell() : senderGlimpseCell(),
-
-    );
-  }
-
-
-  Widget recipGlimpseCell(){
-    return new Card(
-      child:new InkWell(
-
-        onTap: ()async{
-
-          if(!loadedPic){
-            await loadGlimpse();
-          }else{
-            if(loadedPic && !viewedPic){
-              await viewGlimpse();
-            }
-
-            if(viewedPic){
-              new MaterialPageRoute(
-                  builder: (context) => new SnapPage(widget.convoId,widget.id,widget.imgURL, widget.fullName));
-
-        }
-          }
-        },
-
-        child:  new Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            new Expanded(
-                child: new Column(
-                  children: <Widget>[
-                    new Row(
-                      children: <Widget>[
-                        new Container(
-                          child: new CircleAvatar(
-
-                            backgroundImage: new CachedNetworkImageProvider(imgURL),
-                            backgroundColor: Colors.transparent,
-                          ),
-                        ),
-                        new Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            new Padding(padding: new EdgeInsets.only(left: 10.0),
-                              child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
-
-                            ),
-                            //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
-
-                            new Padding(padding: new EdgeInsets.only(left: 10.0),
-                              child: new Text( (loadedPic && !viewedPic) ? 'New Glimpse, tap to view!': (!loadedPic && !viewedPic) ? 'New Glimpse, tap to download!' : (viewedPic) ? 'Tap to Reply!!' : new Text(''), ),
-                            )
-                          ],
-                        )
-                      ],
-                    )
-                  ],
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                )
-            ),
-
-            (!viewedPic) ? new Padding(padding: new EdgeInsets.all(15.0),
-              child: new Container(
-                  height: 30.0,
-                  width: 30.0,
-                  child: (loading) ? new CircularProgressIndicator(): (loadedPic && img != null) ? new Icon(Icons.image) : (!loadedPic && !viewedPic) ? new Icon(Icons.file_download) : new Icon(Icons.check)
-              ),
-            ) : new Container(),
-          ],
-        ),
-      )
-    );
-  }
-
-
-
-
-
-Widget senderGlimpseCell(){
-  return new Container(
-
-    child: InkWell(
-
-        onTap: ()async{
-
-          await loadGlimpse();
-        },
-
-        child:  new Card(
-          child: new Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              new Expanded(
-                  child: new Column(
-                    children: <Widget>[
-                      new Row(
-                        children: <Widget>[
-                     new Padding(padding: new EdgeInsets.all(5.0),
-                     child:  new CircleAvatar(
-                       backgroundImage: new CachedNetworkImageProvider(imgURL),
-                       backgroundColor: Colors.transparent,
-                     ),
-                     ),
-
-                          new Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              new Padding(padding: new EdgeInsets.only(left: 10.0),
-                                child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
-
-                              ),
-                              //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
-
-                              new Padding(padding: new EdgeInsets.only(left: 10.0),
-                                child: new Text( (!viewedPic) ? 'Sent Glimpse!': 'Glimpse has been opened!',
-                                ),
-                              )
-                            ],
-                          )
-                        ],
-                      )
-                    ],
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                  )
-              ),
-
-//        (!viewedPic) ? new Padding(padding: new EdgeInsets.all(15.0),
-//          child: new Container(
-//              height: 20.0,
-//              width: 20.0,
-//              child: (loading) ? new Center(child: CircularProgressIndicator(),) : (loadedPic && img != null ) ? new Container(height: 20.0,width: 20.0,child: new IconButton(icon: new Icon(Icons.image), onPressed: ()async{
-//                await viewGlimpse();
-//              }),) : new Icon(Icons.file_download)
-//          ),
-//        ) : new Container(),
-            ],
-          ),
-        )
-    )
-  );
-}
-
-  Future<void> viewGlimpse()async{
-
-    if(widget.fromCameraRoll){
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(img,widget.duration, true))).then((D)async{
-        setState(() {viewedPic = true;});
-      });
-          }else{
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new viewPic(img,widget.duration, false))).then((D)async{
-        setState(() {viewedPic = true;});
-      });
-    }
-
-    try{
-      await FirebaseDatabase.instance.reference().child('convos').child(widget.convoId).child(widget.glimpseKey).update({'viewed':true});
-    }catch(e){
-      print('error');
-      return;
-    };
-
-  }
-
-
-  Future<void> loadGlimpse()async{
-    setState(() {
-      loading = true;
-    });
-    try{
-      http.Response imgRes = await http.get(glimpseURL);
-      var bytes = imgRes.bodyBytes;
-      final Directory extDir = await getTemporaryDirectory();
-      final String dirPath = '${extDir.path}/Pictures/flutter_test';
-      await new Directory(dirPath).create(recursive: true);
-      String time = timestamp();
-      img = new File('$dirPath/${time}.png');
-      img.writeAsBytes(bytes);
-
-    }catch(e){
-      setState(() {loading = false;});
-    }
-
-    setState(() {loading = false;
-    loadedPic = true;
-    });
-
-
-
-  }
-String getDateOfMsg(String time){
-
-  String date = '';
-  var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
-  DateTime recentMsgDate = formatter.parse(time);
-  var dayFormatter = new DateFormat('EEEE');
-  var shortDatFormatter = new DateFormat('M/d/yy');
-  var timeFormatter = new DateFormat('h:mm a');
-  var now = new DateTime.now();
-  Duration difference = now.difference(recentMsgDate);
-  var differenceInSeconds = difference.inSeconds;
-  // msg is less than a week old
-  if(differenceInSeconds < 86400){
-    date = timeFormatter.format(recentMsgDate);
-  }else{
-    date = shortDatFormatter.format(recentMsgDate);
-  }
-  return date;
-}
-
-}
-
-//Widget Msg(String url, String Name){
-//    return new Container(
-//      child: new Row(
-//        children: <Widget>[
-//          new CircleAvatar(
-//            backgroundImage: new NetworkImage(url),
-//          ),
-//          new Column(
-//            children: <Widget>[
-//            //  new Text(name, style: new TextStyle(fontWeight: FontWeight.bold, ),)
-//            ],
-//          )
-//        ],
-//      )
-//    );
-//  }

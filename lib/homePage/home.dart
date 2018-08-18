@@ -30,7 +30,9 @@ import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong/latlong.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
+import 'package:flutter_native_image/flutter_native_image.dart';
+import 'package:secure_string/secure_string.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 //import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -68,6 +70,7 @@ final destinationTextContoller = new TextEditingController();
     bool bitmojiLoading = false;
     String transportMode;
     LatLng destination;
+    SecureString secureString = new SecureString();
 
 Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 final keyboardDismissalChangeNotifier = new StreamController.broadcast(); // for communicating down the widget tree to dismiss the keyboard
@@ -83,22 +86,22 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
 
    void initState() {
     super.initState();
+  //  migrateData();
     globals.id = widget.userID;
-
+    updateCityCode(widget.userID).then((idk){
+      // need cityCode for these two functions
+      fetchTransportModeAndRiderOrDriver();
+      grabUsersImgAndFullName();
+    });
     configureCloudMessaging();
-
     handleNotificationsRequest();
     updateLastUserPersistentStorage(widget.userID);
-
     _tabController = new TabController(vsync: this, initialIndex: 1, length: 2);
     _tabController.addListener(_tabIndexChanged);
-
     fetchNotificationCommentStatuses(); // attatch a listener to the comment notifications node
     fetchRideNotificationStatuses();// attatch a listener to the ride notifications node
     fetchNotificationMessageStatuses(); // attach a listener to the message notifications node
-
     getToken();
-
     updateCityCode(widget.userID).then((idk){
       fetchTransportModeAndRiderOrDriver();
     });
@@ -176,6 +179,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
     @override
   Widget build(BuildContext context) {
     return new Scaffold(
+
       drawer: menuDrawer(),
       key: _scaffoldKey,
       appBar: new AppBar(
@@ -185,8 +189,9 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
             children: <Widget>[
               new Center(
                 child: new IconButton(icon: new Icon(Icons.menu, color: Colors.black), onPressed: () async{
-                    grabUsersImgAndFullName();
-                  _scaffoldKey.currentState.openDrawer();
+                  await grabUsersImgAndFullName();
+                 _scaffoldKey.currentState.openDrawer();
+
                 }),
               ),
       (commentNotificationReciepts || rideNotificationReciepts) ?  new Align(
@@ -284,20 +289,17 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                               child:CircularProgressIndicator() ,
                             ),
                             onTap: ()async{
-                              var res = await   _warningMenu('Update Bitmoji?', 'Are You Sure You want to update your Bitmoji?', "This CANNOT be undone.");
-                              if(res){
-                                updateBitmoji();
-                              }
+                                changeProfilePic();
                             },
                           )
 
                         ),
                         new Positioned(child:  new IconButton(icon: new Icon(Icons.edit,color: Colors.white,), onPressed: ()async{
                           // change bitmoji
-                       var res = await   _warningMenu('Update Bitmoji?', 'Are You Sure You want to update your Bitmoji?', "This CANNOT be undone.");
-                       if(res){
-                         updateBitmoji();
-                       }
+
+
+
+
                         },iconSize: 10.0,),
                             top:60.0,
                             left: 60.0
@@ -352,7 +354,9 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
                         url: 'https://docs.google.com/document/d/1eci-jMZvGyrLwJWctB4TMsjR2Mk0WHXMvzalD_UZhvQ/edit?usp=sharing',
                         appBar: new AppBar(
-                            backgroundColor: Colors.yellow,
+                          iconTheme: new IconThemeData(color: Colors.black),
+
+                          backgroundColor: Colors.yellowAccent,
                             title: new Text("Terms of Service", style: new TextStyle(color: Colors.black),
                             
                             ),
@@ -380,12 +384,12 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                   title: new Text('logout'),
 
                   onTap: ()async{
-                    bool res = await _warningMenu('Logout?', 'Are you sure you want to logout of Thumbs-Out?', '');
+                    bool res = await _warningMenu('Logout?', 'Are you sure you want to logout of Link?', '');
 
                     if(res){
                       try{
-
-                        platform.invokeMethod('logoutOfSnap').then((res)async{
+                        final FacebookLogin facebookSignIn = new FacebookLogin();
+                          await facebookSignIn.logOut();
                           var ref = FirebaseDatabase.instance.reference();
                           await ref.child('tokens').child(globals.id).remove();
                           globals.id = null;
@@ -393,7 +397,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                           globals.name = null;
                           globals.fullName = null;
                           Navigator.pushReplacement(context , new MaterialPageRoute(builder: (context) => new LoginPage(app: widget.app)));
-                        });
+
                       }catch(e){
 
                         _errorMenu('Unable to Logout', 'Please try again later', '');
@@ -440,56 +444,60 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
       }
     }
   }
+//
 
-  Future<void> updateBitmoji()async{
 
-     setState(() {bitmojiLoading = true;});
-    try{
-      var userInfo = await  platform.invokeMethod('snapGraph');
-      if(userInfo['url'] == null){
-        _errorMenu('Error', "You must add a Bitmoji in the Bitmoji app.", '');
-        setState(() {
-          bitmojiLoading = false;
-        });
-        return;
-      }
-      var url = await uploadImg(userInfo['url'],"bitmoji",globals.id ,FirebaseDatabase.instance.reference().push().key);  // dont want to overwrite previous pictures
-      FirebaseDatabase database = FirebaseDatabase.instance;
-      database.reference().child(globals.cityCode).child('userInfo').child(globals.id).update({'imgURL':url});
-      database.reference().child(globals.cityCode).child('posts').child(globals.id).update({'imgURL':url});
-      setState(() {
-        bitmojiLoading = false;
-        globals.imgURL = url;
-      });
+  Future<void> changeProfilePic()async{
 
-    }catch(e){
-      setState(() {
-        bitmojiLoading = false;
-      });
-      _errorMenu('Error', 'Unable to update Bitmoji.', 'Please chat with Thumbs-Out Feedback!');
-    }
+     try{
+       File newPic = await _pickImage();
+       var croppedImg;
+       if(newPic != null){
+         croppedImg = await _cropImage(newPic);
+       }else{
+         return;
+       }
+
+       if(newPic != null){
+         // File resizeImg = await FlutterNativeImage.compressImage(newPic.path, quality: 100,targetHeight: 200,targetWidth: 200);
+         String profilePicURL = await uploadPhoto(croppedImg, globals.id);
+         DatabaseReference ref = FirebaseDatabase.instance.reference();
+         await ref.child(globals.cityCode).child('posts').child(globals.id).update({'imgURL':profilePicURL});
+         await ref.child(globals.cityCode).child('userInfo').child(globals.id).update({'imgURL':profilePicURL});
+         await ref.child('usersCities').child(globals.id).update({'imgURL':profilePicURL});
+       }
+     }catch(e){
+       return;
+     }
+
   }
 
-  Future<String> uploadImg(String url, String path1,String path2, String path3) async {
+  Future<File> _pickImage() async {
+
+    var imageFile = await  ImagePicker.pickImage(source: ImageSource.gallery);
+    return imageFile;
+  }
+
+
+
+
+  Future<String> uploadPhoto(File img, String id) async {
+
     try{
-      var response = await http.get(url);
-      final Directory systemTempDir = Directory.systemTemp;
-// im a dart n00b and this is my code, and it runs s/o to dart async
-      final file = await new File('${systemTempDir.path}/test.png').create();
-      var result = await file.writeAsBytes(response.bodyBytes);
-      final StorageReference ref = await FirebaseStorage.instance.ref().child("profilePics").child(path1).child(path2).child(path3);
-      final dataRes = await ref.putData(response.bodyBytes);
+      final StorageReference ref = await FirebaseStorage.instance.ref().child("profilePics").child(id).child(secureString.generate(length: 10,charList: ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s']));
+      final dataRes = await ref.putData(img.readAsBytesSync());
       final dwldUrl = await dataRes.future;
-      return dwldUrl.downloadUrl.toString();
-    }catch(e){
       setState(() {
+        globals.imgURL = dwldUrl.downloadUrl.toString();
       });
+      return dwldUrl.downloadUrl.toString();
+
+    }catch(e){
       print(e);
       throw new Exception(e);
     }
 
   }
-
 
 
 
@@ -636,6 +644,7 @@ void updateLastUserPersistentStorage(String id)async{
   if(lastUser != globals.id){
     var ref = FirebaseDatabase.instance.reference();
     // need to make sure that the old user does not have the same cloud token as the last user !t
+    prefs.setString('lastUser', id);
     try{
       DataSnapshot snap = await ref.child('tokens').child(lastUser).child('token').once();
       if(snap.value == await getMyCloudToken()){
@@ -645,7 +654,6 @@ void updateLastUserPersistentStorage(String id)async{
 
     }
   }
-  prefs.setString('lastUser', id);
 }
 
 Future<String> getMyCloudToken()async{
@@ -782,5 +790,212 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
   }
 
 
+
+
+
+
+
+
+  Future<File> _cropImage(File imageFile) async {
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      ratioX: 1.0,
+      ratioY: 1.0,
+      maxWidth: 200,
+      maxHeight: 200,
+    );
+
+    return croppedFile;
+  }
+
+
+
+
+
+
+
+
+
+
+  // for data migration purposes ....
+
+
+
+  Future<void>migrateData()async{
+     // post
+
+    var ref = FirebaseDatabase.instance.reference();
+
+
+
+
+    String id = "834834113343750";
+     Map coordinates = {"lat":"40.0410509","lon":"-94.8214312"};
+     String Destination = "Rosendale";
+     bool fromHome = true;
+     String imgURL = "https://s8.postimg.cc/7jr3stzn9/Screen_Shot_2018-08-10_at_8.42.17_PM.png";
+     String key = '-LJ_EnyQaQa3MA7RcEAx';
+     String leaveDate = '2018-08-8 02:10:26 PM';
+     String name = 'Brody';
+     String riderOrDriver = 'Driving';
+     String state = 'MO';
+     String time = '2018-08-10 01:00:26 PM';
+     String fullName = "Brody Bauman";
+     String bio = '';
+     String fbLink = 'https://www.facebook.com/brody.bauman.1';
+
+    Map coverPhoto = {'imgURL':'https://s8.postimg.cc/8m1abaxv9/Screen_Shot_2018-08-10_at_8.41.20_PM.png'};
+
+    Map gradYear = {'gradYear':"2020"};
+
+
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var now = formatter.format(new DateTime.now());
+    Map message = {'to':globals.id,'from':'Link','message':"Thanks for joinng Link! We would love to hear your thoughts on how we can improve the app!", 'formattedTime':now};
+    ref.child('feedback').child(id).push().set(message);
+
+
+
+     // citycode/id/posts -> set post
+     Map post = {
+       'coordinates':coordinates,
+       'fromHome':fromHome,
+       'imgURL':imgURL,
+       'key':key,
+       'leaveDate':leaveDate,
+       'name':name,
+       'riderOrDriver':riderOrDriver,
+       'state':state,
+       'time':time,
+       'destination':Destination
+     };
+
+   await ref.child('Columbia-MO').child('posts').child(id).set(post);
+
+
+
+     // citycode/userInfo /id-> set post
+     Map userInfo = {
+      'fullName':fullName,
+      'imgURL':imgURL
+    };
+    await ref.child('Columbia-MO').child('userInfo').child(id).set(userInfo);
+
+
+
+
+    // bios /id -> set
+    Map bioMap = {
+      'bio':bio
+    };
+
+    await ref.child('bios').child(id).set(bioMap);
+
+
+
+
+    // set comment notification false
+     Map alertTrue = {'newAlert': true};
+     Map alertFalse = {'newAlert': false};
+
+    await ref.child('commentNotificationReciepts').child(id).set(alertFalse);
+
+
+
+
+     Map feedbackConvoInfo = {
+       'convoID':id,
+       'formattedTime':'2018-08-10 02:10:26 PM',
+       'imgURL':'https://s8.postimg.cc/g46nesl3p/Icon-_App-60x60_2x-1.png',
+       'new':false,
+       'recentMsg':'Tell us how we can improve!!',
+       'recipFullName':'Link',
+       'recipID':'Link',
+       'time':time
+     };
+
+    await ref.child('convoLists').child(id).child(id).set(feedbackConvoInfo);
+
+
+     // need to set coordinates
+
+    await ref.child('coordinates').child('Columbia-MO').child(riderOrDriver).child(id).set({'coordinates':coordinates});
+
+    await ref.child('coverPhotos').child(id).set(coverPhoto);
+    await ref.child('gradYears').child(id).set(gradYear);
+
+    await ref.child('messageNotificationReciepts').child(id).set(alertTrue);
+    await ref.child('commentReciepts').child(id).set(alertTrue);
+
+
+    // set messageNotificationReciepts true
+    //set notificationReciepts to true
+
+    Map signupNotification = {
+      'imgURL':"https://is4-ssl.mzstatic.com/image/thumb/Purple125/v4/b2/a7/91/b2a7916a-35be-5a7e-4c91-45317fb40d9c/AppIcon-1x_U007emarketing-0-0-GLES2_U002c0-512MB-sRGB-0-0-0-85-220-0-0-0-3.png/246x0w.jpg",
+      'message':"Welcome to Link!! This is where you will recieve ride alerts, when someone is going to a city near your destination.",
+      'type':"signup"
+    };
+
+    await ref.child('notifications').child(id).push().set(signupNotification);
+
+    await ref.child('rideNotificationReciepts').child(id).set(alertTrue);
+
+    await ref.child('fbLinks').child(id).set({'link':fbLink});
+
+
+
+
+
+    // set rideNotificationReciepts = false
+
+
+
+
+    Map usersCitiesInfo = {
+      'city':'Columbia, MO',
+      'cityCode':'Columbia-MO',
+      'fullName':fullName,
+      'imgURL':imgURL,
+      'school':'Mizzou'
+    };
+
+
+
+    await ref.child('usersCities').child(id).set(usersCitiesInfo);
+
+
+  }
+
+
 }
 
+
+//  Future<void> updateBitmoji()async{
+//
+//     setState(() {bitmojiLoading = true;});
+//    try{
+//      var userInfo = await  platform.invokeMethod('snapGraph');
+//      if(userInfo['url'] == null){
+//        _errorMenu('Error', "You must add a Bitmoji in the Bitmoji app.", '');
+//        setState(() {
+//          bitmojiLoading = false;
+//        });
+//        return;
+//      }
+//      var url = await uploadImg(userInfo['url'],"bitmoji",globals.id ,FirebaseDatabase.instance.reference().push().key);  // dont want to overwrite previous pictures
+//      FirebaseDatabase database = FirebaseDatabase.instance;
+//      database.reference().child(globals.cityCode).child('userInfo').child(globals.id).update({'imgURL':url});
+//      database.reference().child(globals.cityCode).child('posts').child(globals.id).update({'imgURL':url});
+//      setState(() {
+//        bitmojiLoading = false;
+//        globals.imgURL = url;
+//      });
+//
+//    }catch(e){
+//      setState(() {
+//        bitmojiLoading = false;
+//      });
+//      _errorMenu('Error', 'Unable to update Bitmoji.', 'Please chat with Link Feedback!');
+//    }
+//  }

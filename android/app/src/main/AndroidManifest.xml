@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.flutter3">
+          package="com.youngApps.uber">
 
     <!-- The INTERNET permission is required for development. Specifically,
          flutter needs it to communicate with the running application
@@ -15,7 +15,7 @@
     <application
             android:name="io.flutter.app.FlutterApplication"
             android:screenOrientation="portrait"
-            android:label="Thumbs-Out"
+            android:label="Link"
             android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.snapchat.kit.sdk.clientId" android:value="442352e4-c3d2-4934-a755-20f9e951d74a" />
         <meta-data android:name="com.snapchat.kit.sdk.redirectUrl" android:value="thumbsout://hey" />
@@ -50,7 +50,7 @@
 
 
         <activity
-                android:name=".MainActivity"
+                android:name="com.youngApps.uber.MainActivity"
                 android:screenOrientation="portrait"
                 android:launchMode="singleTop"
                 android:theme="@style/LaunchTheme"
@@ -66,7 +66,6 @@
                     android:name="io.flutter.app.android.SplashScreenUntilFirstFrame"
                     android:value="true" />
             <intent-filter>
-                <data android:host="hey" android:scheme="thumbsout"></data>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>

@@ -23,8 +23,11 @@ class GlimpsePopUp extends StatefulWidget{
   final String recipImgURL;
   final String recipFullName;
   final bool fromCameraRoll;
+  final bool newConvo;
+  final bool userHasSentAtLeastOneMsg;
 
-  GlimpsePopUp(this.recipId, this.convoId, this.img, this.recipImgURL, this.recipFullName,this.fromCameraRoll);
+
+  GlimpsePopUp(this.recipId, this.convoId, this.img, this.recipImgURL, this.recipFullName,this.fromCameraRoll,this.newConvo, this.userHasSentAtLeastOneMsg);
 }
 
 class _GlimpsePopUpState extends State<GlimpsePopUp> {
@@ -46,7 +49,15 @@ class _GlimpsePopUpState extends State<GlimpsePopUp> {
                  backgroundImage: new CachedNetworkImageProvider(widget.recipImgURL),
                  backgroundColor: Colors.transparent,
                ),
-               new Expanded(child: new Text(widget.recipFullName, style: new TextStyle(fontWeight: FontWeight.bold),)),
+               new Expanded(child:
+
+                   new FittedBox(
+                     child: new Text(widget.recipFullName, style: new TextStyle(fontWeight: FontWeight.bold),),
+                     fit: BoxFit.scaleDown,
+                     alignment: Alignment.centerLeft,
+                   )
+
+               ),
                new Padding(padding: new EdgeInsets.only(right: 15.0),
                child: (!loading) ? new MaterialButton(
                  height: 40.0,
@@ -57,7 +68,12 @@ class _GlimpsePopUpState extends State<GlimpsePopUp> {
                  ),
                  onPressed: ()async{
                    try{
-                     await _sendImage();
+                     if(widget.newConvo){
+                       await sendNewConvoGlimpse();
+                     }else{
+                      await _sendImage();
+                     }
+
                      Navigator.pop(context,true);
                    }catch(e) {
                      Navigator.pop(context, false);
@@ -114,12 +130,18 @@ class _GlimpsePopUpState extends State<GlimpsePopUp> {
       return;
     }
     setState(() {loading = true;});
+
+    if(!widget.userHasSentAtLeastOneMsg){
+      await handleContactsList();
+    }
+
+
     var url = await uploadGlimpse(widget.img,globals.id);
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var now = formatter.format(new DateTime.now());
     Map msg = {
       'url':url,
-      'formmatedTime':now,
+      'formattedTime':now,
       'type':'glimpse',
       'from':globals.id,
       'to':widget.recipId,
@@ -150,6 +172,91 @@ class _GlimpsePopUpState extends State<GlimpsePopUp> {
       throw new Exception(e);
     }
   }
+
+
+
+
+  Future<void> sendNewConvoGlimpse()async{
+
+
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var now = formatter.format(new DateTime.now());
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    var senderName;
+    var senderImgURL;
+
+    try{
+      await handleContactsList();
+      senderName = await getSenderFullName();
+      senderImgURL = await getSenderImgURL();
+      Map convoInfoForSender = {'recipID':widget.recipId,'convoID':widget.convoId, 'time':widget.convoId, 'imgURL':widget.recipImgURL,
+        'recipFullName': widget.recipFullName, 'recentMsg':'New Glimpse','formattedTime':now, 'new': false};
+      await ref.child('convoLists').child(globals.id).child(widget.recipId).set(convoInfoForSender);
+
+      Map convoInfoForRecipient = {'recipID':globals.id,'convoID':widget.convoId, 'time':widget.convoId, 'imgURL':senderImgURL, 'recipFullName':senderName,'recentMsg':'New Glimpse','formattedTime':now, 'new':true};
+      await ref.child('convoLists').child(widget.recipId).child(globals.id).set(convoInfoForRecipient);
+
+      // send glimpse here
+
+     await _sendImage();
+
+
+
+    }catch(e){
+    //  _errorMenu('Error', 'There was an error sending your message.', '');
+    }
+  }
+
+Future<void> handleContactsList()async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    DataSnapshot snap = await ref.child('contacts').child(globals.id).once();
+    if(snap.value != null){
+      List<String> contacts = List.from(snap.value);
+      if(!contacts.contains(widget.recipId)){
+        contacts.add(widget.recipId);
+        await ref.child('contacts').child(globals.id).set(contacts);
+      }
+    }
+}
+
+  Future<String> getSenderImgURL()async{
+    if(globals.imgURL != null){
+      return globals.imgURL;
+    }
+
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+
+    DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).child('imgURL').once();
+    if(snap.value != null){
+      return snap.value;
+    }else{
+      throw new Exception();
+    }
+  }
+
+
+
+  Future<String> getSenderFullName()async{
+
+    if(globals.fullName != null){
+      return globals.fullName;
+    }
+
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+
+    DataSnapshot snap = await ref.child(globals.cityCode).child('userInfo').child(globals.id).child('fullName').once();
+    if(snap.value != null){
+      return snap.value;
+    }else{
+      throw new Exception();
+    }
+  }
+
+
+
+
+
+
 }
 
 

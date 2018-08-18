@@ -162,7 +162,7 @@ class chatListStream extends StatelessWidget {
       onTap: (){
         // show the message screen
         Navigator.push(context,
-            new MaterialPageRoute(builder: (context) => new ChatScreen(convoID: convoInfo['convoID'],newConvo: false,recipFullName: convoInfo['recipFullName'],recipID: convoInfo['recipID'],recipImgURL: convoInfo['imgURL']))).then((d){
+            new MaterialPageRoute(builder: (context) => new ChatScreen(convoId: convoInfo['convoID'],newConvo: false,recipFullName: convoInfo['recipFullName'],recipID: convoInfo['recipID'],recipImgURL: convoInfo['imgURL']))).then((d){
 
               updateChatListCallback();
 
@@ -230,6 +230,7 @@ class chatListStream extends StatelessWidget {
                   )
 
               ),),
+
               new Padding(padding: new EdgeInsets.only(right: 5.0),
                   child: new Text((time != null) ? getDateOfMsg(msg) : 'Anytime!',style: new TextStyle(color: Colors.grey) )
               )
@@ -299,8 +300,8 @@ final bool unread;
 
 
 
-GroupConvoCell(this.convoInfo,this.context,this.unread);
-
+///GroupConvoCell(this.convoInfo,this.context,this.unread);
+///
   _GroupConvoCellState createState() => new _GroupConvoCellState();
 
 
@@ -316,6 +317,7 @@ class _GroupConvoCellState extends State<GroupConvoCell> {
   bool userDoesntExist = false;
   String recentMsg;
   String formattedTime;
+  bool loading = false;
 
   void initState() {
     super.initState();
@@ -360,7 +362,26 @@ class _GroupConvoCellState extends State<GroupConvoCell> {
 
   @override
   Widget build(BuildContext context) {
-    return  (!userDoesntExist) ? (groupImg != null && groupName != null && recentMsg != null && formattedTime != null) ? ConvoCell(groupImg,groupName,recentMsg,formattedTime, widget.context, widget.unread) :new Container() : new Container();
+    return test();
+  }
+
+
+  Widget test(){
+    return new InkWell(
+      child: new Container(
+        color: Colors.black,
+        height: 25.0,
+        width: 25.0,
+        child: new Center(
+            child: (loading) ? new CircularProgressIndicator() : new Container()
+        ),
+      ),
+      onTap: (){
+        setState(() {
+          loading = !loading;
+        });
+      },
+    );
   }
 
   Widget ConvoCell(String img,String name,String recentMsg, String time, BuildContext context,bool unread ){

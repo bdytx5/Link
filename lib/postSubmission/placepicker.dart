@@ -15,197 +15,66 @@ import '../homePage/feed.dart';
 import 'package:dio/dio.dart';
 
 class PlacePicker extends StatefulWidget {
- // MyHomePage({Key key, this.title}) : super(key: key);
-       
- 
+
      PlacePicker({this.app,this.userIsSigningUp});
     final FirebaseApp app;
     final bool userIsSigningUp;
 
-
-    
-
-  
 
   @override
   _PickerState createState() => new _PickerState();
 }
 
 
-
-
-
-
-
-
-
-
 class _PickerState extends State<PlacePicker> {
 
 
-  List<Place> myPlaces = new List();
+  List<Place> returnedPlaces = new List();
   List<Map> popularCities = new List();
-  Map data = {};  
   Map placeData = {};
 
 
   final geocoding = new GoogleMapsGeocoding('AIzaSyDdmmVxh0XeFGrWGIjV0BUydtS8urN6DUI');
-   final places = new GoogleMapsPlaces('AIzaSyDdmmVxh0XeFGrWGIjV0BUydtS8urN6DUI');
-   final directions = new GoogleMapsDirections('AIzaSyDdmmVxh0XeFGrWGIjV0BUydtS8urN6DUI');
+  final places = new GoogleMapsPlaces('AIzaSyDdmmVxh0XeFGrWGIjV0BUydtS8urN6DUI');
+  final directions = new GoogleMapsDirections('AIzaSyDdmmVxh0XeFGrWGIjV0BUydtS8urN6DUI');
 
   final textContoller = new TextEditingController();
-  bool placePickerLoading = false;
   bool cellTapEnabled = true;
   bool blankSearch = true;
 
   
 void initState() {
     super.initState();
-
-
       grabPopularCities();
    }
 
-
-
-   void grabPopularCities()async{
-     DatabaseReference ref = FirebaseDatabase.instance.reference();
-     final snap = await ref.child('popularCities').once();
-     Map cities = snap.value;
-     cities.forEach((key,val){
-       setState(() {
-         popularCities.add(val);
-       });
-
-     });
-   }
-
-//Future<int> getDistanceBetweenTwoCities(String origin, String destination)async{
-//  Dio dio = new Dio();
-//  Response response = await dio.get("https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin}&destinations=${destination}&key=AIzaSyC_s7kYr0hEbExTd_GglEUfyP_7KOXlzTs");
-//    var request = response.data['status'];
-//    if(request == 'OK'){
-//    var rows = response.data['rows'];
-//    var elements = rows[0];
-//    var distance = elements['elements'];
-//    var distance2 = distance[0];
-//    var val = distance2['distance'];
-//    var val2 = val['value'];
-//    //val 2 is the distance in meters
-//    return val2;
-//  }else{
-//    throw new Exception('Error');
-//  }
-//}
-  
-
-void onChange() async{
-
-  if(textContoller.text.length == 0 ){
-    setState(() {
-      blankSearch = true;
-      myPlaces.clear();
-    });
- }else{
-
-
-    PlacesAutocompleteResponse response3 = await places.autocomplete(textContoller.text);
-    if(!response3.isOkay){
-      return;
-    }
-    List<Prediction> placesList = response3.predictions;
-    myPlaces.removeRange(0, myPlaces.length);
-    if (this.mounted){
-      setState(() {
-        placesList.forEach((place) {
-          print(placesList.length.toString());
-          Place thePlace = Place(place.placeId, place.description);
-          myPlaces.add(thePlace);
-          blankSearch = false;
-        });
-
-      });
-
-    }
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+        body:new WillPopScope(
+            onWillPop: () async {
+              return false;
+            },
+            child: new Stack(
+              children: <Widget>[
+                buildPlacePickerInput(),
+                new Center(
+                    child: (!cellTapEnabled) ? new Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        new CircularProgressIndicator(),
+                      ],
+                    ) : new Container()
+                )
+              ],
+            )
+        )
+    );
   }
-}
 
 
 
-  bool orinNotEdited = true;
-
-  void sendPost(String userID, Map<String,String> cityData){
-    FirebaseDatabase database = FirebaseDatabase.instance;
-         database.reference().child("userInfo").child(userID).once().then((DataSnapshot snap){
-                if(snap.value != null){
-                 data = snap.value;
-                Post info = Post(name: data['name'],id: data['id'],phoneNumber: data['phone'],fullName: data['fullName'],imgURL: data['imgURL'],destination:cityData['city'],state:cityData['state']);
-                database.reference().child("posts").child(data['id']).set(info.toJson());
-                Navigator.pop(context, info);
-
-                }
-         });
-    }
-
-
-void uploadFirstPost(String userID, String placeID) async{ 
-
-
-   getCityData(placeID).then((cityData){
-
-
-var id = "1727461130626740";
-   sendPost(id, cityData);
- }).catchError((e){
-
-   _errorMenu('error', 'error obtaining city data.', 'Please select a new Location');
-   return;
-   });
-
-  
-}
-
-
-Future<Map<dynamic,dynamic>> getCityData(String id)async{
-
-var cityData = Map<dynamic,dynamic>();
-Map coordinates = {};
-//List<String> cityData;
-GeocodingResponse response3 = await geocoding.searchByPlaceId(id);
-if(response3.isOkay){
-  var lat = response3.results.first.geometry.location.lat.toString();
-  var lng = response3.results.first.geometry.location.lng.toString();
-  coordinates['lat'] = lat;
-  coordinates['lon'] = lng;
-
-  cityData['coordinates'] = coordinates;
-  response3.results.first.addressComponents.forEach((res){
-
-    List<String> stateComponents = ["administrative_area_level_1", "political"];
-    List<String> cityComponents = ["locality", "political"];
-    print(res.types);
-
-    Function eq = const ListEquality().equals;
-    if(eq(stateComponents, res.types)){
-//initials
-      cityData['state'] = res.shortName;
-    }
-    if(eq(cityComponents, res.types)){
-//city short name
-      cityData['city'] = res.shortName;
-      print(cityData.toString());
-    }
-  });
-  return cityData;
-}else{
-  //_errorMenu('Error', 'Could not find location', 'Choose a new location');
-  throw new Exception('error');
-}
-
-}
-
-
-Widget buildPlacePickerInput(){
+  Widget buildPlacePickerInput(){
     return new Container(
       child: new Column(
         children: <Widget>[
@@ -217,37 +86,70 @@ Widget buildPlacePickerInput(){
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 new Expanded(
-                    child: new Padding(padding: new EdgeInsets.only(top: 35.0),
-                      child: (!widget.userIsSigningUp) ?  new IconButton(
-                          icon:  new Icon(Icons.close),
-                          onPressed: (){
-                            Navigator.pop(context);
-                          }) : new Container(),
-                    ),
+                  child: new Padding(padding: new EdgeInsets.only(top: 35.0),
+                    child: (!widget.userIsSigningUp) ?  new IconButton(
+                        icon:  new Icon(Icons.close),
+                        onPressed: (){
+                          Navigator.pop(context);
+                        }) : new Container(),
+                  ),
                 ),
-              new Padding(padding: new EdgeInsets.only(left: 12.0, bottom: 1.0),
-                    child: new TextField(
-                      autofocus: true,
+                new Padding(padding: new EdgeInsets.only(left: 12.0, bottom: 1.0),
+                  child: new TextField(
+                    autofocus: true,
                     controller: textContoller,
                     decoration: new InputDecoration(border: InputBorder.none, hintText:(widget.userIsSigningUp) ? 'Where do usually go?':'Where?'),
                     style: new TextStyle(fontSize: 24.0,color: Colors.black),
-                      onChanged: (d){ onChange();},
+                    onChanged: (d){ searchBarChanged();},
                   ),
-                  ),
-
-
+                ),
               ],
             ),
           ),
-              new Divider(),
-              new Expanded(
-
-             child: (!blankSearch) ? placesListView() : popularCitiesListView(),
+          new Divider(),
+          new Expanded(
+            child: (!blankSearch) ? placesListView() : popularCitiesListView(),
           )
         ],
       ),
     );
+  }
+
+  
+
+void searchBarChanged() async{
+  if(textContoller.text.length == 0 ){
+    setState((){
+      blankSearch = true;
+      returnedPlaces.clear();
+    });
+ }else{
+    PlacesAutocompleteResponse response3;
+    try{
+      response3 = await places.autocomplete(textContoller.text);
+    }catch(e){
+      return;
+    }
+    if(!response3.isOkay){
+      return;
+    }
+    List<Prediction> placesList = response3.predictions;
+    returnedPlaces.removeRange(0, returnedPlaces.length);
+    if (this.mounted){
+      setState(() {
+        placesList.forEach((place) {
+          Place thePlace = Place(place.placeId, place.description);
+          returnedPlaces.add(thePlace);
+          blankSearch = false;
+        });
+      });
+    }
+  }
 }
+
+
+
+
 
 Widget popularCitiesListView(){
  return new MediaQuery.removePadding(
@@ -271,66 +173,39 @@ Widget popularCitiesListView(){
       context: context,
       child: new Container(
         child: new ListView.builder(
-            itemCount: popularCities.length,
+            itemCount: returnedPlaces.length,
             itemBuilder: (context,index){
-              return(index < myPlaces.length) ? _buildPlacesCell(index) : new Container();
+              return(index < returnedPlaces.length) ? _buildPlacesCell(index) : new Container();
             }
         ),
       ),
     );
   }
 
-  @override 
-      Widget build(BuildContext context) {
 
-        return new Scaffold(
-          body: new Stack(
-            children: <Widget>[
-
-          buildPlacePickerInput(),
-              new Center(
-                child: (!cellTapEnabled) ? new Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    new CircularProgressIndicator(),
-                  ],
-                ): new Container()
-              )
-
-
-            ],
-          )
-
-
-        );
-
-      }
 
 
   Widget _buildPlacesCell(int index){
-   Map city = popularCities[index];
-    String cityName = city['city'];
       return new InkWell(
-          onTap: (!cellTapEnabled) ? null : () {_handlePlacePickerCellSelection(myPlaces[index]);},
+          onTap: (!cellTapEnabled) ? null : () {_handlePlacePickerCellSelection(returnedPlaces[index]);},
           child: new Container(
             padding: new EdgeInsets.all(10.0),
             child: new Row(
               children: <Widget>[
                 new Icon(Icons.place),
                 new Flexible(
-                  child:  new Text(myPlaces[index].description, overflow: TextOverflow.ellipsis),
+                  child:  new Text(returnedPlaces[index].description, overflow: TextOverflow.ellipsis),
                 )
               ],
             )
           )
       );
-}
+   }
 
 
   Widget _buildPopularCitiesCell(int index){
     Map city = popularCities[index];
     Place place = new Place(city['placeID'], city['longName']);
-
     return new InkWell(
         onTap: (!cellTapEnabled) ? null : () {_handlePopularCitySelection(place);},
         child: new Container(
@@ -360,10 +235,7 @@ Widget popularCitiesListView(){
 
 
     void _handlePlacePickerCellSelection(Place place) async {
-      setState(() {
-                  cellTapEnabled = false;
-
-              });
+      setState(() {cellTapEnabled = false;});
           var placeInfo;
           try{
              placeInfo = await getCityData(place.id);
@@ -376,14 +248,9 @@ Widget popularCitiesListView(){
           }
            placeInfo['longName'] = place.description;
            if(placeInfoIsOkay(placeInfo)){
-
              Navigator.pop(context, placeInfo);
-
            }else{
-
-             setState(() {
-               cellTapEnabled = true;
-             });
+             setState(() {cellTapEnabled = true;});
 
              _errorMenu('Error', 'Please Choose a different location', 'One of your locations were not found');
 
@@ -395,39 +262,25 @@ Widget popularCitiesListView(){
 
 
   void _handlePopularCitySelection(Place place) async {
-    setState(() {
-      cellTapEnabled = false;
-    });
+    setState(() {cellTapEnabled = false;});
 
       var placeInfo;
       try{
          placeInfo = await getCityData(place.id);
-
       }catch(e){
         _errorMenu('Error', "Couldn't find sufficient information for this location..", 'Sorry');
-        setState(() {
-          cellTapEnabled = true;
-        });
+        setState(() {cellTapEnabled = true;});
         return;
       }
-
       placeInfo['longName'] = place.description;
       if(placeInfoIsOkay(placeInfo)){
         placeInfo['fromHomeCity'] = true;
-
         Navigator.pop(context, placeInfo);
       }else{
-
-        setState(() {
-          cellTapEnabled = true;
-        });
-
+        setState(() {cellTapEnabled = true;});
         _errorMenu('Error', 'Please Choose a different location', 'One of your locations were not found');
-
         return;
       }
-
-
   }
 
 
@@ -447,6 +300,70 @@ Widget popularCitiesListView(){
       }
     }
   }
+
+
+
+  Future<Map<dynamic,dynamic>> getCityData(String id)async{
+    var cityData = Map<dynamic,dynamic>();
+    Map coordinates = {};
+    GeocodingResponse response3;
+    try{
+      response3 = await geocoding.searchByPlaceId(id);
+    }catch(e){
+      throw new Exception();
+    }
+
+    if(response3.isOkay){
+      var lat = response3.results.first.geometry.location.lat.toString();
+      var lng = response3.results.first.geometry.location.lng.toString();
+      coordinates['lat'] = lat;
+      coordinates['lon'] = lng;
+      cityData['coordinates'] = coordinates;
+      response3.results.first.addressComponents.forEach((res){
+
+        List<String> stateComponents = ["administrative_area_level_1", "political"];
+        List<String> cityComponents = ["locality", "political"];
+
+        Function eq = const ListEquality().equals;
+        if(eq(stateComponents, res.types)){
+//initials
+          cityData['state'] = res.shortName;
+        }
+        if(eq(cityComponents, res.types)){
+//city short name
+          cityData['city'] = res.shortName;
+        }
+      });
+      if(cityData['state'] == null || cityData['city'] == null || lng == null || lat == null){
+        throw new Exception();
+      }
+      return cityData;
+    }else{
+      throw new Exception('error');
+    }
+
+  }
+
+
+
+
+
+  void grabPopularCities()async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    try{
+      final snap = await ref.child('popularCities').once();
+      Map cities = snap.value;
+      cities.forEach((key,val){
+        setState(() {
+          popularCities.add(val);
+        });
+      });
+    }catch(e){
+      _errorMenu('Error', 'There was an error connecting to the Link Servers. Please try again later.', '');
+      throw new Exception();
+    }
+  }
+
 
 
 

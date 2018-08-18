@@ -5,6 +5,7 @@ import 'login_page.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:convert';
 
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import '../main.dart';
@@ -23,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'signupPopup.dart';
 import 'customizeProfile.dart';
 import '../homePage/home.dart';
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 // select school will accept push the placeInfo and the snap graph to the profile customization page....
 
@@ -42,15 +44,12 @@ class SelectSchool extends StatefulWidget {
 
 class _SelectSchoolState extends State<SelectSchool> {
   FirebaseApp app;
-  bool loading = false;
   List<School> schoolList = List<School>();
-  final textContoller = new TextEditingController();
   int selectedIndex = -1;
   bool userClickedFB = false;
-  String logoURL = "https://is4-ssl.mzstatic.com/image/thumb/Purple125/v4/b2/a7/91/b2a7916a-35be-5a7e-4c91-45317fb40d9c/AppIcon-1x_U007emarketing-0-0-GLES2_U002c0-512MB-sRGB-0-0-0-85-220-0-0-0-3.png/246x0w.jpg";
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   static final FacebookLogin facebookSignIn = new FacebookLogin();
-  static const platform = const MethodChannel('thumbsOutChannel');
+  AssetImage fbIcon = new AssetImage('assets/fb.png');
+
 
   void initState() {
     super.initState();
@@ -87,38 +86,69 @@ class _SelectSchoolState extends State<SelectSchool> {
             (selectedIndex != -1 && !widget.userHasAlreadySignedIn)
                 ? new Padding(
                     padding: new EdgeInsets.all(25.0),
-                    child: new Container(
-                        height: 75.0,
-                        width: 300.0,
-                        decoration: new BoxDecoration(
-                          borderRadius:
-                              new BorderRadius.all(const Radius.circular(40.0)),
-                          color: Color(0xFFFFFC00),
-                        ),
-                        child: new InkWell(
-                          onTap: (userClickedFB) ? null : (){
-                            handleSnapLogin();
-                          },
-                          child: new Center(
-                           child: new Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                new Padding(padding: new EdgeInsets.all(20.0),
-                                    child: new Container(
-                                      height: 40.0,
-                                      width: 40.0,
-                                      child: new Image.network("https://docs.snapchat.com/static/ghostlogo@2x-7619bf5537237fa6abac3ddcfc1d379b-038d0.png"),
-                                    )
-                                ),
-                                new Text("Continue With Snachat!",style:
-                                new TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                                  )
-                              ],
-                            ),
+                    child: new InkWell(
+                  onTap: (userClickedFB) ? null : (){
+
+                    _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, and Profile Link, so other users can learn more about you.", "").then((res){
+
+                      if(res){
+                        _termsWarningMenu("Link Ridesharing Agreement", "By using Link, you agree to our terms of use.", '').then((agreed){
+                          if(agreed){
+                            handleFbLogin();
+                          }
+                        });
+                      }
+
+                    });
+                  },
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  child:  new Container(
+                    height: 75.0,
+                    width: 300.0,
+                    decoration: new BoxDecoration(
+                      borderRadius:
+                      new BorderRadius.all(const Radius.circular(40.0)),
+                      color: Colors.blue,
+                    ),
+                    child: new Center(
+                      child: new Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          new Padding(padding: new EdgeInsets.only(top: 20.0,bottom: 20.0,left: 20.0,right: 1.0),
+                              child: new Container(
+                                height: 40.0,
+                                width: 40.0,
+                                child: new Image(image: fbIcon,color: Colors.white,),
+                              )
                           ),
-                        )),
-                  )
-                : new Padding(
+
+
+                            new Expanded(child: new Container(
+                                height: 65.0,
+                                width: 200.0 ,
+                                  child:  new Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      new Padding(padding: new EdgeInsets.only(right: 10.0),
+                                      child: new FittedBox(
+                                        child: new Text("Continue With Facebook!",style: new TextStyle(color: Colors.white, fontWeight: FontWeight.bold,),maxLines: 1,),
+                                        fit: BoxFit.scaleDown,
+                                      )
+                                      )
+                                    ],
+                                  )
+
+                            ),)
+
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ) : new Padding(
                     padding: new EdgeInsets.all(25.0),
                     child: new Container(
                         height: 75.0,
@@ -163,39 +193,64 @@ class _SelectSchoolState extends State<SelectSchool> {
 
 
 
-  Future<void> handleSnapLogin()async{
-    var result;
-    try{
-      result = await logInWithSnapchat();
-    }catch(e){
-      _errorMenu("error", "There was an error logging in.", " Please make sure your Snap credentials are correct");
-      return;
-    }
-    bool userExists = await checkIfUserExists(result['id']);
-    if(userExists){
-      Home homePage = Home(widget.app, result['id'],true);
-      globals.id = result['id'];
-      globals.cityCode = await getUserCityCode(result['id']);
-      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => homePage));
-      return;
-    }else{
-      // add selected user data to snap data
-      result["city"] = schoolList[selectedIndex].city;
-      result['cityCode'] = schoolList[selectedIndex].cityCode;
-      result['school'] = schoolList[selectedIndex].schoolName;
-      Map placeInfo = await  Navigator.push(context, new MaterialPageRoute(builder: (context) => new PlacePicker(app: widget.app, userIsSigningUp: true)));
-      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => new customizeProfile(result, placeInfo,widget.app)));
-    }
 
-  }
 
   // need a facebook login function that logs in, and gets the id of the user.
 
 
+  Future<void> handleFbLogin()async{
+    FacebookLoginResult result;
+    bool userExists = false;
+    try{
+      result = await facebookSignIn.logInWithReadPermissions(['public_profile', 'user_link']);
+    }catch(e){
+      _errorMenu("error", "There was an error logging in.", " Please make sure your Snap credentials are correct");
+      return;
+    }
+    if(result.accessToken == null){
+      return;
+    }
+    try{
+      userExists = await checkIfUserExists(result.accessToken.userId);
+    }catch(e){
+      userExists = false;
+    }
+    if(userExists){
+      Home homePage = Home(widget.app, result.accessToken.userId,true);
+      globals.id = result.accessToken.userId;
+      try{
+        globals.cityCode = await getUserCityCode(result.accessToken.userId);
+        Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => homePage));
+      }catch(e){
+          _errorMenu('Error', "Please try logging in again.", '');
+      }
+    }else{
+      // add selected user data to snap data
+      Map userInfo = new Map();
+      userInfo["city"] = schoolList[selectedIndex].city;
+      userInfo['cityCode'] = schoolList[selectedIndex].cityCode;
+      userInfo['school'] = schoolList[selectedIndex].schoolName;
+      //do facebook graph stuff
 
+      var fbInfo;
+      try{
+        fbInfo = await graphFb(result.accessToken.token);
+      }catch(e){
+        _errorMenu("error", 'Error logging into Facebbok, please try again.', '');
+        return;
+      }
+      userInfo['first_name'] = fbInfo['first_name'];
+      userInfo['last_name'] = fbInfo['last_name'];
+      userInfo['imgURL'] = fbInfo['url'];
+      userInfo['id'] = fbInfo['id'];
 
-
-
+      if(fbInfo.containsKey('link')){
+        userInfo['link'] = fbInfo['link'];
+      }
+      Map placeInfo = await  Navigator.push(context, new MaterialPageRoute(builder: (context) => new PlacePicker(app: widget.app, userIsSigningUp: true)));
+      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => new customizeProfile(userInfo, placeInfo,widget.app)));
+    }
+  }
 
 
   Future<void> handleContinue()async{
@@ -206,74 +261,51 @@ class _SelectSchoolState extends State<SelectSchool> {
       result['cityCode'] = schoolList[selectedIndex].cityCode;
       result['school'] = schoolList[selectedIndex].schoolName;
       Map placeInfo = await  Navigator.push(context, new MaterialPageRoute(builder: (context) => new PlacePicker(app: widget.app, userIsSigningUp: true)));
-      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => new customizeProfile(result, placeInfo,widget.app)));
+      if(placeInfo != null){
+        Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => new customizeProfile(result, placeInfo,widget.app)));
+      }
     }else{
-      handleSnapLogin();
+        handleFbLogin();
     }
   }
 
-  Future<dynamic> logInWithSnapchat()async{
+
+  Future<Map>graphFb(String token)async{
+
+    FbGraph graph = FbGraph(token);
     try{
-      dynamic result = await  platform.invokeMethod('snapchatLogin');
-      return result;
+      Map info = await graph.me(['id', 'name', 'first_name', 'last_name', 'picture.type(large)', 'email','link']);
+      return info;
     }catch(e){
-      print(e);
-      throw new Exception('error');
+      throw new Exception();
     }
   }
-
-
 
 
   Future<bool>checkIfUserExists(String id)async{
     FirebaseDatabase database = FirebaseDatabase.instance;
-    DataSnapshot snap = await database.reference().child('usersCities').child(id).once();
-    if(snap.value != null){
-      return true;
-    } else{
-      return false;
+    try{
+      DataSnapshot snap = await database.reference().child('usersCities').child(id).once();
+      if(snap.value != null){
+        return true;
+      } else{
+        return false;
+      }
+    }catch(e){
+      throw new Exception();
     }
+
   }
+
 
   Future<String>getUserCityCode(String id)async{
     FirebaseDatabase database = FirebaseDatabase.instance;
-    DataSnapshot snap = await database.reference().child('usersCities').child(id).child('cityCode').once();
-      return snap.value;
-  }
-
-
-  Map buildUserInfo(String imgURL, String fullName) {
-  //  UsersNumber signUp = UsersNumber(app: app, name: info['first_name'], imgURL: info['url'],fullName: info['name'],id: info['id'],fbLink: info['link']); //
-  Map info = {
-    'fullName': fullName,
-    'imgURL': imgURL,
-  };
-  return info;
-}
-
-
-
-
-Future<String> uploadImg(String url, String path1, String path2) async {
     try{
-      var response = await http.get(url);
-      final Directory systemTempDir = Directory.systemTemp;
-// im a dart n00b and this is my code, and it runs s/o to dart async
-      final file = await new File('${systemTempDir.path}/test.png').create();
-      var result = await file.writeAsBytes(response.bodyBytes);
-      final StorageReference ref = await FirebaseStorage.instance.ref().child("bitmoji").child(path1).child(path2);
-      final dataRes = await ref.putData(response.bodyBytes);
-      final dwldUrl = await dataRes.future;
-      return dwldUrl.downloadUrl.toString();
-
+      DataSnapshot snap = await database.reference().child('usersCities').child(id).child('cityCode').once();
+      return snap.value;
     }catch(e){
-      setState(() {
-        userClickedFB = false;
-      });
-      print(e);
-      throw new Exception(e);
+      throw new Exception();
     }
-
   }
 
 
@@ -290,13 +322,11 @@ void grabSchools(){
     schoolData.forEach((key, val) {
       School school = School(key, val['city'], val['coordinates'],val['cityCode']);
       setState(() {
-        print(val);
         schoolList.add(school);
       });
     });
   });
 }
-
 
   Widget schoolListView() {
     return new Container(
@@ -390,6 +420,102 @@ void grabSchools(){
 
 
 
+  Future<bool> _fbWarningMenu(String title, String primaryMsg, String secondaryMsg) async {
+    var decision = await showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+               new Text(primaryMsg,maxLines: null,),
+
+
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text('Agree', style: new TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+            new FlatButton(
+              child: new Text('Cancel', style: new TextStyle(color: Colors.black),),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    return decision;
+  }
+
+  Future<bool> _termsWarningMenu(String title, String primaryMsg, String secondaryMsg) async {
+    var decision = await showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(primaryMsg,maxLines: null,),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+              new Row(
+                children: <Widget>[
+                  new FlatButton(
+                    child: new Text('View Terms', style: new TextStyle(color: Colors.black),),
+                    onPressed: () {
+                      Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
+                          url: 'https://docs.google.com/document/d/1eci-jMZvGyrLwJWctB4TMsjR2Mk0WHXMvzalD_UZhvQ/edit?usp=sharing',
+                          appBar: new AppBar(
+                            iconTheme: new IconThemeData(color: Colors.black),
+                            backgroundColor: Colors.yellowAccent,
+                            title: new Text("Terms of Service", style: new TextStyle(color: Colors.black),
+
+                            ),
+                            actions: <Widget>[
+                              new Icon(Icons.clear)
+                            ],
+                          ))));
+                    },
+                  ),
+                  new MediaQuery.removePadding(context: context, child:  new FlatButton(
+                    child: new Text('Cancel', style: new TextStyle(color: Colors.black),),
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                  ),),
+                  new FlatButton(
+                    child: new Text('Agree', style: new TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                  ),
+                ],
+              )
+          ],
+        );
+      },
+    );
+
+    return decision;
+  }
+
+
+
+
 }
 
 class schoolCell extends StatelessWidget {
@@ -434,9 +560,37 @@ class School {
 
 
 
+class FbGraph {
+
+  final String _baseGraphUrl = "https://graph.facebook.com/v3.0/";
+  final String token;
+  FbGraph(this.token);
+
+
+
+Future<Map<String, dynamic>> me(fields) async {
+    String _fields = fields.join(",");
+    var response;
+    try{
+      response = await http.get("$_baseGraphUrl/me?fields=${_fields}&access_token=${token}");
+    }catch(e){
+      throw new Exception();
+    }
+
+        Map<String, dynamic>  info = json.decode(response.body);
+        Map<String, dynamic> pic = info['picture'];
+        Map<String, dynamic> data = pic['data'];
+        info['url'] = data['url'];
+
+      return info;
+  }
+}
+
+
 ////////////////////////////// deprecated Snap code ///////////////////////////////////////////////
+//static const platform = const MethodChannel('thumbsOutChannel');
 
-
+//  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 //Widget yearCell(Color color, int index){
 //  return new Container(
 //    height: 30.0,
@@ -684,3 +838,78 @@ class School {
 //_errorMenu("error", "There was an error logging in.", " Please make sure your Snap credentials are correct");
 //  return;
 //}
+
+
+
+//Future<String> uploadImg(String url, String path1, String path2) async {
+//  try{
+//    var response = await http.get(url);
+//    final Directory systemTempDir = Directory.systemTemp;
+//// im a dart n00b and this is my code, and it runs s/o to dart async
+//    final file = await new File('${systemTempDir.path}/test.png').create();
+//    var result = await file.writeAsBytes(response.bodyBytes);
+//    final StorageReference ref = await FirebaseStorage.instance.ref().child("bitmoji").child(path1).child(path2);
+//    final dataRes = await ref.putData(response.bodyBytes);
+//    final dwldUrl = await dataRes.future;
+//    return dwldUrl.downloadUrl.toString();
+//
+//  }catch(e){
+//    setState(() {
+//      userClickedFB = false;
+//    });
+//    print(e);
+//    throw new Exception(e);
+//  }
+//}
+
+//
+//
+//Future<void> handleSnapLogin()async{
+//  var result;
+//  try{
+//    result = await logInWithSnapchat();
+//  }catch(e){
+//    _errorMenu("error", "There was an error logging in.", " Please make sure your Snap credentials are correct");
+//    return;
+//  }
+//  bool userExists = await checkIfUserExists(result['id']);
+//  if(userExists){
+//    Home homePage = Home(widget.app, result['id'],true);
+//    globals.id = result['id'];
+//    globals.cityCode = await getUserCityCode(result['id']);
+//    Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => homePage));
+//    return;
+//  }else{
+//    // add selected user data to snap data
+//    result["city"] = schoolList[selectedIndex].city;
+//    result['cityCode'] = schoolList[selectedIndex].cityCode;
+//    result['school'] = schoolList[selectedIndex].schoolName;
+//    Map placeInfo = await  Navigator.push(context, new MaterialPageRoute(builder: (context) => new PlacePicker(app: widget.app, userIsSigningUp: true)));
+//    Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => new customizeProfile(result, placeInfo,widget.app)));
+//  }
+//
+//}
+
+//
+//Future<dynamic> logInWithSnapchat()async{
+//  try{
+//    dynamic result = await  platform.invokeMethod('snapchatLogin');
+//    return result;
+//  }catch(e){
+//    print(e);
+//    throw new Exception('error');
+//  }
+//}
+//
+
+
+//
+//Map buildUserInfo(String imgURL, String fullName) {
+//  //  UsersNumber signUp = UsersNumber(app: app, name: info['first_name'], imgURL: info['url'],fullName: info['name'],id: info['id'],fbLink: info['link']); //
+//  Map info = {
+//    'fullName': fullName,
+//    'imgURL': imgURL,
+//  };
+//  return info;
+//}
+

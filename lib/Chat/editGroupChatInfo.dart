@@ -53,7 +53,7 @@ class _EditGroupChatPopUpState extends State<EditGroupChatPopUp> {
                     ),
 
 
-                new Padding(padding: new EdgeInsets.only(right: 15.0),
+                new Padding(padding: new EdgeInsets.all(5.0),
                     child: (!loading) ? new Center(
                       child: new MaterialButton(
                         height: 40.0,
@@ -65,8 +65,10 @@ class _EditGroupChatPopUpState extends State<EditGroupChatPopUp> {
                         onPressed: (){
                           // push group message screen
                           if(controller.text != null){
-                            Map convoInfo = {'convoID': widget.convoId,'newConvo': true,'groupMembers': widget.members, 'groupName': controller.text,'groupImg':widget.groupImgURL};
-                            Navigator.pop(context,convoInfo);
+                            if(controller.text.length > 0){
+                              Map convoInfo = {'convoID': widget.convoId,'newConvo': true,'groupMembers': widget.members, 'groupName': controller.text,'groupImg':widget.groupImgURL};
+                              Navigator.pop(context,convoInfo);
+                            }
                             }
                         },
                       ),

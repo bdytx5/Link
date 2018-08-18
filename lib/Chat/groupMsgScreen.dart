@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'viewPicScreen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'addUser.dart';
+import 'groupMembersPopUp.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final String convoID;
@@ -97,16 +98,30 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
         backgroundColor: Colors.yellowAccent,
         actions: <Widget>[
 
-          (widget.convoID != globals.id && !widget.newConvo) ?  new FlatButton.icon(onPressed: (){
-            Navigator.push(context, new MaterialPageRoute(builder: (context) => new AddUser(firstUser: widget.recipID,newConvo: false,))).then((users){
-              // users that have been selected now need to be added 
-              addUsersToGroup(users);
-              List<String> usersAdded = List.from(users);
-              
-              
-            });
+          (widget.convoID != globals.id && !widget.newConvo) ?  new GestureDetector(
+            child: new Icon(Icons.format_list_bulleted,color: Colors.black,),
+            onTap: (){
 
-          }, icon: new Icon(Icons.group_add), label: new Text('')) : new Container()
+              showDialog(context: context, builder: (BuildContext context) => new ViewGroup(widget.convoID,widget.groupName));
+
+            },
+          ) : new Container(),
+
+
+        new Padding(padding: new EdgeInsets.only(left: 10.0,right: 10.0),
+
+        child:   (widget.convoID != globals.id && !widget.newConvo) ?  new GestureDetector(onTap: (){
+          Navigator.push(context, new MaterialPageRoute(builder: (context) => new AddUser(firstUser: widget.recipID,newConvo: false,))).then((users){
+            // users that have been selected now need to be added
+            addUsersToGroup(users);
+            List<String> usersAdded = List.from(users);
+
+
+          });
+
+        }, child: new Icon(Icons.group_add,color: Colors.black,), ) : new Container(),
+
+        )
         ],
         title: new Text((widget.groupName != null) ? widget.groupName : '', style: new TextStyle(color: Colors.black),),
         leading: new IconButton(
@@ -375,7 +390,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var now = formatter.format(new DateTime.now());
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    var key = ref.child('convos').child(widget.convoID).push().key;
 
     try{
       
@@ -412,7 +426,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
 
     try{
       // set group list (for notifications)
-   await   ref.child('groupChatLists').child(widget.convoID).set(widget.groupMembers);
+   await ref.child('groupChatLists').child(widget.convoID).set(widget.groupMembers);
 
       // basic convo info
       Map convoInfo = {'groupChatInfoId':  widget.convoID,'time':widget.convoID, 'formattedTime':now,'group':true, 'groupName':widget.groupName, 'groupImg':widget.groupImg,'new':true};
@@ -561,19 +575,29 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
 
   Future<void> getAllNamesAndProfilePics()async{
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    var snap = await ref.child('groupChatLists').child(widget.convoID).once();
-    List<String> userList = List.from(snap.value);
-    userList.forEach((id)async{
-     var userSnap = await ref.child(globals.cityCode).child('userInfo').child(id).once();
-     setState(() {
-       nameInfo[id] = userSnap.value['fullName'];
-       imgInfo[id] = userSnap.value['imgURL'];
-     });
-    });
 
-    setState(() {
-      imagesAndNamesReady = true;
-    });
+    if(!widget.newConvo){
+      var snap = await ref.child('groupChatLists').child(widget.convoID).once();
+      List<String> userList = List.from(snap.value);
+      userList.forEach((id)async{
+        var userSnap = await ref.child(globals.cityCode).child('userInfo').child(id).once();
+        setState(() {
+          nameInfo[id] = userSnap.value['fullName'];
+          imgInfo[id] = userSnap.value['imgURL'];
+        });
+      });
+      setState(() {imagesAndNamesReady = true;});
+    }else{
+      widget.groupMembers.forEach((id)async{
+        var userSnap = await ref.child(globals.cityCode).child('userInfo').child(id).once();
+        setState(() {
+          nameInfo[id] = userSnap.value['fullName'];
+          imgInfo[id] = userSnap.value['imgURL'];
+        });
+      });
+      setState(() {imagesAndNamesReady = true;});
+    }
+
   }
 
 

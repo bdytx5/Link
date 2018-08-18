@@ -86,7 +86,9 @@ class _FeedState extends State<Feed> {
     super.initState();
     destination = widget.destination;
     transportMode = widget.transportMode;
-    handleNotifications();
+    if(Platform.isIOS){
+      handleNotifications();
+    }
     updateGlobalInfo(globals.id);
 
 
@@ -176,27 +178,28 @@ class _FeedState extends State<Feed> {
 
     void handleNotifications() async {
       final SharedPreferences prefs = await _prefs;
-      (!askedToAllowNotifications &&
-          prefs.getBool('requestedNotifications') == null) ? new Future.delayed(
-          const Duration(seconds: 5))
+      (!askedToAllowNotifications && prefs.getBool('requestedNotifications') == null) ? new Future.delayed(
+          const Duration(seconds: 4))
           .then((idk) {
         askedToAllowNotifications = true;
-        prefs.setBool('requestedNotifications', true);
         createSnackBar();
       }
       ) : null;
     }
 
 
-    void createSnackBar() {
+    void createSnackBar() async{
+      final SharedPreferences prefs = await _prefs;
+
       final snackBar = new SnackBar(content: new Row(
         children: <Widget>[
          new Expanded(child:  new Text('Allow Message Notifcations'),),
           new Padding(padding: new EdgeInsets.all(5.0),
-            child: new MaterialButton(onPressed: () {
-              Scaffold.of(context).hideCurrentSnackBar();
+            child: new MaterialButton(
+              onPressed: () {
+                prefs.setBool('requestedNotifications', true);
+                Scaffold.of(context).hideCurrentSnackBar();
               _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
-
 
             },
               child: new Text(

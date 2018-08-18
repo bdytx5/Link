@@ -21,14 +21,15 @@ import 'package:image_picker/image_picker.dart';
 
 
 class SnapPage extends StatefulWidget {
-  SnapPage(this.convoId,this.recipId, this.recipImgURL, this.recipFullName);
+  SnapPage(this.convoId,this.recipId, this.recipImgURL, this.recipFullName,this.newConvo, this.userHasSentAtLeastOneMessage);
 
 
-
+  final bool userHasSentAtLeastOneMessage;
   final String recipId;
   final String convoId;
   final String recipImgURL;
   final String recipFullName;
+  final bool newConvo;
   Offset postition = Offset(0.0, 0.0);
   @override
   _SnapPageState createState() => new _SnapPageState();
@@ -58,9 +59,6 @@ class _SnapPageState extends State<SnapPage> {
   @override
   void initState() {
     super.initState();
-
-    //setupFilePath();
-    // setup();
     controller = new CameraController(cameras[0], ResolutionPreset.high);
     controller.initialize().then((_) {
       if (!mounted) {
@@ -70,7 +68,11 @@ class _SnapPageState extends State<SnapPage> {
     });
   }
 
-
+  @override
+  void dispose() {
+  controller?.dispose();
+    super.dispose();
+  }
 
 
   @override
@@ -82,19 +84,10 @@ class _SnapPageState extends State<SnapPage> {
       body: (img == null) ? new Container(
         child: new Stack(
           children: <Widget>[
-           // new AspectRatio(
-
-           // child:
             cameraView(),
-          //  aspectRatio: (MediaQuery.of(context).size.width/(MediaQuery.of(context).size.height)),
-         //   ),
           ],
         ),
-      ) : (!picTaken && img != null) ? picPreview() : new Container(
-        ///   child: picTestView(),
-      ),
-
-
+      ) : (!picTaken && img != null) ? picPreview() : new Container(),
     );
   }
 
@@ -107,42 +100,28 @@ class _SnapPageState extends State<SnapPage> {
       width: double.infinity,
       child: new Stack(
         children: <Widget>[
-//          new RepaintBoundary(
-//            key: globalKey,
-//            child:
-//          ),
-        (!fromCameraRoll) ?
+
           new RepaintBoundary(
-      key: repaintKey,
+           key: repaintKey,
        child: new Stack(
           children: <Widget>[
-             new Container(
+            (!fromCameraRoll) ? new Container(
                 decoration:  new BoxDecoration(
                   image:new DecorationImage(image: FileImage(img),
                     fit: BoxFit.cover,
                   ),
                 ),
+              ) : new Container(
+              decoration: new BoxDecoration(border: new Border(bottom: new BorderSide(color: Colors.white,width: 50.0),top: new BorderSide(color: Colors.white,width: 50.0),),
+                  image:new DecorationImage(image: FileImage(img))
+
               ),
+            ),
+
             (textAdded) ? new DragBox(new Offset(0.0, 200.0), "square", Color.fromRGBO(0, 0, 0, 0.75),msgController) : new Container(),
           ],
         ),
-    )
-              : new RepaintBoundary(
-            key: repaintKey,
-            child: new Container(
-    decoration: new BoxDecoration(border: new Border(bottom: new BorderSide(color: Colors.white,width: 50.0),top: new BorderSide(color: Colors.white,width: 50.0),),
-    image:new DecorationImage(image: FileImage(img))
-
     ),
-    ),
-          ),
-
-
-      (fromCameraRoll) ?   new Align(
-        alignment: new Alignment(0.0, 0.95),
-        child: new Text('From Camera Roll', style: new TextStyle(fontWeight: FontWeight.bold),)
-      ) : new Container(),
-
 
      new Align(
             alignment: new Alignment(-0.9, -0.9),
@@ -155,27 +134,6 @@ class _SnapPageState extends State<SnapPage> {
               });
             }),
           ),
-//
-//      new Align(
-//        alignment: new Alignment(0.0, 0.9),
-//        child: new Container(
-//          height: 30.0,
-//          width: double.infinity,
-//          color: Colors.transparent,
-//          child: new Slider(value: slideValue,
-//
-//            onChanged: (val){
-//              setState(() {
-//                slideValue = val;
-//              });
-//            },
-//            activeColor: Colors.yellowAccent,
-//
-//            inactiveColor: Colors.white,
-//
-//          ),
-//        )
-//      ),
 
           new Align(
             alignment: new Alignment(0.9, 0.6),
@@ -192,6 +150,8 @@ class _SnapPageState extends State<SnapPage> {
           new Align(
             alignment: new Alignment(0.9, 0.8),
             child: (!loading) ? new IconButton(icon: new Icon(Icons.send, color: Colors.white,), onPressed: ()async{
+
+              await _capturePng();
               var sent = await  _showConfirmGlimpse();
                   //.then((sent){
               if(sent == null){return;}
@@ -211,21 +171,23 @@ class _SnapPageState extends State<SnapPage> {
 
   Future<File> _pickImage() async {
 
-    var imageFile = await  ImagePicker.pickImage(source: ImageSource.gallery);
+    var imageFile;
+    try{
+      imageFile = await  ImagePicker.pickImage(source: ImageSource.gallery);
+    }catch(e){
+      return;
+    }
     setState(() {
       img = imageFile;
-
       fromCameraRoll = true;
     });
-
-
     return imageFile;
   }
 
   Future<bool> _showConfirmGlimpse()async{
     // need to render the img
     if(img == null){return false;}
-    showDialog(context: context, builder: (BuildContext context) => new GlimpsePopUp(widget.recipId, widget.convoId, img, widget.recipImgURL, widget.recipFullName,fromCameraRoll)).then((sent){
+    showDialog(context: context, builder: (BuildContext context) => new GlimpsePopUp(widget.recipId, widget.convoId, img, widget.recipImgURL, widget.recipFullName,fromCameraRoll,widget.newConvo, widget.userHasSentAtLeastOneMessage)).then((sent){
       return sent;
     });
   }
@@ -248,44 +210,26 @@ class _SnapPageState extends State<SnapPage> {
       // A capture is already pending, do nothing.
       return null;
     }
-    final Directory extDir = await getTemporaryDirectory();
-
+     Directory extDir;
+    try{
+      extDir = await getTemporaryDirectory();
+    }catch(e){
+      _errorMenu('Error', 'There was an error capturing your photo. Please try again later.', '');
+      return;
+    }
     final String dirPath = '${extDir.path}/glimpses';
     await new Directory(dirPath).create(recursive: true);
     final String filePath = '$dirPath/${timestamp()}.jpg';
-
-//    final Directory extDir = await getTemporaryDirectory();
-//    final String dirPath = '${extDir.path}/Pictures/flutter_test';
-//    await new Directory(dirPath).create(recursive: true);
-   String time = timestamp();
-//    File newImg = new File('$dirPath/idk.png');  // this wasnt working so hot...
     img = new File(filePath);
 
     try {
       await controller.takePicture(filePath);
       setState(() {});
     } on CameraException catch (e) {
-      return null;
+      return;
     }
 
   }
-
-//  Future<void> _capturePng() async {
-//    RenderRepaintBoundary boundary = globalKey.currentContext.findRenderObject();
-//    ui.Image image = await boundary.toImage();
-//    ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png); // fail
-//    Uint8List pngBytes = byteData.buffer.asUint8List();
-//    final Directory extDir = await getTemporaryDirectory();
-//    final String dirPath = '${extDir.path}/Pictures/flutter_test';
-//    await new Directory(dirPath).create(recursive: true);
-//    String time = timestamp();
-//    img = new File('$dirPath/${time}.png');
-//    await img.writeAsBytes(pngBytes);
-//    setState(() {
-//     // picTaken = true;
-//    });
-//  }
-//
 
 
 
@@ -295,42 +239,23 @@ class _SnapPageState extends State<SnapPage> {
       loading = true;
     });
     try{
-      final Directory extDir = await getTemporaryDirectory();
+      final Directory extDir = await getApplicationDocumentsDirectory();
       final String dirPath = '${extDir.path}/Pictures/flutter_test';
       await new Directory(dirPath).create(recursive: true);
       String time = timestamp();
-      img = new File('$dirPath/${time}.png');
       RenderRepaintBoundary boundary = repaintKey.currentContext.findRenderObject();
       ui.Image image = await boundary.toImage();
       ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData.buffer.asUint8List();
-      await img.writeAsBytesSync(pngBytes);
-      setState(() {
-        loading = false;
-      });
+      img.writeAsBytesSync(pngBytes);
+      setState(() {loading = false;});
     }catch(e){
-      setState(() {
-        loading = false;
-      });
+      setState(() {loading = false;});
       _errorMenu('Error', "There was an error rendering your image.", "");
     }
 
   }
 
-
-  Future<String> uploadCoverPhoto(File img, String id) async {
-
-    try{
-      final StorageReference ref = await FirebaseStorage.instance.ref().child("glimpes").child(id).child(timestamp());
-      final dataRes = await ref.putData(img.readAsBytesSync());
-      final dwldUrl = await dataRes.future;
-      return dwldUrl.downloadUrl.toString();
-    }catch(e){
-      print(e);
-      throw new Exception(e);
-    }
-
-  }
 
 
   Widget cameraView(){
@@ -386,7 +311,12 @@ class _SnapPageState extends State<SnapPage> {
             child:  new GestureDetector(
                 onTap: ()async{
                   // show image picker
-                  File im =  await _pickImage();
+
+                  try{
+                    File im =  await _pickImage();
+                  }catch(e){
+                    _errorMenu('Error', "Please try closing the camera, and picking another image. We are aware of this bug.", '');
+                  }
                   setState(() {});
 
                 },
@@ -515,7 +445,6 @@ class DragBoxState extends State<DragBox> {
   FocusNode textNode = new FocusNode();
   TextEditingController controller;
   FocusNode glimpseNode = new FocusNode();
-  TextAlign textAl = TextAlign.left;
 
   @override
   void initState() {
@@ -529,16 +458,10 @@ class DragBoxState extends State<DragBox> {
   void _focusListener(){
 
     if(glimpseNode.hasFocus){
-//      textAl = TextAlign.left;
-
       setState(() {
         position = Offset(0.0, 200.0);
-
       });
-    }else{
-      textAl = TextAlign.center;
     }
-
   }
 
   @override
@@ -564,7 +487,7 @@ class DragBoxState extends State<DragBox> {
                     autofocus: true,
                     controller: controller,
                     focusNode: glimpseNode,
-                 textAlign: textAl,
+                 textAlign: TextAlign.center,
 
                 ),
           ),

@@ -141,14 +141,10 @@ class _UsersNumberState extends State<UsersNumber>{
 
 Future<String> uploadImg(String url) async {
 
-var response = await http.get(url);
-//final Directory systemTempDir = Directory.systemTemp;
-// im a dart n00b and this is my code, and it runs
-//final file =  await new File('${systemTempDir.path}/test.png').create();
-// var result = await file.writeAsBytes(response.bodyBytes);
-final StorageReference ref =  FirebaseStorage.instance.ref().child("profilePics");
- final dataRes = await ref.putData(response.bodyBytes);
-final dwldUrl = await dataRes.future;
+  var response = await http.get(url);
+  final StorageReference ref =  FirebaseStorage.instance.ref().child("profilePics");
+  final dataRes = await ref.putData(response.bodyBytes);
+  final dwldUrl = await dataRes.future;
   return dwldUrl.downloadUrl.toString();
 }
 
@@ -159,18 +155,18 @@ final dwldUrl = await dataRes.future;
 void continueToSelectSchool(){
 
 
-  if (!userClicked){
-                        userClicked = true;
-                        if(textContoller.text.length == 10){
-                          setState(() {
-                            widget.loading = true;
-                            widget.loadingRad = 10.0;
-                               });
-                          uploadImg(widget.imgURL).then((url){
-                            final signupInfo = UserInfo(name: widget.name,fullName: widget.fullName,id: widget.id, phoneNumber: textContoller.text, imgURL: url,fbLink: widget.fbLink);
-                          setState(() {
-                            widget.loading = false;
-                            widget.loadingRad = 10.0;
+        if (!userClicked){
+          userClicked = true;
+          if(textContoller.text.length == 10){
+            setState(() {
+              widget.loading = true;
+              widget.loadingRad = 10.0;
+              });
+            uploadImg(widget.imgURL).then((url){
+              final signupInfo = UserInfo(name: widget.name,fullName: widget.fullName,id: widget.id, phoneNumber: textContoller.text, imgURL: url,fbLink: widget.fbLink);
+              setState(() {
+                widget.loading = false;
+                widget.loadingRad = 10.0;
                                });
                 // need to pushpush the screen that allows the user to signup!
 //              SelectSchool selectSchool = new SelectSchool(app: widget.app,userInfo: signupInfo.toJson());

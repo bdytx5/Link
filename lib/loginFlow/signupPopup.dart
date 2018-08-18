@@ -56,16 +56,14 @@ class _SignupPopUpState extends State<SignupPopUp> {
   bool stage1 = true;
   bool stage2 = false;
   bool loading = false;
-  String logoURL = "https://is4-ssl.mzstatic.com/image/thumb/Purple125/v4/b2/a7/91/b2a7916a-35be-5a7e-4c91-45317fb40d9c/AppIcon-1x_U007emarketing-0-0-GLES2_U002c0-512MB-sRGB-0-0-0-85-220-0-0-0-3.png/246x0w.jpg";
+  String logoURL = "https://s8.postimg.cc/cnkpt6zv9/thumbs_Out_Logo4.jpg";
   String coverPhotoURL;
   String gradYear = '';
   TextEditingController postController = new TextEditingController();
   List<String> yearList = ['2019', '2020','2021','2022']; // could get this from the database maybe
   void initState() {
     super.initState();
-
     cityCode = widget.userInfo['cityCode'];
-
   }
 
 
@@ -199,11 +197,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
           break;
       }
     });
-
-
   }
-
-
 
 
 
@@ -229,12 +223,11 @@ class _SignupPopUpState extends State<SignupPopUp> {
               onPressed: () async {
                 if(!loading){
                   var post =  buildFirstPostForSnap(widget.placeInfo, widget.userInfo);
-                  var info = buildUserInfo(widget.userInfo['url'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}' );
-                   uploadInfoForSnap('Riding', post, info, buildNotificationInfo(), widget.userInfo['id']);
+                  var info = buildUserInfo(widget.userInfo['imgURL'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}' );
+                   uploadInfoForProfile('Riding', post, info, buildNotificationInfo(), widget.userInfo['id']);
                   Navigator.pop(context);
                   return;
                 }
-
               },
             ),
           ),
@@ -257,8 +250,8 @@ class _SignupPopUpState extends State<SignupPopUp> {
                     loading = true;
                   });
                   var post =  await buildFirstPostForSnap(widget.placeInfo, widget.userInfo);
-                  var info = await buildUserInfo(widget.userInfo['url'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}');
-                   uploadInfoForSnap('Driving', post, info, buildNotificationInfo(), widget.userInfo['id']);
+                  var info = await buildUserInfo(widget.userInfo['imgURL'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}');
+                  await uploadInfoForProfile('Driving', post, info, buildNotificationInfo(), widget.userInfo['id']);
                 }
               },
             ),
@@ -270,7 +263,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
 
 
-  void uploadInfoForSnap(String riderOrDriver,Map post, Map usersInfo, Map notificationInfo, String id)async{
+  Future<void> uploadInfoForProfile(String riderOrDriver,Map post, Map usersInfo, Map notificationInfo, String id)async{
     FirebaseDatabase database = FirebaseDatabase.instance;
 
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
@@ -296,31 +289,22 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
     File resizeImg;
     var cover;
-    File backUpCoverSmall;
-    var backupProfilePic;
-    String bitmojiURL;
+
 
     try{
       resizeImg = await FlutterNativeImage.compressImage(widget.coverPhoto.path, quality: getCoverPicQualityPercentage(widget.coverPhoto.lengthSync()));
       cover = await uploadCoverPhoto(resizeImg, widget.userInfo['id']);
-      backUpCoverSmall = await FlutterNativeImage.compressImage(widget.coverPhoto.path, targetHeight: 200, targetWidth: 200);
-      bitmojiURL  = await uploadBitmoji(usersInfo['imgURL'], widget.userInfo['id']);
-      backupProfilePic = await uploadCoverPhoto(backUpCoverSmall, widget.userInfo['id']);
     }catch(e){
       setState(() {loading = false;});
       _errorMenu('Error', 'There was an error.', 'Please try again.');
       return;
     }
 
-    if(bitmojiURL ==null || cover ==null || backUpCoverSmall == null || backupProfilePic == null  || resizeImg == null){
+    if(cover == null || resizeImg == null){
       _errorMenu('Error', 'There was an error, please try again later.', '');
       return;
     }
-
-    usersInfo['imgURL'] = bitmojiURL;
-    post['imgURL'] = bitmojiURL;
     post['riderOrDriver'] = riderOrDriver;
-
     try{
       await database.reference().child("bios").child(id).set({'bio':widget.userInfo['bio']});
       await database.reference().child("gradYears").child(id).set(buildGraduationYear(gradYear));
@@ -331,13 +315,15 @@ class _SignupPopUpState extends State<SignupPopUp> {
       await database.reference().child('commentNotificationReciepts').child(id).set({'newAlert':false});
       await database.reference().child('messageNotificationReciepts').child(id).set({'newAlert':false});
       await database.reference().child('rideNotificationReciepts').child(id).set({'newAlert':false});
-      await database.reference().child("backupProfilePics").child(id).set({'imgURL':backupProfilePic});
       await database.reference().child("coverPhotos").child(id).set({'imgURL':cover});
       await database.reference().child('convoLists').child(id).child(id).set(feedbackConvoInfo);
       await database.reference().child('coordinates').child(widget.userInfo["cityCode"]).child(post['riderOrDriver']).child(id).child('coordinates').set(buildCoordinatesInfo(widget.placeInfo));
       await database.reference().child('notifications').child(widget.userInfo['id']).push().set(buildFirstNotificaiton());
-
-
+      if(widget.userInfo.containsKey('link')){
+        if(widget.userInfo['link'] != null){
+          await database.reference().child('fbLinks').child(widget.userInfo['id']).set({'link':widget.userInfo['link']});
+        }
+      }
     }catch(e){
       setState(() {loading = false;});
       _errorMenu('error', 'Please try again.', '');
@@ -365,26 +351,8 @@ class _SignupPopUpState extends State<SignupPopUp> {
       print(e);
       throw new Exception(e);
     }
-
   }
 
-  Future<String> uploadBitmoji(String url, String userID) async {
-    var key =  secureString.generate(length: 10,charList: ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s']);
-    try{
-      var response = await http.get(url);
-//      final Directory systemTempDir = Directory.systemTemp;
-//      final file = await new File('${systemTempDir.path}/${key}.png').create();
-//      var result = await file.writeAsBytes(response.bodyBytes);
-//      File resizeImg = await FlutterNativeImage.compressImage(result.path, quality: 100);
-      final StorageReference ref = await FirebaseStorage.instance.ref().child("bitmojis").child(userID).child(key);
-      final dataRes = await ref.putData(response.bodyBytes);
-      final dwldUrl = await dataRes.future;
-      return dwldUrl.downloadUrl.toString();
-    }catch(e){
-      print(e);
-      throw new Exception(e);
-    }
-  }
 
 
   Map buildGraduationYear(String year){
@@ -425,10 +393,12 @@ class _SignupPopUpState extends State<SignupPopUp> {
       'key':nowKey,
       'time':formatter.format(new DateTime.now()),
       'coordinates':buildCoordinatesForPost(placeInfo),
-
     };
     return post;
   }
+
+  String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
+
 
   Map buildCoordinatesInfo(Map placeInfo){
     Map coordinate = placeInfo['coordinates'];
@@ -455,6 +425,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
   int  getCoverPicQualityPercentage(int size){
     var qualityPercentage = 100;
+
 
     if(size > 6000000){
       qualityPercentage = 80;
@@ -505,8 +476,6 @@ class _SignupPopUpState extends State<SignupPopUp> {
       },
     );
   }
-
-
 
 }
 

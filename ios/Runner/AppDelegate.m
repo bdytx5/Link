@@ -2,6 +2,8 @@
 #include "GeneratedPluginRegistrant.h"
 #import <Flutter/Flutter.h>
 #import <SCSDKLoginKit/SCSDKLoginKit.h>
+#import "glimpseScreen.h"
+
 
 
 static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
@@ -31,6 +33,7 @@ static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
     [GeneratedPluginRegistrant registerWithRegistry:self];
     // Override point for customization after application launch.
     
+
     
     FlutterViewController* controller = (FlutterViewController*)self.window.rootViewController;
     
@@ -73,6 +76,12 @@ static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
             [self checkNotificationStatus:result];
         }
         
+        if ([@"showCamera" isEqualToString:call.method]) {
+            glimpseScreen * vc = [[glimpseScreen alloc]initWithResult:result];
+            
+            [controller presentViewController:vc animated:YES completion:nil];
+        }
+        
         
     }];
     
@@ -85,6 +94,12 @@ static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
 }
 
+-(void) showGlimpseCamera{
+    
+//    glimpseScreen * vc = [[glimpseScreen alloc]init];
+//    [self.window.rootViewController]
+
+}
 
 -(void) loginToSnap:(FlutterViewController * )vc result:(FlutterResult)res {
     
@@ -148,15 +163,15 @@ static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
     
 }
 
-- (BOOL)application:(UIApplication *)application
-            openURL:(NSURL *)url
-            options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
-{
-    BOOL handled = [SCSDKLoginClient application:application
-                                         openURL:url
-                                         options:options];
-    return true;
-}
+//- (BOOL)application:(UIApplication *)application
+//            openURL:(NSURL *)url
+//            options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
+//{
+//    BOOL handled = [SCSDKLoginClient application:application
+//                                         openURL:url
+//                                         options:options];
+//    return true;
+//}
 
 
 - (void) getSnapId:(FlutterResult)res{

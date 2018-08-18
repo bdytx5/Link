@@ -37,8 +37,10 @@ target 'Runner' do
   # Flutter Pods
 pod 'Protobuf'
 pod 'SnapSDK'
+pod 'Firebase/Core'
+pod 'Firebase/Storage'
 
-  generated_xcode_build_settings = parse_KV_file('./Flutter/Generated.xcconfig')
+generated_xcode_build_settings = parse_KV_file('./Flutter/Generated.xcconfig')
   if generated_xcode_build_settings.empty?
     puts "Generated.xcconfig must exist. If you're running pod install manually, make sure flutter packages get is executed first."
   end

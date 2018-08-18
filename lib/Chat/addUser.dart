@@ -18,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'editGroupChatInfo.dart';
 
-
+//
 class AddUser extends StatefulWidget{
 
   final Stream stream;
@@ -197,12 +197,13 @@ class _AddUserState extends State<AddUser> {
 //              color: Colors.grey,
 //            ))
 
-          new Divider(),
+
     new Row(
       children: <Widget>[
         new Container(
           height: 40.0,
           width: MediaQuery.of(context).size.width - 30,
+          color: Colors.white,
 
           child: new ListView.builder(
               itemCount: addedUsers.length,

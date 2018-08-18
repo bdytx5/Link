@@ -18,14 +18,8 @@ import 'dart:io';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-
-
-
-
-
-
-
-
+import 'viewPicture.dart';
+import '../pageTransitions.dart';
 
 
 class ProfilePage extends StatefulWidget{
@@ -56,10 +50,12 @@ String school;
 String bio;
 String riderOrDriver;
 bool hasContacts = false;
+String fbLink;
 Map contactNameInfo = new Map();
 Map contactImgInfo = new Map();
 List<String> contactsList = new List();
 SecureString secureString = new SecureString();
+AssetImage fbIcon = new AssetImage('assets/fb.png');
 
 
 
@@ -73,12 +69,18 @@ SecureString secureString = new SecureString();
           alignment: Alignment.bottomCenter,
 
           children: <Widget>[
-            (coverPhoto != null) ?  new Container(
-              height: double.infinity,
-              width: double.infinity,
-              decoration: new BoxDecoration(image: new DecorationImage(
-                  image:  new CachedNetworkImageProvider((coverPhoto != null) ? coverPhoto : widget.coverPlaceholder),
-                  fit: BoxFit.cover)),
+            (coverPhoto != null) ? new GestureDetector(
+              child:  new Container(
+                height: double.infinity,
+                width: double.infinity,
+                decoration: new BoxDecoration(image: new DecorationImage(
+                    image:  new CachedNetworkImageProvider((coverPhoto != null) ? coverPhoto : widget.coverPlaceholder),
+                    fit: BoxFit.cover)),
+              ),
+              onTap: (){
+                Navigator.push(context,
+                    new ShowRoute(widget: viewPicPage(true,coverPhoto)));
+              },
             ) : new Container(child:new Center(
               child: new CircularProgressIndicator(),
             )),
@@ -111,7 +113,7 @@ SecureString secureString = new SecureString();
 
   Widget profileView() {
     return new Container(
-        height: (hasContacts) ? 230.0 : 160.0,
+        height: (hasContacts) ? 238.0 : 160.0,
         decoration: new BoxDecoration(borderRadius: new BorderRadius.only(
             topLeft: new Radius.circular(25.0),
             topRight: new Radius.circular(25.0)), color: Colors.white),
@@ -127,9 +129,16 @@ SecureString secureString = new SecureString();
                     new Padding(padding: new EdgeInsets.only(top: 8.0,left: 8.0),
                     child: new Column(
                       children: <Widget>[
-                        new CircleAvatar(radius: 35.0,
-                          backgroundImage: new CachedNetworkImageProvider(widget.profilePicURL),
-                          backgroundColor: Colors.transparent,// this should never be null!
+                        new GestureDetector(
+                          child: new CircleAvatar(radius: 35.0,
+                            backgroundImage: new CachedNetworkImageProvider(widget.profilePicURL),
+                            backgroundColor: Colors.transparent,// this should never be null!
+                          ),
+                          onTap: (){
+                            Navigator.push(context,
+                                new ShowRoute(widget: viewPicPage(false,widget.profilePicURL)));
+
+                          },
                         ),
                         (globals.id == widget.id) ? new Padding(padding: new EdgeInsets.only(top: 5.0),
                         child: GestureDetector(
@@ -150,12 +159,13 @@ SecureString secureString = new SecureString();
                     ),
                     new Column(
                       mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         new SizedBox(
                             height: 40.0,
-                            width: MediaQuery.of(context).size.width - 136,
+                            width: MediaQuery.of(context).size.width - (136+48),
                             child: new FittedBox(
-                              child:   (fullName != null) ? new Text(fullName,textAlign: TextAlign.left,style: new TextStyle(fontWeight: FontWeight.bold,fontSize: 28.0),overflow: TextOverflow.clip,maxLines: 1,):new Container(),
+                              child:(fullName != null) ? new Text(fullName,textAlign: TextAlign.left,style: new TextStyle(fontWeight: FontWeight.bold,fontSize: 28.0),overflow: TextOverflow.clip,maxLines: 1,):new Container(),
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                             ),
@@ -227,19 +237,35 @@ SecureString secureString = new SecureString();
             ),
             new Align(
               alignment: (hasContacts) ? new Alignment(0.94, -1.2) : new Alignment(0.94, -1.2) ,
-              child: new Container(
-                height: 48.0,
-                width: 48.0,
-                decoration: new BoxDecoration(
-                    color: Colors.yellowAccent, shape: BoxShape.circle),
-                child: new IconButton(
-                    icon: new Icon(Icons.chat, color: Colors.black,),
-                    onPressed: () {
-                      if(widget.id != globals.id){
-                        showMessageScreen(widget.id);
-                      }
-                    }),
-              ),
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  new Container(
+                    height: 48.0,
+                    width: 48.0,
+                    decoration: new BoxDecoration(
+                        color: Colors.yellowAccent, shape: BoxShape.circle),
+                    child: new IconButton(
+                        icon: new Icon(Icons.chat, color: Colors.black,),
+                        onPressed: () {
+                          if(widget.id != globals.id){
+                            showMessageScreen(widget.id);
+                          }
+                        }),
+                  ),
+                  new Container(
+                    height: 48.0,
+                    width: 48.0,
+                    decoration: new BoxDecoration(
+                        color: Colors.blue, shape: BoxShape.circle),
+                    child: new IconButton(
+                        icon: new ImageIcon(fbIcon,color: Colors.white,),
+                        onPressed: () {
+                            showFb();
+                        }),
+                  ),
+                ],
+              )
             ),
 
           ],
@@ -249,6 +275,54 @@ SecureString secureString = new SecureString();
     );
   }
 
+
+
+
+
+  Future<void> showFb()async{
+
+  var fbLink;
+    try{
+    fbLink = await getFBLink();
+    }catch(e){
+      _errorMenu("Error", "The user hasn't linked their Facebook yet. Try Searching their name on Facebook.", "");
+      return;
+    }
+
+    Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
+        url: fbLink,
+        appBar: new AppBar(
+          iconTheme: new IconThemeData(color: Colors.black),
+          backgroundColor: Colors.yellowAccent,
+          title: new Text(fullName, style: new TextStyle(color: Colors.black),
+
+          ),
+          actions: <Widget>[
+            new Icon(Icons.clear)
+          ],
+        ))));
+
+
+  }
+
+
+  Future<String> getFBLink()async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+
+    try{
+      DataSnapshot snap = await ref.child('fbLinks').child(widget.id).child('link').once();
+      if(snap.value != null){
+        return snap.value;
+      }else{
+
+        throw new Exception();
+      }
+    }catch(e){
+      throw new Exception();
+    }
+
+
+  }
 
 
 void initState() {
@@ -373,10 +447,10 @@ String getFirstName(String fullName) {
      await grabFullName();
     }
     if(snap.value != null){
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoID: snap.value,newConvo: false,recipFullName: fullName,recipID: widget.id,recipImgURL: widget.profilePicURL)));
+      Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoId: snap.value,newConvo: false,recipFullName: fullName,recipID: widget.id,recipImgURL: widget.profilePicURL)));
     }else{
     var key = ref.push().key;
-    Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoID: key,newConvo: true,recipFullName: fullName,recipID: widget.id,recipImgURL: widget.profilePicURL)));
+    Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoId: key,newConvo: true,recipFullName: fullName,recipID: widget.id,recipImgURL: widget.profilePicURL)));
     }
   }
 
@@ -410,10 +484,13 @@ Widget contactsListBuilder(){
         scrollDirection: Axis.horizontal,
         shrinkWrap: true,
         itemCount: contactsList.length,
-          itemBuilder: (BuildContext context, int index){
+          itemBuilder: (BuildContext context, int index) {
             return new InkWell(
-              onTap: (){
-                Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: contactsList[index],profilePicURL: contactImgInfo[contactsList[index]],)));
+              onTap: () {
+                Navigator.push(context, new MaterialPageRoute(
+                    builder: (context) =>
+                    new ProfilePage(id: contactsList[index],
+                      profilePicURL: contactImgInfo[contactsList[index]],)));
               },
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -421,17 +498,22 @@ Widget contactsListBuilder(){
                   new Padding(padding: new EdgeInsets.all(5.0),
                     child: new CircleAvatar(
                       radius: 23.0,
-                      backgroundImage: new CachedNetworkImageProvider(contactImgInfo[contactsList[index]]),
+                      backgroundImage: new CachedNetworkImageProvider(
+                          contactImgInfo[contactsList[index]]),
                       backgroundColor: Colors.transparent,
                     ),
                   ),
-                  new Text(contactNameInfo[contactsList[index]], style: new TextStyle(fontSize: 11.0,color: Colors.grey[800], fontWeight: FontWeight.bold),
-                  ),
+                  new Card(
+                    child: new Text(contactNameInfo[contactsList[index]],
+                      style: new TextStyle(fontSize: 11.0,
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.bold),
+                    ),
+                  )
                 ],
               ),
             );
           }
-
       )
     );
 
@@ -531,6 +613,45 @@ int  getCoverPicQualityPercentage(int size){
   return qualityPercentage;
 
 }
+
+
+
+
+
+
+
+
+
+
+
+Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) async {
+  return showDialog<Null>(
+    context: context,
+    barrierDismissible: false, // user must tap button!
+    builder: (BuildContext context) {
+      return new AlertDialog(
+        title: new Text(title),
+        content: new SingleChildScrollView(
+          child: new ListBody(
+            children: <Widget>[
+              new Text(primaryMsg),
+              new Text(secondaryMsg),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          new FlatButton(
+            child: new Text('Okay', style: new TextStyle(color: Colors.black),),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
 
 }

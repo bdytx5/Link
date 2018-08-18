@@ -125,6 +125,7 @@ class _commentsPageState extends State<commentsPage> {
 
   void sendComment(String key,String comment, String postId,bool expired)async {
     await grabUserInfo();
+    await handleCommentNotificaitonList(key, postId);
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     String now = formatter.format(new DateTime.now());
@@ -140,6 +141,36 @@ class _commentsPageState extends State<commentsPage> {
     await incrementCommentCount(postId, expired);
     
   }
+
+
+  Future<void>handleCommentNotificaitonList(String key, String posterId)async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+
+    try{
+      DataSnapshot snap = await ref.child('commentLists').child(key).once();
+
+      if(snap.value != null){
+        List<String> commentList = List.from(snap.value);
+        if(!commentList.contains(globals.id)){
+          commentList.add(globals.id);
+          await ref.child('commentLists').child(key).set(commentList);
+        }else{
+          return; // the user is already involved in the convo....
+        }
+      }else{
+        if(posterId != globals.id){
+          await ref.child('commentLists').child(key).set([globals.id, posterId]);
+        }else{
+          // the user is adding a comment to their own post, that has no prior comments
+          await ref.child('commentLists').child(key).set([globals.id]);
+        }
+      }
+    }catch(e){
+      return;
+    }
+
+  }
+
 
 
   Future<void> incrementCommentCount(String postId,bool expired)async {

@@ -111,7 +111,7 @@ class _userSearchStreamState extends State<userSearchStream> {
       // the user has a convo going with selected user
 
       final convoInfo = convoListSnap.value;
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoID: convoListSnap.value,newConvo: false,recipFullName: recipFullName,recipID: recipID,recipImgURL: recipImgURL)));
+      Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoId: convoListSnap.value,newConvo: false,recipFullName: recipFullName,recipID: recipID,recipImgURL: recipImgURL)));
         }else{
       // the user  does not have a convo going with the selected user
 
@@ -127,7 +127,7 @@ class _userSearchStreamState extends State<userSearchStream> {
 //      ref.child('convoLists').child(recipID).child(globals.id).set(convoInfoForRecipient);
 
       var key = ref.child('convoLists').child(globals.id).child(recipID).push().key;
-      Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoID: key,newConvo: true,recipFullName: recipFullName,recipID: recipID,recipImgURL: recipImgURL)));
+      Navigator.push(context, new MaterialPageRoute(builder: (context) => new ChatScreen(convoId: key,newConvo: true,recipFullName: recipFullName,recipID: recipID,recipImgURL: recipImgURL)));
 
 
 

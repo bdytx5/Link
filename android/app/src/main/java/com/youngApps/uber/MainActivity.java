@@ -1,9 +1,9 @@
-package com.example.flutter3;
+package com.youngApps.uber;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
+
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -16,7 +16,6 @@ import com.snapchat.kit.sdk.core.models.UserDataResponse;
 import com.snapchat.kit.sdk.login.networking.FetchUserDataCallback;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import io.flutter.app.FlutterActivity;
 import io.flutter.plugins.GeneratedPluginRegistrant;
@@ -31,13 +30,14 @@ public class MainActivity extends FlutterActivity {
     super.onCreate(savedInstanceState);
     GeneratedPluginRegistrant.registerWith(this);
     cxt = this;
-
+//
     new MethodChannel(getFlutterView(), CHANNEL).setMethodCallHandler(
             new MethodCallHandler() {
               @Override
               public void onMethodCall(MethodCall call,  Result result) {
                 // TODO
                 res = result;
+
                 if(call.method.equals("snapchatLogin")){
                   SnapLogin.getLoginStateController(cxt).addOnLoginStateChangedListener(mLoginStateChangedListener);
                   SnapLogin.getAuthTokenManager(cxt).startTokenGrant();
@@ -57,7 +57,7 @@ public class MainActivity extends FlutterActivity {
               }
             });
   }
-
+//
   final LoginStateController.OnLoginStateChangedListener mLoginStateChangedListener =
           new LoginStateController.OnLoginStateChangedListener() {
 

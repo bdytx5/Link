@@ -75,21 +75,22 @@ class _PostPopUpState extends State<PostPopUp> {
         new   Stack(
           children: <Widget>[
             buildPostSubmitScreen(),
-            new Center(
-              child: (loading) ? new CircularProgressIndicator() : new Container(),
-            )
+
+
+
           ],
         ),
 
 
-        (!selected) ? new InkWell(
-          child: new Icon(Icons.arrow_forward),
-          onTap: (){
+
+
+    (!selected) ?  new IconButton(icon: new Icon(Icons.arrow_forward), onPressed: (){
             setState(() {
               selected = true;
             });
-          },
-        ) : new Container()
+          }) : new Container()
+
+
       ],
     );
   }
@@ -298,62 +299,72 @@ class _PostPopUpState extends State<PostPopUp> {
 
   Widget buildPostSubmitScreen(){
 
-    return new Container(
-      child: new Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          buildLocationFields(true),
-          buildLocationFields(false),
+    return new Stack(
+      children: <Widget>[
 
-          new Padding(padding: new EdgeInsets.all(10.0),
-            child: new Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                new CircleAvatar(backgroundColor: Colors.yellowAccent, backgroundImage: new CachedNetworkImageProvider((globals.imgURL != null) ? globals.imgURL : logoURL)),
-                new Expanded(child: new Container(
-                  height: 100.0,
-                  width: 50.0,
-                  child: new Padding(padding: new EdgeInsets.only(left: 5.0),
-                    child: new TextField(
-                      autofocus: true,
-                      controller: postController,
-                      keyboardType: TextInputType.multiline,
-                      decoration: new InputDecoration(
-                          border: InputBorder.none,
-                          hintText: 'Enter a message...',
-                      ),
-                      maxLines: 40,
+    new Container(
+    child: new Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        buildLocationFields(true),
+        buildLocationFields(false),
+
+        new Padding(padding: new EdgeInsets.all(10.0),
+          child: new Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new CircleAvatar(backgroundColor: Colors.yellowAccent, backgroundImage: new CachedNetworkImageProvider((globals.imgURL != null) ? globals.imgURL : logoURL)),
+              new Expanded(child: new Container(
+                height: 100.0,
+                width: 50.0,
+                child: new Padding(padding: new EdgeInsets.only(left: 5.0),
+                  child: new TextField(
+                    autofocus: true,
+                    controller: postController,
+                    keyboardType: TextInputType.multiline,
+                    decoration: new InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Enter a message...',
                     ),
+                    maxLines: 40,
                   ),
-                 )
-                )
-              ],
-            ),
+                ),
+              )
+              )
+            ],
           ),
-          new Padding(
-            padding: new EdgeInsets.only(top: 10.0),
-            child: new Container(
-                height: 50.0,
-                width: double.infinity,
-                child: new Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    new Padding(padding: new EdgeInsets.all(3.0),
+        ),
+      (!loading) ? new Padding(
+          padding: new EdgeInsets.only(top: 10.0),
+          child: new Container(
+              height: 50.0,
+              width: double.infinity,
+              child: new Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  new Padding(padding: new EdgeInsets.all(3.0),
 
                     child: ridingBtn(),
-                    ),
-                    new Padding(padding: new EdgeInsets.all(3.0),
+                  ),
+                  new Padding(padding: new EdgeInsets.all(3.0),
 
                       child: drivingBtn()
-                    ),
+                  ),
 
-                  ],
-                )
-            ),
-          )
-        ],
-      ),
-    );
+                ],
+              )
+          ),
+        ):  new Center(
+        child: new CircularProgressIndicator(),
+      )
+      ],
+    ),
+    ),
+
+      ],
+    ) ;
+
+
   }
 
   Widget ridingBtn(){
