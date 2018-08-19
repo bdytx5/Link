@@ -304,15 +304,15 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                   ),
                   child: new InkWell(onTap: (){
 
-                    Navigator.push(context,
-                        new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
+//                    Navigator.push(context,
+//                        new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
 
 
 
 
-//                   platform.invokeMethod('showCamera').then((res){
-//                     print(res);
-//                   });
+                   platform.invokeMethod('showCamera').then((res){
+                     print(res);
+                   });
 
 
                      },

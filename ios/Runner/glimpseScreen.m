@@ -624,18 +624,17 @@ CGPoint textViewStartPoint;
     }
 }
 
--(void) uploadImg:(UIImage *)img{
+-(void) uploadImg:(UIImage *)img to:(NSString *)recip from:(NSString *)sender{
+    // generate current timestamp
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd hh:mm:ss a"];
+    NSString *currentTime = [dateFormatter stringFromDate:[NSDate date]];
+    
+    
     // Data in memory
      NSData *data = UIImageJPEGRepresentation(img,0.8);
-   
-
     FIRStorageReference *storageRef = [[FIRStorage storage] reference];
-
-    
-    // Create a reference to the file you want to upload
     FIRStorageReference *riversRef = [storageRef child:@"testing/dssfdd.jpg"];
-    
-    // Upload the file to the path "images/rivers.jpg"
     FIRStorageUploadTask *uploadTask = [riversRef putData:data
                                                  metadata:nil
                                                completion:^(FIRStorageMetadata *metadata,
@@ -654,7 +653,9 @@ CGPoint textViewStartPoint;
                                                                NSString * url = [[NSString alloc]initWithString:URL.absoluteString];
                                                                NSLog(url);
                                                                _flutterRes(url);
-                                                               NSDictionary * info = @{@"url":url, @"duration":[[NSNumber numberWithInt:slideval]stringValue]};
+                                                               NSDictionary * info = @{@"url":url, @"duration":[NSNumber numberWithInt:slideval],@"from":sender, @"to":recip,@"glimpse":@true,@"formattedTime":currentTime};
+                                                               
+                                                               
                                                                [self dismissViewControllerAnimated:false completion:nil];
                                                            }
                                                        }];

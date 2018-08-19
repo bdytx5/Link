@@ -37,8 +37,6 @@ target 'Runner' do
   # Flutter Pods
 pod 'Protobuf'
 pod 'SnapSDK'
-pod 'Firebase/Core'
-pod 'Firebase/Storage'
 
 generated_xcode_build_settings = parse_KV_file('./Flutter/Generated.xcconfig')
   if generated_xcode_build_settings.empty?

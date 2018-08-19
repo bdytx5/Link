@@ -355,12 +355,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     DataSnapshot snap = await ref.child('groupChatLists').child(widget.convoID).once();
     List<String> currentUsers = List.from(snap.value);
-    users.forEach((user)async{
+   // users.forEach((user)async{
+
+    for(var user in users){
       if(!currentUsers.contains(user)){
         currentUsers.add(user);
         await getNewlyAddedUsersInfo(user);
+        await updateNewUserConvoList(user);
       }
-    });
+    }
+
     await ref.child('groupChatLists').child(widget.convoID).set(currentUsers);
   }
 
@@ -629,6 +633,23 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
     return '';
   }
 
+
+  Future<void> updateNewUserConvoList(String id)async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    Map convoInfo = {
+      'group':true,
+      'groupChatInfoId':widget.convoID,
+      'formattedTime':formatter.format(new DateTime.now()),
+      'groupImg':widget.groupImg,
+      'groupName':widget.groupName,
+      'new':true,
+      'time':FirebaseDatabase.instance.reference().push().key,
+    };
+    
+   await ref.child('convoLists').child(id).child(widget.convoID).set(convoInfo);
+
+}
 
 
 
