@@ -9,9 +9,15 @@
 #import <UIKit/UIKit.h>
 #import <Flutter/Flutter.h>
 
-@interface glimpseScreen : UIViewController
+@interface glimpseScreen : UIViewController <UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate>
 @property (strong, nonatomic) FlutterResult flutterRes;
+@property (strong, nonatomic) NSString *recip;
+@property (strong, nonatomic) NSString *sender;
+@property (strong, nonatomic) NSString *convoId;
+@property (strong, nonatomic) NSString *imgURL;
+@property (strong, nonatomic) NSString *fullName;
+
+- (instancetype)initWithResult:(FlutterResult )result recipient:(NSString *)recip sender:(NSString *)sender convoId:(NSString *)convoId name:(NSString *)fullName imgURL:(NSString *)imgURL;
 
 
-- (instancetype)initWithResult:(FlutterResult )result;
 @end

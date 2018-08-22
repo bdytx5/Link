@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'loginFlow/login_page.dart';
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'globals.dart' as globals;

@@ -355,8 +355,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     DataSnapshot snap = await ref.child('groupChatLists').child(widget.convoID).once();
     List<String> currentUsers = List.from(snap.value);
-   // users.forEach((user)async{
-
     for(var user in users){
       if(!currentUsers.contains(user)){
         currentUsers.add(user);
@@ -454,9 +452,11 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
 
   Future<void> setGroupList(Map convoInfo)async{
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    widget.groupMembers.forEach((id)async {
-      await ref.child('convoLists').child(id).child(widget.convoID).set(convoInfo);
-    });
+
+      for(var id in widget.groupMembers){
+        await ref.child('convoLists').child(id).child(widget.convoID).set(convoInfo);
+      }
+
   }
 
   String getDateOfMsg(String time){
@@ -583,22 +583,25 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
     if(!widget.newConvo){
       var snap = await ref.child('groupChatLists').child(widget.convoID).once();
       List<String> userList = List.from(snap.value);
-      userList.forEach((id)async{
-        var userSnap = await ref.child(globals.cityCode).child('userInfo').child(id).once();
-        setState(() {
-          nameInfo[id] = userSnap.value['fullName'];
-          imgInfo[id] = userSnap.value['imgURL'];
-        });
-      });
+        for(var id in userList){
+          var userSnap = await ref.child(globals.cityCode).child('userInfo').child(id).once();
+          setState(() {
+            nameInfo[id] = userSnap.value['fullName'];
+            imgInfo[id] = userSnap.value['imgURL'];
+          });
+        }
+
+
       setState(() {imagesAndNamesReady = true;});
     }else{
-      widget.groupMembers.forEach((id)async{
+
+        for(var id in widget.groupMembers){
         var userSnap = await ref.child(globals.cityCode).child('userInfo').child(id).once();
         setState(() {
           nameInfo[id] = userSnap.value['fullName'];
           imgInfo[id] = userSnap.value['imgURL'];
         });
-      });
+      }
       setState(() {imagesAndNamesReady = true;});
     }
 

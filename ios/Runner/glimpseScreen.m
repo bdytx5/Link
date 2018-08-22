@@ -28,11 +28,14 @@
 
 
 @property (nonatomic,strong) UIButton *editBtn;
-@property (nonatomic,strong) UIButton *cameraBtn;
 @property (nonatomic,strong) UIButton *sendBtn;
+@property (nonatomic,strong) UIView * sendBtnBackdrop;
+@property (nonatomic,strong) UIView * editBtnBackdrop;
+@property (nonatomic,strong) UIButton *sendGlimpseBtn;
 @property (nonatomic,strong) UIButton *xButton;
 @property (nonatomic,strong) UIImageView *preview;
 @property (nonatomic,strong) UIImage *previewImage;
+@property (nonatomic,strong) UIImage *edittedImage;
 @property (nonatomic,strong) UIView * textView;
 @property (nonatomic,strong) UITextField * msgTextfield;
 @property (nonatomic,strong) UIView * confirmGlimpse;
@@ -40,18 +43,34 @@
 @property (nonatomic) UIView * slideBar;
 @property (nonatomic) UIView * slideBubble;
 @property (nonatomic) UILabel * slideValTxt;
+@property (strong, nonatomic) FIRDatabaseReference *ref;
+@property (nonatomic,strong) UIActivityIndicatorView *loadingCircle;
+@property (nonatomic,strong) UIButton *cameraBtn;
+@property (strong, nonatomic)  UIButton *libraryGlimpseBtn;
+@property (strong, nonatomic) UIImagePickerController* imagePicker;
+@property (strong, nonatomic) AVCaptureSession *session;
+@property (strong, nonatomic) AVCapturePhotoOutput *stillImageOutput;
+@property ( nonatomic) bool camSetup;
 
 
+
+
+// Check if image access is authorized
 
 @end
 
 @implementation glimpseScreen
 
 
-- (instancetype)initWithResult:(FlutterResult )result {
+- (instancetype)initWithResult:(FlutterResult )result recipient:(NSString *)recip sender:(NSString *)sender convoId:(NSString *)convoId name:(NSString *)fullName imgURL:(NSString *)imgURL{
     self = [super init];
     if (self) {
         _flutterRes = result;
+        _convoId = convoId;
+        _sender = sender;
+        _recip = recip;
+        _imgURL = imgURL;
+        _fullName = fullName;
     }
     return self;
 }
@@ -59,8 +78,7 @@
 int slideval = 10.0;
 bool confirmGlimpseShowing = false;
 bool cameraFacingFront = false;
-AVCaptureSession *session;
-AVCapturePhotoOutput *stillImageOutput;
+bool loading = false;
 
 CGPoint textViewStartPoint;
 
@@ -73,11 +91,19 @@ CGPoint textViewStartPoint;
                                                       NSError * _Nullable error) {
         // ...
     }];
+
+    
+    self.ref = [[FIRDatabase database] reference];
+    
+    _imagePicker = [[UIImagePickerController alloc]init];
+    _imagePicker.delegate = self;
+
     [self addTakePhotoBtn];
     [self addFlipCameraBtn];
+    [self addPhotoLibraryBtn];
     [self addBackBtn];
     [self showPicPreview];
-   // [self performSelectorInBackground:@selector(loadImage) withObject:nil];
+    [self performSelectorInBackground:@selector(loadImage) withObject:nil];
     self.slideValTxt.text = @"10s";
     textViewStartPoint = CGPointMake(self.view.frame.size.width/2, 0.0);
     
@@ -87,53 +113,49 @@ CGPoint textViewStartPoint;
 
 -(void) viewWillAppear:(BOOL)animated {
     
-    [self setupCam];
+    if(!_camSetup){
+        [self setupCam];
+        _camSetup = true;
+        
+
+    }
 }
 
 
-
-
-
 -(void)setupCam{
-    session = [[AVCaptureSession alloc]init];
-    [session setSessionPreset:AVCaptureSessionPresetPhoto];
+    _session = [[AVCaptureSession alloc]init];
+    [_session setSessionPreset:AVCaptureSessionPresetPhoto];
     AVCaptureDevice * inputDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     NSError *error;
     AVCaptureDeviceInput *deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:inputDevice error:&error];
-    if([session canAddInput:deviceInput]){
-        [session addInput:deviceInput];
+    if([_session canAddInput:deviceInput]){
+        [_session addInput:deviceInput];
     }
-    AVCaptureVideoPreviewLayer *previewLayer = [[AVCaptureVideoPreviewLayer alloc]initWithSession:session];
+    AVCaptureVideoPreviewLayer *previewLayer = [[AVCaptureVideoPreviewLayer alloc]initWithSession:_session];
     [previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
     CALayer * rootLayer = [[self view] layer];
     [rootLayer setMasksToBounds:YES];
     CGRect frame = self.view.frame;
     [previewLayer setFrame:frame];
     [rootLayer insertSublayer:previewLayer atIndex:0];
-    stillImageOutput = [[AVCapturePhotoOutput alloc]init];
-    [session addOutput:stillImageOutput];
-    [session startRunning];
+    _stillImageOutput = [[AVCapturePhotoOutput alloc]init];
+    [_session addOutput:_stillImageOutput];
+    [_session startRunning];
 }
 
 
 
-
-
-
-
-
-
 -(void) addTakePhotoBtn{
-    UIButton *cameraBtn = [[UIButton alloc] init];
-    cameraBtn.backgroundColor = [UIColor clearColor];
-    cameraBtn.layer.cornerRadius = 25.0;
-    cameraBtn.layer.borderWidth = 3.0;
-    cameraBtn.layer.borderColor = [UIColor whiteColor].CGColor;
-    cameraBtn.translatesAutoresizingMaskIntoConstraints = false;
-    [self.view addSubview:cameraBtn];
+    _cameraBtn = [[UIButton alloc] init];
+    _cameraBtn.backgroundColor = [UIColor clearColor];
+    _cameraBtn.layer.cornerRadius = 25.0;
+    _cameraBtn.layer.borderWidth = 3.0;
+    _cameraBtn.layer.borderColor = [UIColor whiteColor].CGColor;
+    _cameraBtn.translatesAutoresizingMaskIntoConstraints = false;
+    [self.view addSubview:_cameraBtn];
     //Trailing
     NSLayoutConstraint *centerx =[NSLayoutConstraint
-                                  constraintWithItem:cameraBtn
+                                  constraintWithItem:_cameraBtn
                                   attribute:NSLayoutAttributeCenterX
                                   relatedBy:NSLayoutRelationEqual
                                   toItem:self.view
@@ -142,7 +164,7 @@ CGPoint textViewStartPoint;
                                   constant:0.f];
     
     NSLayoutConstraint *height = [NSLayoutConstraint
-                                  constraintWithItem:cameraBtn
+                                  constraintWithItem:_cameraBtn
                                   attribute:NSLayoutAttributeHeight
                                   relatedBy:NSLayoutRelationEqual
                                   toItem:nil
@@ -151,7 +173,7 @@ CGPoint textViewStartPoint;
                                   constant:50.0];
     
     NSLayoutConstraint *width = [NSLayoutConstraint
-                                 constraintWithItem:cameraBtn
+                                 constraintWithItem:_cameraBtn
                                  attribute:NSLayoutAttributeWidth
                                  relatedBy:NSLayoutRelationEqual
                                  toItem:nil
@@ -160,7 +182,7 @@ CGPoint textViewStartPoint;
                                  constant:50.0];
     
     NSLayoutConstraint *bottomPadding = [NSLayoutConstraint
-                                         constraintWithItem:cameraBtn
+                                         constraintWithItem:_cameraBtn
                                          attribute:NSLayoutAttributeBottom
                                          relatedBy:NSLayoutRelationEqual
                                          toItem:self.view
@@ -172,9 +194,9 @@ CGPoint textViewStartPoint;
     [self.view addConstraint:centerx];
     [self.view addConstraint:bottomPadding];
     //Add height constraint to the subview, as subview owns it.
-    [cameraBtn addConstraint:height];
-    [cameraBtn addConstraint:width];
-    [cameraBtn addTarget:self action:@selector(takePicture) forControlEvents:UIControlEventTouchUpInside];
+    [_cameraBtn addConstraint:height];
+    [_cameraBtn addConstraint:width];
+    [_cameraBtn addTarget:self action:@selector(takePicture) forControlEvents:UIControlEventTouchUpInside];
     
 }
 
@@ -212,7 +234,6 @@ CGPoint textViewStartPoint;
     [self addSendBtn];
     [self addEditBtn];
     
-    
     [self.preview setHidden:YES];
 }
 
@@ -223,15 +244,14 @@ CGPoint textViewStartPoint;
     _xButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [_xButton addTarget:self action:@selector(handleXBtnTap) forControlEvents:UIControlEventTouchUpInside];
     [_xButton setImage:[UIImage imageNamed:@"close"] forState:UIControlStateNormal];
-    _xButton.frame = CGRectMake(30.0, 60.0, 40.0, 40.0);
+    _xButton.frame = CGRectMake(30.0, 60.0, 35.0, 35.0);
     [self.preview addSubview:_xButton];
 }
 
 
 -(void) addFlipCameraBtn{
     
-    _cameraBtn =
-    [[UIButton alloc] init];
+    _cameraBtn = [[UIButton alloc] init];
     
     _cameraBtn.frame = CGRectMake((self.view.frame.size.width - 60.0), 60.0, 30.0, 30.0);
     [_cameraBtn setImage:[UIImage imageNamed:@"switchCamera"] forState:UIControlStateNormal];
@@ -242,19 +262,36 @@ CGPoint textViewStartPoint;
 }
 
 -(void) addSendBtn{
+    _sendBtnBackdrop = [UIView new];
+    [_sendBtnBackdrop setUserInteractionEnabled:true];
+    _sendBtnBackdrop.backgroundColor = [UIColor yellowColor];
+    _sendBtnBackdrop.layer.cornerRadius = 20.0;
+    _sendBtnBackdrop.frame = CGRectMake((self.view.frame.size.width - 60.0), (self.view.frame.size.height - 95.0), 40.0, 40.0);
+    [self.preview addSubview:_sendBtnBackdrop];
+    
+
+    
     _sendBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    _sendBtn.frame = CGRectMake((self.view.frame.size.width - 60.0), (self.view.frame.size.height - 100.0), 30.0, 30.0);
-    [_sendBtn setImage:[UIImage imageNamed:@"send"] forState:UIControlStateNormal];
+    _sendBtn.frame = CGRectMake((self.view.frame.size.width - 47.5), (self.view.frame.size.height - 85), 20.0, 20.0);
+    [_sendBtn setImage:[UIImage imageNamed:@"sendblack"] forState:UIControlStateNormal];
     [_sendBtn addTarget:self action:@selector(handleSendBtnTap) forControlEvents:UIControlEventTouchUpInside];
     [self.preview addSubview:_sendBtn];
 }
 
 
 -(void) addEditBtn{
+    
+    _editBtnBackdrop = [UIView new];
+    [_editBtnBackdrop setUserInteractionEnabled:true];
+    _editBtnBackdrop.backgroundColor = [UIColor yellowColor];
+    _editBtnBackdrop.layer.cornerRadius = 20.0;
+    _editBtnBackdrop.frame = CGRectMake((self.view.frame.size.width - 60.0), (self.view.frame.size.height - 150.0), 40.0, 40.0);
+    [self.preview addSubview:_editBtnBackdrop];
+    
     self.editBtn = [[UIButton alloc] init];
     [self.editBtn setUserInteractionEnabled:YES];
-    self.editBtn.frame = CGRectMake((self.view.frame.size.width - 60.0), (self.view.frame.size.height - 150.0), 30.0, 30.0);
-    [self.editBtn setImage:[UIImage imageNamed:@"edit"] forState:UIControlStateNormal];
+    self.editBtn.frame = CGRectMake((self.view.frame.size.width - 50.0), (self.view.frame.size.height - 140.0), 20.0, 20.0);
+    [self.editBtn setImage:[UIImage imageNamed:@"text"] forState:UIControlStateNormal];
     [self.editBtn addTarget:self action:@selector(handleEditBtnTap) forControlEvents:UIControlEventTouchUpInside];
     [self.preview addSubview:self.editBtn];
 }
@@ -263,11 +300,24 @@ CGPoint textViewStartPoint;
 -(void) addBackBtn{
     UIButton * backBtn = [[UIButton alloc] init];
     [backBtn setUserInteractionEnabled:YES];
-    backBtn.frame = CGRectMake(30.0, (self.view.frame.size.height - 80.0), 30.0, 30.0);
+    backBtn.frame = CGRectMake(30.0, (self.view.frame.size.height - 80.0), 40.0, 40.0);
     [backBtn setImage:[UIImage imageNamed:@"back"] forState:UIControlStateNormal];
     [backBtn addTarget:self action:@selector(handleBackBtnTap) forControlEvents:UIControlEventTouchUpInside];
+
     [self.view addSubview:backBtn];
 }
+
+-(void) addPhotoLibraryBtn{
+    //(self.view.frame.size.width - 60.0), (self.view.frame.size.height - 95.0)
+    _libraryGlimpseBtn = [[UIButton alloc] init];
+    [_libraryGlimpseBtn setUserInteractionEnabled:YES];
+    _libraryGlimpseBtn.frame = CGRectMake((self.view.frame.size.width - 70.0), (self.view.frame.size.height - 90.0), 40.0, 40.0);
+    [_libraryGlimpseBtn setImage:[UIImage imageNamed:@"addPhoto"] forState:UIControlStateNormal];
+    [_libraryGlimpseBtn addTarget:self action:@selector(showImagePicker) forControlEvents:UIControlEventTouchUpInside];
+    
+    [self.view addSubview:_libraryGlimpseBtn];
+}
+
 
 
 //////////////////// preview methods
@@ -276,6 +326,7 @@ CGPoint textViewStartPoint;
         [self addXBtn];
         [self addSendBtn];
         [self addEditBtn];
+        [_textView setUserInteractionEnabled:true];
         
         [self.confirmGlimpse removeFromSuperview];
         return;
@@ -301,10 +352,13 @@ CGPoint textViewStartPoint;
 -(void)handleXBtnTap{
     [self.textView removeFromSuperview];
     [self.preview setHidden:YES];
+    
 }
 
 -(void)handleBackBtnTap{
     // dismiss view
+    [self dismissViewControllerAnimated:false completion:nil];
+
 }
 
 
@@ -314,7 +368,6 @@ CGPoint textViewStartPoint;
 }
 
 /////textfield stuff
-
 
 -(void)addTextView{
     self.textView = [[UIView alloc]init];
@@ -362,6 +415,10 @@ CGPoint textViewStartPoint;
     CGRect keyboardRect = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
     keyboardRect = [self.view convertRect:keyboardRect fromView:nil];
     
+    if((self.view.frame.size.height - _textView.frame.origin.y) < (keyboardRect.size.height + 30)){
+        self.textView.frame = CGRectMake(0.0, (self.view.frame.size.height - (keyboardRect.size.height - _textView.frame.size.height/2) -70),_textView.frame.size.width, _textView.frame.size.height);
+    }
+    
 }
 
 
@@ -408,7 +465,7 @@ CGPoint textViewStartPoint;
 -(void) takePicture{
     NSDictionary *outputSettings = [[NSDictionary alloc]initWithObjectsAndKeys:AVVideoCodecTypeJPEG, AVVideoCodecKey, nil];
     AVCapturePhotoSettings * settins = [AVCapturePhotoSettings photoSettings];
-    [stillImageOutput capturePhotoWithSettings:settins delegate:self];
+    [_stillImageOutput capturePhotoWithSettings:settins delegate:self];
 }
 
 
@@ -416,13 +473,13 @@ CGPoint textViewStartPoint;
 -(void)switchCameraTapped
 {
     //Change camera source
-    if(session)
+    if(_session)
     {
         //Indicate that some changes will be made to the session
-        [session beginConfiguration];
+        [_session beginConfiguration];
         //Remove existing input
-        AVCaptureInput* currentCameraInput = [session.inputs objectAtIndex:0];
-        [session removeInput:currentCameraInput];
+        AVCaptureInput* currentCameraInput = [_session.inputs objectAtIndex:0];
+        [_session removeInput:currentCameraInput];
         //Get new input
         AVCaptureDevice *newCamera = nil;
         if(((AVCaptureDeviceInput*)currentCameraInput).device.position == AVCaptureDevicePositionBack)
@@ -445,10 +502,10 @@ CGPoint textViewStartPoint;
         }
         else
         {
-            [session addInput:newVideoInput];
+            [_session addInput:newVideoInput];
         }
         //Commit all the configuration changes at once
-        [session commitConfiguration];
+        [_session commitConfiguration];
     }
 }
 
@@ -470,12 +527,15 @@ CGPoint textViewStartPoint;
 
 
 -(void) showConfirmGlimpseScreen{
+    [_sendBtnBackdrop removeFromSuperview];
+    [_editBtnBackdrop removeFromSuperview];
+    
     [_sendBtn removeFromSuperview];
     [_editBtn removeFromSuperview];
     [_xButton removeFromSuperview];
+    [_textView setUserInteractionEnabled:false];
     
-    
-    [self uploadImg:[self screenshot]];
+    _edittedImage = [self screenshot];
     
     
     self.confirmGlimpse = [[UIView alloc]init];
@@ -495,25 +555,39 @@ CGPoint textViewStartPoint;
     
     // add the name
     UILabel * name = [[UILabel alloc]init];
-    name.text = @"Brett Young";
+    name.adjustsFontSizeToFitWidth = YES;
+    name.text = _fullName;
     [name setBackgroundColor:[UIColor clearColor]];
     [name setFont:[UIFont boldSystemFontOfSize:16]];
     name.frame = CGRectMake(70.0, 25.0, 130.0, 30.0);
     [self.confirmGlimpse addSubview:name];
     
-    UIButton * sendBtn = [[UIButton alloc]init];
-    [sendBtn setBackgroundColor:[UIColor yellowColor]];
-    sendBtn.frame = CGRectMake(203.0, 25.0, (self.view.frame.size.width - 265.5), 50.0);
-    sendBtn.layer.cornerRadius = 8.0;
-    [sendBtn setTitle:@"Send" forState:UIControlStateNormal];
-    [sendBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    [sendBtn.titleLabel setFont:[UIFont fontWithName:@"Arial" size:17.f]];
-    [sendBtn.titleLabel setFont:[UIFont boldSystemFontOfSize:17.f]];
-    [self.confirmGlimpse addSubview:sendBtn];
+    _sendGlimpseBtn = [[UIButton alloc]init];
+    [_sendGlimpseBtn setBackgroundColor:[UIColor yellowColor]];
+    _sendGlimpseBtn.frame = CGRectMake(203.0, 25.0, (self.view.frame.size.width - 265.5), 50.0);
+    _sendGlimpseBtn.layer.cornerRadius = 8.0;
+    _sendGlimpseBtn.layer.shadowRadius  = 15.0;
+    _sendGlimpseBtn.layer.shadowColor   = [UIColor colorWithRed:176.f/255.f green:199.f/255.f blue:226.f/255.f alpha:1.f].CGColor;
+    _sendGlimpseBtn.layer.shadowOffset  = CGSizeMake(0.0f, 0.0f);
+    _sendGlimpseBtn.layer.shadowOpacity = 0.9f;
+    _sendGlimpseBtn.layer.masksToBounds = NO;
+    
+    UIEdgeInsets shadowInsets = UIEdgeInsetsMake(0, 0, -1.5f, 0);
+    UIBezierPath *shadowPath = [UIBezierPath bezierPathWithRect:UIEdgeInsetsInsetRect(_sendGlimpseBtn.bounds, shadowInsets)];
+    _sendGlimpseBtn.layer.shadowPath    = shadowPath.CGPath;
+    [_sendGlimpseBtn setTitle:@"Send" forState:UIControlStateNormal];
+    [_sendGlimpseBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_sendGlimpseBtn.titleLabel setFont:[UIFont boldSystemFontOfSize:17.f]];
+    [_sendGlimpseBtn addTarget:self action:@selector(uploadImg) forControlEvents:UIControlEventTouchUpInside];
+    [self.confirmGlimpse addSubview:_sendGlimpseBtn];
+    
     
     
     [self addSlideBar];
 }
+
+
+
 
 
 -(void) addSlideBar{
@@ -609,7 +683,7 @@ CGPoint textViewStartPoint;
 
 - (void)loadImage
 {
-    NSURL * url = [NSURL URLWithString:@"https://firebasestorage.googleapis.com/v0/b/mu-ridesharing.appspot.com/o/profilePics%2F1727461130626740%2F1534139120177?alt=media&token=3c7da14d-3ce5-42fd-9922-793ef067ed6c"];
+    NSURL * url = [NSURL URLWithString:_imgURL];
     NSData * data = [NSData dataWithContentsOfURL:url];
     UIImage * image = [UIImage imageWithData:data];
     if (image)
@@ -624,23 +698,36 @@ CGPoint textViewStartPoint;
     }
 }
 
--(void) uploadImg:(UIImage *)img to:(NSString *)recip from:(NSString *)sender{
+-(void) uploadImg{
     // generate current timestamp
+    
+    [_sendGlimpseBtn removeFromSuperview];
+    _loadingCircle = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [_loadingCircle startAnimating];
+   // 203.0, 25.0, (self.view.frame.size.width - 265.5), 50.0
+    _loadingCircle.frame = CGRectMake(((self.view.frame.size.width - 265.5) + 101.5 - 10.0), 15.0, (self.view.frame.size.width - 265.5), 50.0);
+    [_confirmGlimpse addSubview:_loadingCircle];
+    
+
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd hh:mm:ss a"];
     NSString *currentTime = [dateFormatter stringFromDate:[NSDate date]];
-    
-    
     // Data in memory
-     NSData *data = UIImageJPEGRepresentation(img,0.8);
+     NSData *data = UIImageJPEGRepresentation(_edittedImage,0.8);
     FIRStorageReference *storageRef = [[FIRStorage storage] reference];
-    FIRStorageReference *riversRef = [storageRef child:@"testing/dssfdd.jpg"];
+    
+    NSString * key = [[NSString alloc]initWithString:[[_ref childByAutoId]key]];
+    NSMutableString * path = [[NSMutableString alloc]initWithString:@"glimpses/"];
+    [path appendString:key];
+    FIRStorageReference *riversRef = [storageRef child:path];
     FIRStorageUploadTask *uploadTask = [riversRef putData:data
                                                  metadata:nil
                                                completion:^(FIRStorageMetadata *metadata,
                                                             NSError *error) {
                                                    if (error != nil) {
                                                        // Uh-oh, an error occurred!
+                                                       [_loadingCircle removeFromSuperview];
+                                                       // display error
                                                    } else {
                                                        // Metadata contains file metadata such as size, content-type, and download URL.
                                                        int size = metadata.size;
@@ -648,14 +735,23 @@ CGPoint textViewStartPoint;
                                                        [riversRef downloadURLWithCompletion:^(NSURL * _Nullable URL, NSError * _Nullable error) {
                                                            if (error != nil) {
                                                                // Uh-oh, an error occurred!
+                                                               [_loadingCircle removeFromSuperview];
+                                                               // display error
+
                                                            } else {
-                                                               NSURL *downloadURL = URL;
+                            
                                                                NSString * url = [[NSString alloc]initWithString:URL.absoluteString];
-                                                               NSLog(url);
+                                                               int duration = slideval;
+                                                               if(duration > 10){
+                                                                   duration = 100;
+                                                               }
                                                                _flutterRes(url);
-                                                               NSDictionary * info = @{@"url":url, @"duration":[NSNumber numberWithInt:slideval],@"from":sender, @"to":recip,@"glimpse":@true,@"formattedTime":currentTime};
+                                                               NSDictionary * glimpse = @{@"url":url, @"duration":[NSNumber numberWithInt:duration],@"from":_sender,@"to":_recip,@"type":@"glimpse",@"formattedTime":currentTime, @"viewed":@NO};
                                                                
-                                                               
+                                                               [[[[self.ref child:@"convos"] child:_convoId] child:[[_ref childByAutoId] key]]
+                                                                setValue:glimpse];
+                                                        
+                                                               [_loadingCircle removeFromSuperview];
                                                                [self dismissViewControllerAnimated:false completion:nil];
                                                            }
                                                        }];
@@ -675,6 +771,42 @@ CGPoint textViewStartPoint;
 }
 
 
+
+-(void) showImagePicker{
+  
+    if([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
+        _imagePicker.modalPresentationStyle = UIModalPresentationCurrentContext;
+        _imagePicker.delegate = self;
+        _imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+
+
+
+   
+
+        // Use delegate methods to get result of photo library -- Look up UIImagePicker delegate methods
+        
+        [self presentViewController:_imagePicker animated:true completion:nil];
+}
+    
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+ 
+    [_imagePicker dismissViewControllerAnimated:true completion:nil];
+    UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
+    self.previewImage = [[UIImage alloc]init];
+    [self.preview setImage:image];
+    [self.preview setHidden:false];
+
+
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    [_imagePicker dismissViewControllerAnimated:YES completion:nil];
+    
+
+}
 
 
 #pragma mark - AVCapturePhotoCaptureDelegate

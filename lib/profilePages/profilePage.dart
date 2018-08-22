@@ -20,6 +20,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'viewPicture.dart';
 import '../pageTransitions.dart';
+import 'package:flutter/services.dart';
 
 
 class ProfilePage extends StatefulWidget{
@@ -57,6 +58,7 @@ List<String> contactsList = new List();
 SecureString secureString = new SecureString();
 AssetImage fbIcon = new AssetImage('assets/fb.png');
 
+static const platform = const MethodChannel('thumbsOutChannel');
 
 
 
@@ -289,18 +291,36 @@ AssetImage fbIcon = new AssetImage('assets/fb.png');
       return;
     }
 
-    Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
-        url: fbLink,
-        appBar: new AppBar(
-          iconTheme: new IconThemeData(color: Colors.black),
-          backgroundColor: Colors.yellowAccent,
-          title: new Text(fullName, style: new TextStyle(color: Colors.black),
+//    if(Platform.isIOS){
+//
+//      await  platform.invokeMethod('showFb',
+//          <String, dynamic> {'url':fbLink});
+//    }else{
 
-          ),
-          actions: <Widget>[
-            new Icon(Icons.clear)
-          ],
-        ))));
+      final flutterWebviewPlugin = new FlutterWebviewPlugin();
+
+      flutterWebviewPlugin.launch(fbLink,
+          rect: new Rect.fromLTWH(
+              0.0,
+              50.0,
+              MediaQuery.of(context).size.width,
+              (MediaQuery.of(context).size.height - 100.0)));
+    //}
+
+
+
+//    Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
+//        url: fbLink,
+//        appBar: new AppBar(
+//          iconTheme: new IconThemeData(color: Colors.black),
+//          backgroundColor: Colors.yellowAccent,
+//          title: new Text(fullName, style: new TextStyle(color: Colors.black),
+//
+//          ),
+//          actions: <Widget>[
+//            new Icon(Icons.clear)
+//          ],
+//        ))));
 
 
   }
@@ -461,7 +481,8 @@ Future<void> getContactInfo()async{
   DataSnapshot snap = await ref.child('contacts').child(widget.id).once();
   if(snap.value != null){
     List<String> contacts = List.from(snap.value);
-    contacts.forEach((id)async{
+
+      for(var id in contacts){
       var usersInfo = await ref.child(globals.cityCode).child('userInfo').child(id).once();
       setState(() {
         contactsList.add(id);
@@ -469,7 +490,7 @@ Future<void> getContactInfo()async{
         contactNameInfo[id] = usersInfo.value['fullName'];
         hasContacts = true;
       });
-    });
+    }
 //    setState(() {hasContacts = true;});
 
   }

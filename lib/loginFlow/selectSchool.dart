@@ -76,115 +76,153 @@ class _SelectSchoolState extends State<SelectSchool> {
             new Divider(),
 
             new Expanded(
+              child:new Padding(padding: new EdgeInsets.only(bottom: 100.0),
               child: (schoolList.length != 0) ? schoolListView() : new Center(
-                      child: CircularProgressIndicator(
-                        backgroundColor: Colors.black,
-                      ),
-                    ),
+                child: CircularProgressIndicator(
+                  backgroundColor: Colors.black,
+                ),
+              ),
+              )
+
+//              child:  new Padding(padding: new EdgeInsets.only(bottom: 10.0),
+//                  child:  new Container(
+//                      height: MediaQuery.of(context).size.height,
+//                      width: MediaQuery.of(context).size.width,
+//                      child:(schoolList.length != 0) ? schoolListView() : new Center(
+//                        child: CircularProgressIndicator(
+//                          backgroundColor: Colors.black,
+//                        ),
+//                      ),
+//                  )
+//              ),
             ),
 
-            (selectedIndex != -1 && !widget.userHasAlreadySignedIn)
-                ? new Padding(
-                    padding: new EdgeInsets.all(25.0),
-                    child: new InkWell(
-                  onTap: (userClickedFB) ? null : (){
-
-                    _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, and Profile Link, so other users can learn more about you.", "").then((res){
-
-                      if(res){
-                        _termsWarningMenu("Link Ridesharing Agreement", "By using Link, you agree to our terms of use.", '').then((agreed){
-                          if(agreed){
-                            handleFbLogin();
-                          }
-                        });
-                      }
-
-                    });
-                  },
-                  splashColor: Colors.transparent,
-                  highlightColor: Colors.transparent,
-                  child:  new Container(
-                    height: 75.0,
-                    width: 300.0,
-                    decoration: new BoxDecoration(
-                      borderRadius:
-                      new BorderRadius.all(const Radius.circular(40.0)),
-                      color: Colors.blue,
-                    ),
-                    child: new Center(
-                      child: new Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          new Padding(padding: new EdgeInsets.only(top: 20.0,bottom: 20.0,left: 20.0,right: 1.0),
-                              child: new Container(
-                                height: 40.0,
-                                width: 40.0,
-                                child: new Image(image: fbIcon,color: Colors.white,),
-                              )
-                          ),
 
 
-                            new Expanded(child: new Container(
-                                height: 65.0,
-                                width: 200.0 ,
-                                  child:  new Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      new Padding(padding: new EdgeInsets.only(right: 10.0),
-                                      child: new FittedBox(
-                                        child: new Text("Continue With Facebook!",style: new TextStyle(color: Colors.white, fontWeight: FontWeight.bold,),maxLines: 1,),
-                                        fit: BoxFit.scaleDown,
-                                      )
-                                      )
-                                    ],
-                                  )
-
-                            ),)
-
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ) : new Padding(
-                    padding: new EdgeInsets.all(25.0),
-                    child: new Container(
-                        height: 75.0,
-                        width: double.infinity,
-                        decoration: new BoxDecoration(
-                          borderRadius:
-                              new BorderRadius.all(const Radius.circular(40.0)),
-                          color: (selectedIndex != -1)
-                              ? Colors.yellowAccent
-                              : Colors.transparent,
-                        ),
-                        child: (selectedIndex != -1)
-                            ? new InkWell(
-                                onTap: (userClickedFB)
-                                    ? null
-                                    : () {
-                                  handleContinue();
-                                },
-                                child: new Center(
-                                  child: new Text(
-                                    'Continue',
-                                    style: new TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,fontSize: 15.0),
-                                  ),
-                                ),
-                              )
-                            : new Container()),
-                  ),
-            ],
+          ],
         ),
         (userClickedFB)
             ? new Center(
-                child: new CircularProgressIndicator(),
-              )
+          child: new CircularProgressIndicator(),
+        )
             : new Container(),
+
+
+
+
+
+
+
+
+
+        new Align(
+          alignment: new Alignment(0.0, 1.0),
+          child: new Container(
+            color: Colors.white,
+            height: 100.0,
+            width: double.infinity,
+
+            child:(selectedIndex != -1 && !widget.userHasAlreadySignedIn)
+                ? new Padding(
+              padding: new EdgeInsets.all(10.0),
+              child: new InkWell(
+                onTap: (userClickedFB) ? null : (){
+
+                  _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, and Profile Link, so other users can learn more about you.", "").then((res){
+
+                    if(res){
+                      _termsWarningMenu("Link Ridesharing Agreement", "By using Link, you agree to our terms of use.", '').then((agreed){
+                        if(agreed){
+                          handleFbLogin();
+                        }
+                      });
+                    }
+
+                  });
+                },
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                child:  new Container(
+                  height: 75.0,
+                  width: 300.0,
+                  decoration: new BoxDecoration(
+                    borderRadius:
+                    new BorderRadius.all(const Radius.circular(40.0)),
+                    color: Colors.blue,
+                  ),
+                  child: new Center(
+                    child: new Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        new Padding(padding: new EdgeInsets.only(top: 20.0,bottom: 20.0,left: 20.0,right: 1.0),
+                            child: new Container(
+                              height: 40.0,
+                              width: 40.0,
+                              child: new Image(image: fbIcon,color: Colors.white,),
+                            )
+                        ),
+
+
+                        new Expanded(child: new Container(
+                            height: 65.0,
+                            width: 200.0 ,
+                            child:  new Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                new Padding(padding: new EdgeInsets.only(right: 10.0),
+                                    child: new FittedBox(
+                                      child: new Text("Continue With Facebook!",style: new TextStyle(color: Colors.white, fontWeight: FontWeight.bold,),maxLines: 1,),
+                                      fit: BoxFit.scaleDown,
+
+                                    )
+                                )
+                              ],
+                            )
+
+                        ),)
+
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ) : new Padding(
+              padding: new EdgeInsets.all(10.0),
+              child: new Container(
+                  height: 75.0,
+                  width: double.infinity,
+
+                  decoration: new BoxDecoration(
+                    borderRadius:
+                    new BorderRadius.all(const Radius.circular(40.0)),
+
+                    color: (selectedIndex != -1)
+                        ? Colors.yellowAccent
+                        : Colors.yellowAccent,
+                  ),
+                  child: new InkWell(
+                    onTap: (userClickedFB)
+                        ? null
+                        : () {
+                      handleContinue();
+                    },
+                    child: new Center(
+                      child: new Text(
+                        (selectedIndex != -1) ?  'Continue' : 'Select Your School!',
+                        style: new TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,fontSize: 15.0),
+                      ),
+                    ),
+                  )
+                 ),
+            ),
+          ),
+
+        ),
+
       ],
         )
     );

@@ -137,29 +137,42 @@ class _SnapPageState extends State<SnapPage> {
 
           new Align(
             alignment: new Alignment(0.9, 0.6),
-            child: new IconButton(icon: new Icon(Icons.mode_edit, color: Colors.white,), onPressed: (){
-              setState(() {
-                if(textAdded){
-                  textAdded = false;
-                }else{
-                  textAdded = true;
-                }
-              });
-            }),
+            child: new Container(
+                height: 40.0,
+                width: 40.0,
+                decoration: new BoxDecoration(color: Colors.yellowAccent,shape: BoxShape.circle,),
+                child: new Center(
+                child: new InkWell(child: new Icon(Icons.mode_edit, color: Colors.black,), onTap: (){
+                  setState(() {
+                    if(textAdded){
+                      textAdded = false;
+                    }else{
+                      textAdded = true;
+                    }
+                  });
+                }),
+              )
+            )
           ),
           new Align(
             alignment: new Alignment(0.9, 0.8),
-            child: (!loading) ? new IconButton(icon: new Icon(Icons.send, color: Colors.white,), onPressed: ()async{
-
-              await _capturePng();
-              var sent = await  _showConfirmGlimpse();
+            child: (!loading) ? new Container(
+              height: 40.0,
+              width: 40.0,
+              decoration: new BoxDecoration(color: Colors.yellowAccent,shape: BoxShape.circle,),
+              child: new Center(
+                child: new InkWell( child: new Icon(Icons.send, color: Colors.black,), onTap: ()async{
+                  await _capturePng();
+                  var sent = await  _showConfirmGlimpse();
                   //.then((sent){
-              if(sent == null){return;}
-                if(sent){
-                  Navigator.pop(context);
-                }
-            //  });
-            }) : new Center(
+                  if(sent == null){return;}
+                  if(sent){
+                    Navigator.pop(context);
+                  }
+                  //  });
+                }),
+              )
+            ) : new Center(
               child: new CircularProgressIndicator(),
             )
           ),

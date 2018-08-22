@@ -179,7 +179,7 @@ class _FeedState extends State<Feed> {
     void handleNotifications() async {
       final SharedPreferences prefs = await _prefs;
       (!askedToAllowNotifications && prefs.getBool('requestedNotifications') == null) ? new Future.delayed(
-          const Duration(seconds: 4))
+          const Duration(seconds: 2))
           .then((idk) {
         askedToAllowNotifications = true;
         createSnackBar();
@@ -197,9 +197,10 @@ class _FeedState extends State<Feed> {
           new Padding(padding: new EdgeInsets.all(5.0),
             child: new MaterialButton(
               onPressed: () {
-                prefs.setBool('requestedNotifications', true);
-                Scaffold.of(context).hideCurrentSnackBar();
-              _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
+
+                  prefs.setBool('requestedNotifications', true);
+                  Scaffold.of(context).hideCurrentSnackBar();
+                  _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
 
             },
               child: new Text(
@@ -211,9 +212,10 @@ class _FeedState extends State<Feed> {
         ],
       ),
           backgroundColor: Colors.grey[800], duration: new Duration(seconds: 10));
-
-      // Find the Scaffold in the Widget tree and use it to show a SnackBar!
-      Scaffold.of(context).showSnackBar(snackBar);
+      // Find the Scaffold in the Widget tree and use it to show a SnackBar
+      if(context != null){
+        Scaffold.of(context).showSnackBar(snackBar);
+      }
     }
 
 

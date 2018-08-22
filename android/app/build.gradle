@@ -28,8 +28,8 @@ android {
         applicationId "com.youngApps.uber"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 9
-        versionName "1.08"
+        versionCode 10
+        versionName "1.09"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

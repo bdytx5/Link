@@ -95,31 +95,10 @@ PODS:
   - nanopb/encode (0.3.8)
   - path_provider (0.0.1):
     - Flutter
-  - PINCache (2.3)
-  - PINOperation (1.1.1)
   - Protobuf (3.6.0)
   - shared_preferences (0.0.1):
     - Flutter
-  - SnapSDK (1.0.4):
-    - SnapSDK/SCSDKBitmojiKit (= 1.0.4)
-    - SnapSDK/SCSDKCreativeKit (= 1.0.4)
-    - SnapSDK/SCSDKLoginKit (= 1.0.4)
-  - SnapSDK/SCSDKBitmojiKit (1.0.4):
-    - PINCache (~> 2.3)
-    - PINOperation (~> 1.1)
-    - Protobuf (~> 3.5)
-  - SnapSDK/SCSDKCreativeKit (1.0.4):
-    - Protobuf (~> 3.5)
-    - YYImage (~> 1.0.4)
-    - YYImage/WebP
-  - SnapSDK/SCSDKLoginKit (1.0.4):
-    - Protobuf (~> 3.5)
   - TOCropViewController (2.3.6)
-  - YYImage (1.0.4):
-    - YYImage/Core (= 1.0.4)
-  - YYImage/Core (1.0.4)
-  - YYImage/WebP (1.0.4):
-    - YYImage/Core
 
 DEPENDENCIES:
   - camera (from `.symlinks/plugins/camera/ios`)
@@ -135,9 +114,7 @@ DEPENDENCIES:
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
-  - Protobuf
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
-  - SnapSDK
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -156,12 +133,8 @@ SPEC REPOS:
     - GTMSessionFetcher
     - leveldb-library
     - nanopb
-    - PINCache
-    - PINOperation
     - Protobuf
-    - SnapSDK
     - TOCropViewController
-    - YYImage
 
 EXTERNAL SOURCES:
   camera:
@@ -222,14 +195,10 @@ SPEC CHECKSUMS:
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
   path_provider: 09407919825bfe3c2deae39453b7a5b44f467873
-  PINCache: ce36ed282031b92fc7733ffe831f474ff80fddc2
-  PINOperation: a6219e6fc9db9c269eb7a7b871ac193bcf400aac
   Protobuf: 0fc0ad8bec688b2a3017a139953e01374fedbd5f
   shared_preferences: 5a1d487c427ee18fcd3ea1f2a131569481834b53
-  SnapSDK: 832d74bbca7332f86dcf1c5f16a0cd9b1b16dfcc
   TOCropViewController: 6d972f2c609372312648f96758e13a7f689efbc0
-  YYImage: 1e1b62a9997399593e4b9c4ecfbbabbf1d3f3b54
 
-PODFILE CHECKSUM: 5665e444f7ac1a7c547403aad5a587cc150f0958
+PODFILE CHECKSUM: 4159d1d0758052c34bbaa8449438b904769206f1
 
 COCOAPODS: 1.5.3

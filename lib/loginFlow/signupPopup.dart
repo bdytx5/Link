@@ -222,9 +222,12 @@ class _SignupPopUpState extends State<SignupPopUp> {
               ),
               onPressed: () async {
                 if(!loading){
+                  setState(() {
+                    loading = true;
+                  });
                   var post =  buildFirstPostForSnap(widget.placeInfo, widget.userInfo);
                   var info = buildUserInfo(widget.userInfo['imgURL'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}' );
-                   uploadInfoForProfile('Riding', post, info, buildNotificationInfo(), widget.userInfo['id']);
+                  await uploadInfoForProfile('Riding', post, info, buildNotificationInfo(), widget.userInfo['id']);
                   Navigator.pop(context);
                   return;
                 }

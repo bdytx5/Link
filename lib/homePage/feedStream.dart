@@ -142,7 +142,8 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
     final Distance distance = new Distance();
     double ameter = distance(new LatLng(aLat, alon), destination);
     double bmeter = distance(new LatLng(bLat, blon), destination);
-    print(ameter);
+
+
 
       if(ameter == bmeter){
         return 0;

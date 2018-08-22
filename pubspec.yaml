@@ -23,7 +23,7 @@ dev_dependencies:
   google_maps_webservice: "^0.0.5"
   firebase_messaging: "^1.0.0"
   intl: "^0.15.6"
-  flutter_webview_plugin: "^0.1.6"
+  flutter_webview_plugin: "^0.2.1"
   dio: "^0.0.14"
   io: "^0.3.2+1"
   image_picker: "^0.4.5"

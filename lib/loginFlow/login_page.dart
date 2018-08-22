@@ -19,7 +19,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 class LoginPage extends StatefulWidget {
 
 
@@ -117,37 +117,6 @@ class _LoginState extends State<LoginPage> {
 
 
 
-  Future<void> handleSnapLogin() async {
-    var result;
-    try {
-      result = await logInWithSnapchat();
-      if (result != null) {
-        setState(() {
-          userClickedSC = true;
-        });
-      }
-    } catch (e) {
-      _errorMenu("error", "Please make sure you have the correct username/email and password.", '');
-      setState(() { userClickedSC = false;
-      });
-      print(e);
-      return;
-    }
-
-    bool userexists = await checkIfUserExists(result["id"]);
-    if (userexists) {
-      DatabaseReference ref = FirebaseDatabase.instance.reference();
-      Home home = Home(widget.app, result["id"], true);
-      setState(() {userClickedSC = false;});
-      globals.id = result["id"];
-      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => home),);
-
-    }else {
-      setState(() {userClickedSC = false;});
-      SelectSchool selectSchool = SelectSchool(app: app, userHasAlreadySignedIn: true, userInfo: result,);
-      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => selectSchool),);
-    }
-  }
 
   Future<void> handleFbLogin()async{
     FacebookLoginResult result;
@@ -180,9 +149,19 @@ class _LoginState extends State<LoginPage> {
       if(fbInfo.containsKey('link')){
         userInfo['link'] = fbInfo['link'];
       }
+      _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, and Profile Link, so other users can learn more about you.", "").then((res){
 
-      SelectSchool selectSchool = SelectSchool(app: app, userHasAlreadySignedIn: true, userInfo: userInfo);
-      Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => selectSchool),);
+        if(res){
+          _termsWarningMenu("Link Ridesharing Agreement", "By using Link, you agree to our terms of use.", '').then((agreed){
+            if(agreed){
+              SelectSchool selectSchool = SelectSchool(app: app, userHasAlreadySignedIn: true, userInfo: userInfo);
+              Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => selectSchool),);            }
+          });
+        }
+
+      });
+
+
     }
 
   }
@@ -224,6 +203,100 @@ class _LoginState extends State<LoginPage> {
 
 
 
+  Future<bool> _fbWarningMenu(String title, String primaryMsg, String secondaryMsg) async {
+    var decision = await showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(primaryMsg,maxLines: null,),
+
+
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text('Agree', style: new TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+            new FlatButton(
+              child: new Text('Cancel', style: new TextStyle(color: Colors.black),),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    return decision;
+  }
+
+  Future<bool> _termsWarningMenu(String title, String primaryMsg, String secondaryMsg) async {
+    var decision = await showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(primaryMsg,maxLines: null,),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new Row(
+              children: <Widget>[
+                new FlatButton(
+                  child: new Text('View Terms', style: new TextStyle(color: Colors.black),),
+                  onPressed: () {
+                    Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
+                        url: 'https://docs.google.com/document/d/1eci-jMZvGyrLwJWctB4TMsjR2Mk0WHXMvzalD_UZhvQ/edit?usp=sharing',
+                        appBar: new AppBar(
+                          iconTheme: new IconThemeData(color: Colors.black),
+                          backgroundColor: Colors.yellowAccent,
+                          title: new Text("Terms of Service", style: new TextStyle(color: Colors.black),
+
+                          ),
+                          actions: <Widget>[
+                            new Icon(Icons.clear)
+                          ],
+                        ))));
+                  },
+                ),
+                new MediaQuery.removePadding(context: context, child:  new FlatButton(
+                  child: new Text('Cancel', style: new TextStyle(color: Colors.black),),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),),
+                new FlatButton(
+                  child: new Text('Agree', style: new TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                ),
+              ],
+            )
+          ],
+        );
+      },
+    );
+
+    return decision;
+  }
+
+
 
 
   Future<Null> _errorMenu(String title, String primaryMsg,
@@ -261,6 +334,40 @@ class _LoginState extends State<LoginPage> {
 
 }
 
+//
+//
+//
+//Future<void> handleSnapLogin() async {
+//  var result;
+//  try {
+//    result = await logInWithSnapchat();
+//    if (result != null) {
+//      setState(() {
+//        userClickedSC = true;
+//      });
+//    }
+//  } catch (e) {
+//    _errorMenu("error", "Please make sure you have the correct username/email and password.", '');
+//    setState(() { userClickedSC = false;
+//    });
+//    print(e);
+//    return;
+//  }
+//
+//  bool userexists = await checkIfUserExists(result["id"]);
+//  if (userexists) {
+//    DatabaseReference ref = FirebaseDatabase.instance.reference();
+//    Home home = Home(widget.app, result["id"], true);
+//    setState(() {userClickedSC = false;});
+//    globals.id = result["id"];
+//    Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => home),);
+//
+//  }else {
+//    setState(() {userClickedSC = false;});
+//    SelectSchool selectSchool = SelectSchool(app: app, userHasAlreadySignedIn: true, userInfo: result,);
+//    Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => selectSchool),);
+//  }
+//}
 
 //Future<String> idk() async {
 //  try {

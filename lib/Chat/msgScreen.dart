@@ -123,6 +123,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
         ],
         title: new Text((recipFullName != null) ? recipFullName : '', style: new TextStyle(color: Colors.black),),
         leading: new IconButton(
+          highlightColor: Colors.yellowAccent,
           color: Colors.black,
           icon: new Icon(Icons.arrow_back),
           onPressed: (){
@@ -302,18 +303,17 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                       shape: BoxShape.circle,
                       border: new Border.all(color: Colors.grey,width: 3.0)
                   ),
-                  child: new InkWell(onTap: (){
-
+                  child: new InkWell(onTap: ()async{
+//
 //                    Navigator.push(context,
 //                        new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
 
 
 
 
-                   platform.invokeMethod('showCamera').then((res){
-                     print(res);
-                   });
 
+                 await  platform.invokeMethod('showCamera',
+                       <String, dynamic> {'convoId':widget.convoId, 'sender':globals.id, 'recip':widget.recipID, 'fullName':recipFullName, 'imgURL':recipImgURL});
 
                      },
                   ),
@@ -709,6 +709,8 @@ void setupStreamQuery(){
   Widget recipGlimpseCell(Map msg, String convoId, String glimpseKey, String fullName, String imgURL){
     return new Card(
         child:new InkWell(
+         splashColor: Colors.white,
+          highlightColor: Colors.white,
 
           onTap: ()async {
             if(!msg['viewed']){
@@ -772,6 +774,8 @@ void setupStreamQuery(){
 
               // nothing
             },
+            splashColor: Colors.white,
+            highlightColor: Colors.white,
 
             child:  new Card(
               child: new Row(
@@ -1005,6 +1009,8 @@ String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
   Widget recipGlimpseCell(String imgURL, bool viewed, String fullName, String time, String glimpseURL, String glimpseKey, String convoId, String id, bool fromCameraRoll,int duration,){
     return new Card(
         child:new InkWell(
+          splashColor: Colors.white,
+          highlightColor: Colors.white,
 
           onTap: ()async {
 
@@ -1083,6 +1089,8 @@ String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
         onTap: ()async{
         },
+        splashColor: Colors.white,
+        highlightColor: Colors.white,
 
         child:  new Card(
           child: new Row(

@@ -153,18 +153,10 @@ class _userSearchStreamState extends State<userSearchStream> {
 
       List<Map> sup;
       DataSnapshot snap = await FirebaseDatabase.instance.reference().child(globals.cityCode).child('userInfo').once();
-
         Map allUsers = snap.value;
-
         allUsers.forEach((id,info){
-
           User returnedUser = new User(info['fullName'], id, info['imgURL']);
-
             widget.userList.add(returnedUser);
-
-
-          print(id);
-
         });
 
 

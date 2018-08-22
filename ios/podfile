@@ -27,7 +27,7 @@ def parse_KV_file(file, separator='=')
 end
 
 target 'Runner' do
-  use_frameworks!
+ # use_frameworks!
 
   # Prepare symlinks folder. We use symlinks to avoid having Podfile.lock
   # referring to absolute paths on developers' machines.
@@ -35,8 +35,6 @@ target 'Runner' do
   system('mkdir -p .symlinks/plugins')
 
   # Flutter Pods
-pod 'Protobuf'
-pod 'SnapSDK'
 
 generated_xcode_build_settings = parse_KV_file('./Flutter/Generated.xcconfig')
   if generated_xcode_build_settings.empty?
