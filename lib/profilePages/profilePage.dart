@@ -21,7 +21,7 @@ import 'package:image_picker/image_picker.dart';
 import 'viewPicture.dart';
 import '../pageTransitions.dart';
 import 'package:flutter/services.dart';
-
+import 'viewFbPage.dart';
 
 class ProfilePage extends StatefulWidget{
 
@@ -291,11 +291,12 @@ static const platform = const MethodChannel('thumbsOutChannel');
       return;
     }
 
-//    if(Platform.isIOS){
-//
-//      await  platform.invokeMethod('showFb',
-//          <String, dynamic> {'url':fbLink});
-//    }else{
+
+    if(Platform.isIOS){
+
+      await  platform.invokeMethod('showFb',
+          <String, dynamic> {'url':fbLink});
+    }else{
 
       final flutterWebviewPlugin = new FlutterWebviewPlugin();
 
@@ -305,7 +306,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
               50.0,
               MediaQuery.of(context).size.width,
               (MediaQuery.of(context).size.height - 100.0)));
-    //}
+    }
 
 
 

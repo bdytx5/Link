@@ -78,8 +78,4 @@ class _viewPicPageState extends State<viewPicPage> {
     );
   }
 
-
-
-
-
 }

@@ -61,6 +61,7 @@ class _SelectSchoolState extends State<SelectSchool> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
+      resizeToAvoidBottomPadding: false,
         body: new Stack(
       children: <Widget>[
         new Column(

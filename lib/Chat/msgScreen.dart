@@ -189,20 +189,20 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
 
 
 
-          if(msg['type'] != null && msg['from'] != globals.id ){
+          if(msg['type'] != null && msg['from'] != globals.id && msg['formattedTime'] != null){
 
                   return recipGlimpseCell(msg,widget.convoId,snapshot.key,recipFullName,recipImgURL);
 
           }
-          if(msg['type'] != null && msg['from'] == globals.id ){
+          if(msg['type'] != null && msg['from'] == globals.id && msg['formattedTime'] != null){
            // return GlimpseCell(msg, senderFullName, senderImgURL, widget.convoId,snapshot.key, false, widget.recipID,msg['duration'],false);
 
-            return senderGlimpseCell(msg['viewed'],senderFullName, senderImgURL);
+            return senderGlimpseCell(msg['viewed'],senderFullName, senderImgURL,msg['formattedTime']);
           }
 
-//          if(msg['type'] != null && msg['from'] != senderId ){
-//            return GlimpseCell(recipImgURL, recipFullName, msg['formattedTime'], msg['url']);
-//          }
+          if(msg['type'] != null && msg['formattedTime'] == null ){
+            return new Container();
+          }
 
           if(msg['from'] == senderId){
             return Msg(msg['message'], senderImgURL,senderFullName, msg['formattedTime']);
@@ -246,7 +246,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                       ),
                 new Container(
                   margin: const EdgeInsets.only(top: 3.0),
-                  child: new Text(txt),
+                  child: new Text(txt,style: new TextStyle(fontSize: 17.0),),
                 )
               ],
             ),
@@ -465,6 +465,9 @@ Future<void> handleContactsList()async{
   String getDateOfMsg(String time){
 
     String date = '';
+    if(time == null){
+      return '';
+    }
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     DateTime recentMsgDate = formatter.parse(time);
     var dayFormatter = new DateFormat('EEEE');
@@ -742,10 +745,13 @@ void setupStreamQuery(){
                                 child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
 
                               ),
-                              //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+    (msg['formattedTime'] != null) ?  new Padding(padding: new EdgeInsets.only(left: 10.0,top: 1.0, bottom:1.0 ),
+                                child:  Text(getDateOfMsg(msg['formattedTime']), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+                              ) : new Container(),
+
 
                               new Padding(padding: new EdgeInsets.only(left: 10.0),
-                                child: new Text( (!msg['viewed']) ? 'New Glimpse, tap to view!': 'Tap to Reply!!' ),
+                                child: new Text( (!msg['viewed']) ? 'New Glimpse, tap to view!': 'Tap to Reply!!' , style: new TextStyle(fontStyle: FontStyle.italic),),
                               )
                             ],
                           )
@@ -765,7 +771,7 @@ void setupStreamQuery(){
 
 
 
-  Widget senderGlimpseCell(bool recipViewed, String senderName, String imgURL ){
+  Widget senderGlimpseCell(bool recipViewed, String senderName, String imgURL,String time ){
     return new Container(
 
         child: InkWell(
@@ -800,10 +806,11 @@ void setupStreamQuery(){
                                     child: new Text(senderName,style: new TextStyle(fontWeight: FontWeight.bold),),
 
                                   ),
-                                  //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
-
+                                  (time != null) ? new Padding(padding: new EdgeInsets.only(left: 10.0,top: 1.0, bottom:1.0 ),
+                                    child:  Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+                                  ) : new Container(),
                                   new Padding(padding: new EdgeInsets.only(left: 10.0),
-                                    child: new Text( (!recipViewed) ? 'Sent Glimpse!': 'Glimpse has been opened!',
+                                    child: new Text((!recipViewed) ? 'Sent Glimpse!': 'Glimpse has been opened!',style: new TextStyle(fontStyle: FontStyle.italic)
                                     ),
                                   )
                                 ],
@@ -1052,7 +1059,7 @@ String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
                          //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
 
                          new Padding(padding: new EdgeInsets.only(left: 10.0),
-                         child: new Text( (!viewed && !glimpseLoaded) ? 'New Glimpse, tap to Load!': (!viewed && glimpseLoaded) ? 'Tap to view' : 'Tap to Reply!!' ),
+                         child: new Text( (!viewed && !glimpseLoaded) ? 'New Glimpse, tap to Load!': (!viewed && glimpseLoaded) ? 'Tap to view' : 'Tap to Reply!!',style: new TextStyle(fontStyle: FontStyle.italic) ),
     )
     ],
     ),),
@@ -1107,7 +1114,6 @@ String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
                        backgroundColor: Colors.transparent,
                      ),
                      ),
-
                           new Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
@@ -1118,7 +1124,7 @@ String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
                               //Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
 
                               new Padding(padding: new EdgeInsets.only(left: 10.0),
-                                child: new Text( (!widget.msg['viewed']) ? 'Sent Glimpse!': 'Glimpse has been opened!',
+                                child: new Text( (!widget.msg['viewed']) ? 'Sent Glimpse!': 'Glimpse has been opened!',style: new TextStyle(fontStyle: FontStyle.italic)
                                 ),
                               )
                             ],
