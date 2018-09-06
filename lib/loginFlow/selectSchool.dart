@@ -84,18 +84,6 @@ class _SelectSchoolState extends State<SelectSchool> {
                 ),
               ),
               )
-
-//              child:  new Padding(padding: new EdgeInsets.only(bottom: 10.0),
-//                  child:  new Container(
-//                      height: MediaQuery.of(context).size.height,
-//                      width: MediaQuery.of(context).size.width,
-//                      child:(schoolList.length != 0) ? schoolListView() : new Center(
-//                        child: CircularProgressIndicator(
-//                          backgroundColor: Colors.black,
-//                        ),
-//                      ),
-//                  )
-//              ),
             ),
 
 
@@ -204,7 +192,7 @@ class _SelectSchoolState extends State<SelectSchool> {
                         : Colors.yellowAccent,
                   ),
                   child: new InkWell(
-                    onTap: (userClickedFB)
+                    onTap: (selectedIndex == -1)
                         ? null
                         : () {
                       handleContinue();
@@ -240,7 +228,7 @@ class _SelectSchoolState extends State<SelectSchool> {
   Future<void> handleFbLogin()async{
     FacebookLoginResult result;
     bool userExists = false;
-    try{
+    try{//, 'user_photos'
       result = await facebookSignIn.logInWithReadPermissions(['public_profile', 'user_link']);
     }catch(e){
       _errorMenu("error", "There was an error logging in.", " Please make sure your Snap credentials are correct");
@@ -319,6 +307,8 @@ class _SelectSchoolState extends State<SelectSchool> {
       throw new Exception();
     }
   }
+
+
 
 
   Future<bool>checkIfUserExists(String id)async{
@@ -517,7 +507,7 @@ void grabSchools(){
                     child: new Text('View Terms', style: new TextStyle(color: Colors.black),),
                     onPressed: () {
                       Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
-                          url: 'https://docs.google.com/document/d/1eci-jMZvGyrLwJWctB4TMsjR2Mk0WHXMvzalD_UZhvQ/edit?usp=sharing',
+                          url: 'https://bdytx5.github.io/termsOfService/',
                           appBar: new AppBar(
                             iconTheme: new IconThemeData(color: Colors.black),
                             backgroundColor: Colors.yellowAccent,

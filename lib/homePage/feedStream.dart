@@ -168,6 +168,9 @@ bool checkIfPostIsGhosted(Map post){
     var ghostTime = post['ghost'];
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
     var ghostEndDate = formatter.parse(ghostTime);
+    if(ghostEndDate == null){
+      return false;
+    }
     var now = new DateTime.now();
     if(now.isAfter(ghostEndDate)){
       return false;
@@ -286,7 +289,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                   new Container(
                     height: checkCommentCountForCommentsOnly(widget.snapshot.value),
                     width: double.infinity,
-                    child: (checkCommentCountForCommentsOnly(widget.snapshot.value) != 1.0) ? checkDateOfPost(widget.snapshot.value) ? commentStream(widget.snapshot.value['key']) : commentStream("${widget.snapshot.value['key']}expired") : new Container()
+                    child: (checkCommentCountForCommentsOnly(widget.snapshot.value) != 1.0) ? checkDateOfPost(widget.snapshot.value) ? commentStream(widget.snapshot.value['key'],widget.snapshot.key) : commentStream("${widget.snapshot.value['key']}expired",widget.snapshot.key) : new Container()
                   )
 
                 ],
@@ -311,14 +314,10 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
               }
             }
           },
-
           trailing: new Container(  // hack
             height: 0.1,
             width: 0.1,
           ),
-
-       //   leading:
-
           body: new Container(
           child: new Row(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -377,7 +376,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                           ),
                         ),
                         fit: BoxFit.scaleDown,
-
                       ),
                       ),
                      new Row(
@@ -389,7 +387,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                       new Padding(
                         padding: new EdgeInsets.only(
                             left: 7.0, top: 7.0, right: 7.0, bottom: 2.0),
-                        child: checkDateOfPost(widget.snapshot.value) ? new Text(widget.snapshot.value['post'], style: new TextStyle(fontSize: 20.0,color: Colors.grey[800])) : new Text(''),
+                        child: checkDateOfPost(widget.snapshot.value) ? (widget.snapshot.value['post'] != null) ? new Text(widget.snapshot.value['post'], style: new TextStyle(fontSize: 20.0,color: Colors.grey[800])) : new Text('') : new Text(''),
                       ),
                       new Row(
                         children: <Widget>[
@@ -517,11 +515,11 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
     Future<void>handleCommentNotificaitonList(String key, String posterId)async{
+
     DatabaseReference ref = FirebaseDatabase.instance.reference();
 
     try{
       DataSnapshot snap = await ref.child('commentLists').child(key).once();
-
       if(snap.value != null){
         List<String> commentList = List.from(snap.value);
         if(!commentList.contains(globals.id)){
@@ -541,7 +539,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     }catch(e){
       return;
     }
-
   }
 
 
@@ -577,8 +574,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
   Widget FeedCellTitle(Map post) {
-
-
     String date = formatDateForCellTitle(post['leaveDate']);
 //    bool updated = checkIfPostIsUpdated(post);
     bool updated = checkDateOfPost(post);
@@ -687,7 +682,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   }
 
 
-  Widget commentStream(String id){
+  Widget commentStream(String id,String postId){
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     Query falQuery = ref.child('comments').child(id).orderByKey();
 
@@ -707,12 +702,12 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
         if(id == globals.id){
           widget.commentNotificationCallback(); // kind of sly.... this will update every time there is an update to the comments, and set the notification flag accordingly to false... only thing is that it's a little complex
         }
-       return commentCell(snapshot);
+       return commentCell(snapshot, id,postId);
 
         });
   }
 
-  Widget commentCell(DataSnapshot snapshot){
+  Widget commentCell(DataSnapshot snapshot, String commentKey,String postId){
     if(snapshot.value['fullName'] == null || snapshot.value['imgURL'] == null || snapshot.value['time'] == null || snapshot.value['comment'] == null){
       return new Container();
     }
@@ -746,16 +741,89 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                     padding: new EdgeInsets.only(left: 1.0),
                     child: new Text(snapshot.value['comment'],style: new TextStyle(fontSize: 15.0),)
                 ),
-
               ],
             )
         ),
+        (snapshot.value['sender'] == globals.id) ? new GestureDetector(
+          child: new Icon(Icons.delete,color: Colors.grey[400],size: 15.0,),
+          onTap: ()async{
+            var res = await _showRemoveCommentWarning("Delete Comment?", "Are you sure you want to delete the comment?", "");
+            if(res){
+              await removeComment(snapshot.value['sender'], commentKey, snapshot.key, postId);
+            }
+          },
+        ) : new Container()
       ],
     ),
         new Divider()
       ],
     );
   }
+
+
+
+
+  Future<void>removeComment(String sender, String commentKey,String commentId,String postId )async{
+  // need to first remove the comment, then loop through all other comments to see if the user has commented any other times
+    // if the user has commented, return, otherwise, also remove the user from the commentList used for notifications
+    // also need to decrement the comment count of the post
+    // first confirm that the user wants to delete the comment
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    ref.child('comments').child(commentKey).child(commentId).remove();
+    int count;
+    DataSnapshot expiredCommentCountSnap = await ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').once();
+    if(expiredCommentCountSnap.value == null){
+      // need to decrement regular comment count
+      DataSnapshot updatedCommentCountSnap = await ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').once();
+      count = updatedCommentCountSnap.value;
+      if(count > 1){
+        count = count - 1;
+        await ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').set(count);
+      }else{
+        count = count - 1;
+        await ref.child(globals.cityCode).child('posts').child(postId).child('commentCount').remove();
+      }
+    }else{
+      // need to decrement expired commentcount
+       count = expiredCommentCountSnap.value;
+      if(count > 1){
+        count = count - 1;
+        await ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').set(count);
+      }else{
+        count = count - 1;
+        ref.child(globals.cityCode).child('posts').child(postId).child('expiredCommentCount').remove();
+      }
+    }
+// now we need to loop through every comment, and see if the user needs to be removed from the comment list
+        if(count > 0){
+          bool userHasOtherComments = false;
+          DataSnapshot allCommentsSnap = await ref.child('comments').child(commentKey).once();
+          Map allComments = allCommentsSnap.value;
+          await Future.forEach(allComments.entries,(commentEntry) async {
+            Map comment = commentEntry.value;
+            if(comment['sender'] == globals.id){
+            userHasOtherComments = true;
+            }
+          });
+
+          if(userHasOtherComments){
+            return;
+          }
+         DataSnapshot commentListSnap = await ref.child('commentLists').child(commentKey).once();
+         List<String> commenters = List.from(commentListSnap.value);
+         if(commenters != null){
+           if(commenters.contains(globals.id)){
+             commenters.remove(globals.id);
+             await ref.child('commentLists').child(commentKey).set(commenters);
+           }
+         }
+
+        }else{
+          await ref.child('commentLists').child(commentKey).remove();
+
+        }
+    }
+
 
   double checkCommentCountForCommentsContainer(Map snapshot){
     var count;
@@ -988,6 +1056,48 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
             ),
 
 
+          ],
+        );
+      },
+    );
+
+    return decision;
+  }
+
+
+
+  Future<bool> _showRemoveCommentWarning(String title, String primaryMsg, String secondaryMsg) async {
+    var decision = await showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(primaryMsg,maxLines: null,),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new Row(
+              children: <Widget>[
+
+                new MediaQuery.removePadding(context: context, child:  new FlatButton(
+                  child: new Text('Cancel', style: new TextStyle(color: Colors.black),),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),),
+                new FlatButton(
+                  child: new Text('Remove', style: new TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                ),
+              ],
+            )
           ],
         );
       },

@@ -221,7 +221,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> with RouteAware{
                   ),
                   new Container(
                     margin: const EdgeInsets.only(top: 6.0),
-                    child: new Text(txt),
+                    child: new Text(txt,style: new TextStyle(fontSize: 17.0)),
                   )
                 ],
               ),

@@ -1,19 +1,19 @@
 <component name="libraryTable">
   <library name="Flutter Plugins" type="FlutterPluginsLibraryType">
     <CLASSES>
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/image_picker-0.4.6" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/flutter_facebook_login-1.1.1" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/shared_preferences-0.4.2" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_core-0.2.5" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_messaging-1.0.4" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_core-0.2.5" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_storage-0.3.7" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/image_cropper-0.0.4" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_auth-0.5.15" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/shared_preferences-0.4.2" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/camera-0.2.1" />
-      <root url="file://$USER_HOME$/.pub-cache/git/flutter_native_image-b5a9a2c37a864f34baef862d1f437b85b8fdfaa2" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/image_picker-0.4.6" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/image_cropper-0.0.4" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_database-1.0.3" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/flutter_facebook_login-1.1.1" />
+      <root url="file://$USER_HOME$/.pub-cache/git/flutter_native_image-b5a9a2c37a864f34baef862d1f437b85b8fdfaa2" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_auth-0.5.15" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/flutter_webview_plugin-0.2.1+2" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

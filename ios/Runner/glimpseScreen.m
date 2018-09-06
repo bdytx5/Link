@@ -51,7 +51,8 @@
 @property (strong, nonatomic) AVCaptureSession *session;
 @property (strong, nonatomic) AVCapturePhotoOutput *stillImageOutput;
 @property ( nonatomic) bool camSetup;
-
+@property (nonatomic, strong) UIAlertController *alertController;
+@property (nonatomic) bool fromCameraRoll;
 
 
 
@@ -97,6 +98,7 @@ CGPoint textViewStartPoint;
     
     _imagePicker = [[UIImagePickerController alloc]init];
     _imagePicker.delegate = self;
+    _fromCameraRoll = false;
 
     [self addTakePhotoBtn];
     [self addFlipCameraBtn];
@@ -108,7 +110,8 @@ CGPoint textViewStartPoint;
     textViewStartPoint = CGPointMake(self.view.frame.size.width/2, 0.0);
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillChange:) name:UIKeyboardWillChangeFrameNotification object:nil];
-    
+    _alertController = [[UIAlertController alloc]initWithNibName:nil bundle:nil];
+
 }
 
 -(void) viewWillAppear:(BOOL)animated {
@@ -350,6 +353,7 @@ CGPoint textViewStartPoint;
 }
 
 -(void)handleXBtnTap{
+    _fromCameraRoll = false;
     [self.textView removeFromSuperview];
     [self.preview setHidden:YES];
     
@@ -357,6 +361,8 @@ CGPoint textViewStartPoint;
 
 -(void)handleBackBtnTap{
     // dismiss view
+    
+    _flutterRes(@"yay");
     [self dismissViewControllerAnimated:false completion:nil];
 
 }
@@ -383,11 +389,15 @@ CGPoint textViewStartPoint;
     
     // add textfield to textview
     self.msgTextfield = [[UITextField alloc] initWithFrame:CGRectMake(0.0, 0.0, self.view.frame.size.width, 40.0)];
-    [self.msgTextfield becomeFirstResponder];
     [self.msgTextfield setTextColor:[UIColor whiteColor]];
     self.msgTextfield.delegate = self;
     [self.msgTextfield setReturnKeyType:UIReturnKeyDone];
     [self.textView addSubview:self.msgTextfield];
+    
+
+     [self.msgTextfield becomeFirstResponder];
+ 
+  
 }
 -(BOOL)textFieldShouldReturn:(UITextField *)textField
 {
@@ -404,7 +414,8 @@ CGPoint textViewStartPoint;
     
 }
 - (void)textFieldDidBeginEditing:(UITextField *)textField{
-    
+ 
+
     NSLog(@"%f -- @%f",self.textView.center.y, (self.view.frame.size.height/2));
     
     [self.msgTextfield setTextAlignment:NSTextAlignmentLeft];
@@ -412,6 +423,8 @@ CGPoint textViewStartPoint;
 }
 
 - (void)keyboardWillChange:(NSNotification *)notification {
+    
+    
     CGRect keyboardRect = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
     keyboardRect = [self.view convertRect:keyboardRect fromView:nil];
     
@@ -698,9 +711,28 @@ CGPoint textViewStartPoint;
     }
 }
 
+- (void) showAlertMsg:(UIViewController *)viewController title:(NSString *)title message:(NSString *)message {
+    
+    UIAlertController * alert = [UIAlertController alertControllerWithTitle : title
+                                                                    message : message
+                                                             preferredStyle : UIAlertControllerStyleAlert];
+    
+    UIAlertAction * ok = [UIAlertAction
+                          actionWithTitle:@"OK"
+                          style:UIAlertActionStyleDefault
+                          handler:^(UIAlertAction * action)
+                          { }];
+    
+    [alert addAction:ok];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [viewController presentViewController:alert animated:YES completion:nil];
+    });
+}
+
 -(void) uploadImg{
     // generate current timestamp
     
+  
     [_sendGlimpseBtn removeFromSuperview];
     _loadingCircle = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     [_loadingCircle startAnimating];
@@ -727,6 +759,9 @@ CGPoint textViewStartPoint;
                                                    if (error != nil) {
                                                        // Uh-oh, an error occurred!
                                                        [_loadingCircle removeFromSuperview];
+                                                       
+                                                       [self showAlertMsg:self title:@"Error" message:@"lol"];
+                                                       return;
                                                        // display error
                                                    } else {
                                                        // Metadata contains file metadata such as size, content-type, and download URL.
@@ -737,6 +772,8 @@ CGPoint textViewStartPoint;
                                                                // Uh-oh, an error occurred!
                                                                [_loadingCircle removeFromSuperview];
                                                                // display error
+                                                               [self showAlertMsg:self title:@"Error" message:@"lol"];
+                                                               return;
 
                                                            } else {
                             
@@ -746,10 +783,26 @@ CGPoint textViewStartPoint;
                                                                    duration = 100;
                                                                }
                                                                _flutterRes(url);
-                                                               NSDictionary * glimpse = @{@"url":url, @"duration":[NSNumber numberWithInt:duration],@"from":_sender,@"to":_recip,@"type":@"glimpse",@"formattedTime":currentTime, @"viewed":@NO};
                                                                
+                                                               NSDictionary * glimpse;
+                                                               
+                                                               if(!_fromCameraRoll){
+                                                                   glimpse = @{@"url":url, @"duration":[NSNumber numberWithInt:duration],@"from":_sender,@"to":_recip,@"type":@"glimpse",@"formattedTime":currentTime, @"viewed":@NO};
+                                                               }else{
+                                                                   glimpse = @{@"url":url, @"duration":[NSNumber numberWithInt:duration],@"from":_sender,@"to":_recip,@"type":@"glimpse",@"formattedTime":currentTime, @"viewed":@NO, @"fromCameraRoll":@YES};
+                                                               }
+                                                              
+                                                               
+                                                               NSDictionary * recipConvoListUpdate = @{@"recentMsg":@"Recieved Glimpse",@"new":@YES,@"formattedTime":currentTime};
+                                                               
+                                                               NSDictionary * senderConvoListUpdate = @{@"recentMsg":@"Sent Glimpse",@"formattedTime":currentTime};
+
                                                                [[[[self.ref child:@"convos"] child:_convoId] child:[[_ref childByAutoId] key]]
                                                                 setValue:glimpse];
+                                                               [[[[self.ref child:@"convoLists"] child:_recip]child:_sender]
+                                                                updateChildValues:recipConvoListUpdate];
+                                                               [[[[self.ref child:@"convoLists"] child:_sender]child:_recip]
+                                                                updateChildValues:senderConvoListUpdate];
                                                         
                                                                [_loadingCircle removeFromSuperview];
                                                                [self dismissViewControllerAnimated:false completion:nil];
@@ -796,6 +849,7 @@ CGPoint textViewStartPoint;
     [_imagePicker dismissViewControllerAnimated:true completion:nil];
     UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
     self.previewImage = [[UIImage alloc]init];
+    _fromCameraRoll = true;
     [self.preview setImage:image];
     [self.preview setHidden:false];
 

@@ -260,7 +260,7 @@ class _PostPopUpState extends State<PostPopUp> {
       return;
     }
     if(await checkIfThereAreComments()){
-    var decision = await _warningMenu('Warning', "Updating your status will delete all current coomments.", '');
+    var decision = await _warningMenu('Warning', "Updating your status will delete all current comments.", '');
     if(decision == 'Okay'){
     uploadPost(currentUsersPost, riderOrDriver);
     }else{

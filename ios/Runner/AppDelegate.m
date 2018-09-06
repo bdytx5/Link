@@ -82,7 +82,7 @@ static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
             [controller presentViewController:vc animated:NO completion:nil];
         }
         if ([@"showFb" isEqualToString:call.method]) {
-            FbWebView * vc = [[FbWebView alloc]initWithURL:call.arguments[@"url"]];
+            FbWebView * vc = [[FbWebView alloc]initWithURL:call.arguments[@"url"]Result:result];
             [controller presentViewController:vc animated:YES completion:nil];
         }
         

@@ -154,6 +154,8 @@ class _GlimpsePopUpState extends State<GlimpsePopUp> {
     }
     try{
       await FirebaseDatabase.instance.reference().child('convos').child(widget.convoId).push().set(msg);
+      await FirebaseDatabase.instance.reference().child('convoLists').child(widget.recipId).child(globals.id).update({'new':true,'recentMsg':'Recieved Glimpse','formattedTime':now});
+      await FirebaseDatabase.instance.reference().child('convoLists').child(globals.id).child(widget.recipId).update({'recentMsg':'Sent Glimpse','formattedTime':now});
       Navigator.pop(context);
     }catch(e){
       setState(() {loading = false;});

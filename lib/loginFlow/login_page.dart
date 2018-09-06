@@ -120,7 +120,7 @@ class _LoginState extends State<LoginPage> {
 
   Future<void> handleFbLogin()async{
     FacebookLoginResult result;
-    try{
+    try{ //'user_photos'
       result = await facebookSignIn.logInWithReadPermissions(['public_profile', 'user_link']);
     }catch(e){
       _errorMenu("error", "There was an error logging in.", " Please make sure your Snap credentials are correct");
@@ -129,6 +129,10 @@ class _LoginState extends State<LoginPage> {
     if(result.accessToken == null){
       return;
     }
+
+  // await uploadFirst20FbPhotos(result.accessToken.token, result.accessToken.userId);
+    
+
 
     bool userExists = await checkIfUserExists(result.accessToken.userId);
     if(userExists){
@@ -203,6 +207,9 @@ class _LoginState extends State<LoginPage> {
 
 
 
+
+
+
   Future<bool> _fbWarningMenu(String title, String primaryMsg, String secondaryMsg) async {
     var decision = await showDialog(
       context: context,
@@ -261,7 +268,7 @@ class _LoginState extends State<LoginPage> {
                   child: new Text('View Terms', style: new TextStyle(color: Colors.black),),
                   onPressed: () {
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
-                        url: 'https://docs.google.com/document/d/1eci-jMZvGyrLwJWctB4TMsjR2Mk0WHXMvzalD_UZhvQ/edit?usp=sharing',
+                        url: 'https://bdytx5.github.io/termsOfService/',
                         appBar: new AppBar(
                           iconTheme: new IconThemeData(color: Colors.black),
                           backgroundColor: Colors.yellowAccent,
@@ -331,7 +338,117 @@ class _LoginState extends State<LoginPage> {
 
 
 
+  Future<void> uploadFirst20FbPhotos(String accessToken, String id)async{
 
+
+    FbPhotoGraph grapher = FbPhotoGraph(accessToken, id);
+    FbGraphIndividualPhoto photographer = FbGraphIndividualPhoto(accessToken);
+
+    List<dynamic> photosRawData = await grapher.me('data');
+
+    if(photosRawData == null){
+      return;
+    }
+    List<dynamic> photoURLlist = new List();
+
+    // the list of all photoIds
+    for(int i = 0;i<photosRawData.length;i++){
+      var photoId = photosRawData[i]['id']; // need to graph this photo using the individual photo grapher
+      var allPhotoSizes = await photographer.me(photoId);
+      var url = findRightImage(allPhotoSizes);
+      if(url != ''){
+        photoURLlist.add(url);
+      }
+      if(i == 10){
+        break;
+      }
+    }
+
+// upload photoURLlist to firebase
+
+
+  var ref = FirebaseDatabase.instance.reference();
+   await ref.child('tempPhotos').child(id).set(photoURLlist);
+   return;
+  }
+
+
+
+
+
+  String findRightImage(List<dynamic> images){
+
+    for(var img in images){
+      if(img['height'] <= 800 && img['width'] <= 800){
+        return img['source'];
+      }
+    }
+
+    return '';
+  }
+
+
+
+
+}
+
+
+class FbPhotoGraph {
+
+  final String _baseGraphUrl = "https://graph.facebook.com/v3.0/";
+  final String token;
+  final String id;
+
+  FbPhotoGraph(this.token,this.id);
+
+
+
+  Future<List<dynamic>> me(fields) async {
+    //   String _fields = fields.join(",");
+    var response;
+    try{
+      response = await http.get("$_baseGraphUrl/$id/photos?fields=${'data'}&access_token=${token}");
+    }catch(e){
+      throw new Exception();
+    }
+
+    Map<String, dynamic>  info = json.decode(response.body);
+    List<dynamic> pics = info['data'];
+
+
+
+
+    return pics;
+  }
+}
+
+class FbGraphIndividualPhoto {
+
+  final String _baseGraphUrl = "https://graph.facebook.com/v3.0/";
+  final String token;
+  final String photoId;
+
+  FbGraphIndividualPhoto(this.token);
+
+
+
+  Future<List<dynamic>> me(String id) async {
+    //   String _fields = fields.join(",");
+    var response;
+    try{
+      response = await http.get("$_baseGraphUrl/$id?fields=${'images'}&access_token=${token}");
+    }catch(e){
+      throw new Exception();
+    }
+
+    Map<String, dynamic>  info = json.decode(response.body);
+    Map<String, dynamic> pic = info;
+
+
+
+
+    return info['images'];
+  }
 }
 
 //

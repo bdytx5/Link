@@ -24,7 +24,8 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
-
+import 'login_page.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 
 
 class customizeProfile extends StatefulWidget {
@@ -50,25 +51,32 @@ class _customizeProfileState extends State<customizeProfile> {
   String firstName = '';
   String lastName = '';
   String bio = '';
-
   bool loading = false;
+
   TextEditingController firstNameController = new TextEditingController();
   TextEditingController lastNameController = new TextEditingController();
   TextEditingController bioController = new TextEditingController();
+  TextEditingController phoneController = new TextEditingController();
+
   FocusNode firstNameNode = new FocusNode();
   FocusNode lastNameNode = new FocusNode();
+  FocusNode phoneNode = new FocusNode();
   FocusNode bioNode = new FocusNode();
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   String profileImgURL;
   Map userInfo;
   File profilePic;
   String link;
+  final FacebookLogin facebookSignIn = new FacebookLogin();
+  bool tempPhotosAdded = true;
+  bool continueBtnTapped = false;
 
 
 
 
   void initState() {
     super.initState();
+   // uploadFirst10FbPhotos(widget.userInfo['id']);
     downloadProfilePicAndAssignIt(widget.userInfo['imgURL']);
     firstName = widget.userInfo['first_name'];
     lastName = widget.userInfo['last_name'];
@@ -79,7 +87,6 @@ class _customizeProfileState extends State<customizeProfile> {
       profileImgURL = widget.userInfo['imgURL'];
     }
     userInfo = widget.userInfo;
-
   }
 
 
@@ -92,9 +99,10 @@ class _customizeProfileState extends State<customizeProfile> {
         body: new Container(
           child: MediaQuery.removePadding(
              removeTop: true, removeBottom: true, context: context,
-            child: new ListView(
+            child:
+            new ListView(
               children: <Widget>[
-                customizeProfile()
+                customizeProfile(),
               ],
             )
         )
@@ -119,10 +127,12 @@ class _customizeProfileState extends State<customizeProfile> {
                children: <Widget>[
 
             new Align(
-              alignment: Alignment.center,
+              alignment: new Alignment(0.0,-0.2),
               child: new Container(
+                height: 100.0,
+                  width: 100.0,
                   child: new Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       new IconButton(
@@ -158,15 +168,19 @@ class _customizeProfileState extends State<customizeProfile> {
                        onPressed: () {
                          setState(() {imgFile = null;});
                        }),
-                 )
+                 ),
+
                ],
              ))
            ),
 
 
 
+
+
+
           new Container(
-            height: 250.0,
+            height: 260.0,
             width: double.infinity,
             decoration: new BoxDecoration(borderRadius: new BorderRadius.only(
                 topLeft: new Radius.circular(25.0),
@@ -194,14 +208,26 @@ class _customizeProfileState extends State<customizeProfile> {
                ),
                )
                     : new Padding(padding: new EdgeInsets.all(5.0),
-                child: new InkWell(
-                  child: new CircleAvatar(radius: 45.0,
-                    backgroundImage:  new FileImage(profilePic),
-                    backgroundColor: Colors.transparent,) ,
-                  onTap: (){
-                    // show image picker
-
-                  },
+                child: new Column(
+                  children: <Widget>[
+                    new InkWell(
+                      child: new CircleAvatar(radius: 45.0,
+                        backgroundImage:  new FileImage(profilePic),
+                        backgroundColor: Colors.transparent,) ,
+                      onTap: ()async{
+                        // show image picker
+                        await changeProfilePic();
+                      },
+                    ),
+                   new Padding(padding: new EdgeInsets.only(top: 5.0),
+                   child:  new GestureDetector(
+                     child: new Icon(Icons.edit, size: 20.0,color: Colors.grey[600],),
+                     onTap: ()async{
+                       await changeProfilePic();
+                     },
+                   ),
+                   ),
+                  ],
                 )
 
 
@@ -215,14 +241,29 @@ class _customizeProfileState extends State<customizeProfile> {
 
                           ],
                         ),),
+                        phoneField(),
+
                         new EnsureVisibleWhenFocused(child: bioField(), focusNode: bioNode),
-                        continueBtn()
+
+                        new Container(
+                          height: 50.0,
+                          width: 50.0,
+                        )
+
+                      // new Expanded(child:  continueBtn())
                       ],
                     ),
 
               ],
             ),
 
+          ),
+
+          new Align(
+            alignment: new Alignment(0.0, 1.0),
+            child:  new Container(
+             child:continueBtn(),
+            )
           ),
 
 
@@ -235,7 +276,14 @@ class _customizeProfileState extends State<customizeProfile> {
 
 
 
-
+  Future<File> _cropProfilePic(File imageFile) async {
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      ratioX: 1.0,
+      ratioY: 1.0,
+    );
+    return croppedFile;
+  }
 
 
   Future<File> _cropImage(File imageFile) async {
@@ -275,24 +323,25 @@ class _customizeProfileState extends State<customizeProfile> {
 
     var imageFile = await  ImagePicker.pickImage(source: ImageSource.gallery);
     imgFile = imageFile;
-
-
     return imageFile;
   }
 
   Future<void> changeProfilePic()async{
+    File pic =  await  ImagePicker.pickImage(source: ImageSource.gallery);
+    File croppedPic = await _cropProfilePic(pic);
+    setState(() {
+      pic = croppedPic;
+    });
 
-    File pic = await _pickImage();
     File resizeImg = await FlutterNativeImage.compressImage(pic.path, quality: 100,targetWidth: 200,targetHeight: 200);
-
     profilePic = resizeImg;
-
   }
+
+
   String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
 
 
   Future<String> uploadProfilePicWithFile(File img, String userID) async {
-
     try{
       File resizeImg = await FlutterNativeImage.compressImage(img.path, quality: 100);
       final StorageReference ref = await FirebaseStorage.instance.ref().child("profilePics").child(userID).child(timestamp());
@@ -355,8 +404,7 @@ class _customizeProfileState extends State<customizeProfile> {
 
 
   Widget firstNameField(){
-    return new Padding(padding: new EdgeInsets.all(5.0),
-
+    return new Padding(padding: new EdgeInsets.all(1.0),
       child:new Container(
         height: 55.0,
         width: 100.0,
@@ -386,8 +434,7 @@ class _customizeProfileState extends State<customizeProfile> {
     );
   }
   Widget lastNameField(){
-    return new Padding(padding: new EdgeInsets.all(5.0),
-
+    return new Padding(padding: new EdgeInsets.all(1.0),
       child:new Container(
         height: 55.0,
         width: 100.0,
@@ -401,7 +448,9 @@ class _customizeProfileState extends State<customizeProfile> {
                 new TextField(
 
                   onSubmitted: (txt){
-                    FocusScope.of(context).requestFocus(bioNode);
+                    setState(() {
+                      FocusScope.of(context).requestFocus(phoneNode);
+                    });
                   },
                   style: new TextStyle(fontSize: 14.0,color: Colors.black,),
                   textAlign: TextAlign.left,
@@ -417,11 +466,46 @@ class _customizeProfileState extends State<customizeProfile> {
     );
   }
 
+  Widget phoneField(){
+    return new Padding(padding: new EdgeInsets.all(5.0),
+      child:new Container(
+        width: 200.0,
+        height: 55.0,
+        decoration: new BoxDecoration(border: new Border(bottom:new BorderSide(color: Colors.grey[600]))),
+        child: new EnsureVisibleWhenFocused(
+            focusNode:phoneNode,
+            child: new Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                new Text('Phone Number',style: new TextStyle(fontSize: 11.0,color: Colors.grey),),
+                new TextField(
+                  style: new TextStyle(fontSize: 14.0,color: Colors.black),
+                  textAlign: TextAlign.left,
+                  focusNode: phoneNode,
+                  keyboardType: (phoneController.text.length < 10) ? TextInputType.numberWithOptions() : TextInputType.text,
+                  decoration: new InputDecoration( border:InputBorder.none ),
+                  controller: phoneController,
+                  maxLines: 1,
+                  onSubmitted: (txt){
+                    FocusScope.of(context).requestFocus(bioNode);
+                  },
+                  onChanged: (d){
+                    if(d.length == 10){
+                      FocusScope.of(context).requestFocus(bioNode);
+                    }
+                  },
+                ),
+              ],
+            )
+        ),
+      ),
+    );
+  }
+
 
 
   Widget bioField(){
     return new Padding(padding: new EdgeInsets.all(5.0),
-
       child:new Container(
         width: 200.0,
         height: 77.0,
@@ -437,7 +521,6 @@ class _customizeProfileState extends State<customizeProfile> {
                   textAlign: TextAlign.left,
                   focusNode: bioNode,
                   decoration: new InputDecoration( border:InputBorder.none ),
-                  onChanged:(k){_firstNameChange();},
                   controller: bioController,
                   maxLength: 30,
                 ),
@@ -450,46 +533,52 @@ class _customizeProfileState extends State<customizeProfile> {
 
 
   Widget continueBtn(){
-    return  new Padding(padding: new EdgeInsets.all(10.0),
-        child: new Center(
-            child:    (loading) ?  new CircularProgressIndicator()
-                : new IconButton(icon: new Icon(Icons.arrow_forward, color: Colors.black,), onPressed: ()async{
+    return (loading) ?  new Padding(padding: new EdgeInsets.only(bottom: 10.0),child: new CircularProgressIndicator(),) : new IconButton(icon: new Icon(Icons.arrow_forward, color: Colors.black,), onPressed: ()async{
+              continueArrowTapped();
+              });
+           }
 
-              if(imgFile == null){
-                setState(() {
-                  loading = false;
-                });
-                _errorMenu("Error", "Please add a Cover Photo, a First Name, a Last Name, and a Bio!", '');
 
-                return;;
-              }
-              if(profilePic == null){
-                setState(() {loading = false;});
 
-                _errorMenu("Error", "There was an error loading your profile pic!", '');
-                return;
+void continueArrowTapped(){
 
-              }
-              setState(() {loading = true;});
+  if(imgFile == null){
+    setState(() {
+      loading = false;
+    });
+    _errorMenu("Error", "Please add a Cover Photo, your first and last name, phone number, and a Bio!", '');
+    return;
+  }
+  if(profilePic == null){
+    setState(() {loading = false;});
+    _errorMenu("Error", "There was an error loading your profile pic!", '');
+    return;
+  }
+  if(phoneController.text == null){
+    _errorMenu("Error", "Please add your Phone Number", '');
 
-              //28237
-
-              continueToSignUpPopup(userInfo, widget.placeInfo);
-
-              })
-        )
-
-    );
-
+    return;
+  }
+  if(phoneController.text.length != 10 ){
+    _errorMenu("Error", "Please enter your phone number!", 'Type only the digits, nothing else.');
+    return;
   }
 
+  // if temp photos have not been added yet, wait on them to be added
+  if(!tempPhotosAdded){
+    setState(() {
+      loading = true;
+    continueBtnTapped = true;
+    });
+    return;
+  }
 
-
-
+  setState(() {loading = true;});
+  continueToSignUpPopup(userInfo, widget.placeInfo);
+}
 
 
   void continueToSignUpPopup(Map userInfo, Map placeInfo) async{
-
    // Map nameInfo = sortName(firstNameController.text);
     var firstName = firstNameController.text;
     var lastName = lastNameController.text;
@@ -500,6 +589,7 @@ class _customizeProfileState extends State<customizeProfile> {
       userInfo['firstName'] = firstName;
       userInfo['lastName'] = lastName;
       userInfo['bio'] = bioController.text;
+      userInfo['phone'] = phoneController.text;
       setState(() {loading = false;});
       showDialog(context: context, barrierDismissible: false, builder: (BuildContext context) => new SignupPopUp(userInfo,placeInfo, imgFile)).then((val)async{
         if(val == "success"){
@@ -521,6 +611,64 @@ class _customizeProfileState extends State<customizeProfile> {
 
     }
   }
+
+
+
+  Future<void> uploadFirst10FbPhotos( String id)async{
+
+    // call this function in init state
+    // if the user manages to enter all their information in before this function completes (tempPhotosAdded = true), we will return from
+    // the continue function, set the loading = to true, and wait for this function to finish, then call the continue function again
+
+    var accessToken = await facebookSignIn.currentAccessToken;
+    FbPhotoGraph grapher = FbPhotoGraph(accessToken.token, id);
+    FbGraphIndividualPhoto photographer = FbGraphIndividualPhoto(accessToken.token);
+    List<dynamic> photosRawData = await grapher.me('data');
+    if(photosRawData == null){
+      setState(() {
+        tempPhotosAdded = true;
+      });
+      if(continueBtnTapped){
+       continueArrowTapped();
+      }
+      return;
+    }
+    List<dynamic> photoURLlist = new List();
+    // the list of all photoIds
+    for(int i = 0;i<photosRawData.length;i++){
+      var photoId = photosRawData[i]['id']; // need to graph this photo using the individual photo grapher
+      var allPhotoSizes = await photographer.me(photoId);
+      var url = findRightImage(allPhotoSizes);
+      if(url != ''){
+        photoURLlist.add(url);
+      }
+      if(i == 10){
+        break;
+      }
+    }
+// upload photoURLlist to firebase
+    var ref = FirebaseDatabase.instance.reference();
+    await ref.child('tempPhotos').child(id).set(photoURLlist);
+    setState(() {
+      tempPhotosAdded = true;
+    });
+    if(continueBtnTapped){
+      continueArrowTapped();
+    }
+    return;
+  }
+
+
+  String findRightImage(List<dynamic> images){
+    for(var img in images){
+      if(img['height'] <= 800 && img['width'] <= 800){
+        return img['source'];
+      }
+    }
+    return '';
+  }
+
+
 
 
 

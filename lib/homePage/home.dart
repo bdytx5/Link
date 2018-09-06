@@ -33,7 +33,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:secure_string/secure_string.dart';
 import 'package:image_cropper/image_cropper.dart';
-
+import '../loginFlow/notificationsSplash.dart';
 //import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class Home extends StatefulWidget{
@@ -77,6 +77,7 @@ final keyboardDismissalChangeNotifier = new StreamController.broadcast(); // for
 
 FirebaseMessaging _firMes = new FirebaseMessaging();
 //FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  static bool askedToAllowNotifications = false;
 
 
   // notification logic is somwhat complicated...
@@ -102,12 +103,83 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
     fetchRideNotificationStatuses();// attatch a listener to the ride notifications node
     fetchNotificationMessageStatuses(); // attach a listener to the message notifications node
     getToken();
-    updateCityCode(widget.userID).then((idk){
-      fetchTransportModeAndRiderOrDriver();
-    });
-
+    if(Platform.isIOS){
+       handleNotifications();
+    }
    }
 
+  void handleNotifications() async {
+    final SharedPreferences prefs = await _prefs;
+    var permissions = await platform.invokeMethod("checkNotificationStatus");
+    (!askedToAllowNotifications && prefs.getBool('requestedNotifications') == null && permissions != 1) ? new Future.delayed(
+
+        const Duration(milliseconds: 1000)).then((idk) {
+      askedToAllowNotifications = true;
+      Navigator.push(context, new MaterialPageRoute(builder: (context) => new NotificationsSplash())).then((res){
+        if(res != null){
+          if(res){
+            platform.invokeMethod("goToSettings");
+          }
+        }
+      });
+
+    }
+    ) : null;
+  }
+
+  Future<void> handleNotificationsForSideMenu()async{
+
+    final prefs = await _prefs;
+    var notificationResult = prefs.getBool('notifications');
+    if(notificationResult == null){
+      // show menu to ask for access
+      var res = await _warningMenu("Allow Notifications?", "Would you like to allow notifications?", '');
+      if(res) {
+        // request access to notifications
+        _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
+      }
+    }else{
+      var permissions = await platform.invokeMethod("checkNotificationStatus");
+      if(permissions  == 1){
+        // tell the user that notifications are enabled
+        _warningMenu("Notifications are Enabled", "They can be turned off in settings", '');
+      }else{
+        // tell the user that notifications are not enabled, and that they need to go to settings
+        var res = await  _warningMenu("Notifications are Disabled", "Click okay to be redirected to notification settings", '');
+        if(res){
+          platform.invokeMethod("goToSettings");
+        }
+      }
+    }
+  }
+
+//  void createSnackBar() async{
+//    final SharedPreferences prefs = await _prefs;
+//
+//    final snackBar = new SnackBar(content: new Row(
+//      children: <Widget>[
+//        new Expanded(child:  new Text('Allow Message Notifcations'),),
+//        new Padding(padding: new EdgeInsets.all(5.0),
+//          child: new MaterialButton(
+//            onPressed: () {
+//              prefs.setBool('requestedNotifications', true);
+//              _scaffoldKey.currentState.removeCurrentSnackBar();
+//              _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
+//            },
+//            child: new Text(
+//              'TURN ON', style: new TextStyle(color: Colors.black),),
+//            color: Colors.yellowAccent,
+//          ),
+//        )
+//
+//      ],
+//    ),
+//        backgroundColor: Colors.grey[800], duration: new Duration(seconds: 10));
+//    // Find the Scaffold in the Widget tree and use it to show a SnackBar
+//    if(context != null){
+//      Scaffold.of(context).showSnackBar(snackBar);
+//    }
+//  }
 
    void configureCloudMessaging(){
      _firMes.configure(
@@ -338,9 +410,6 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
     Navigator.push(context, new MaterialPageRoute(builder: (context) => new NotificationPage(_generalNotificationCallback)));
     },
 
-
-
-
                  ),
                ),
 
@@ -352,7 +421,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                   onTap: (){
                     // showNotificationsSettingsMenu();
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
-                        url: 'https://docs.google.com/document/d/1eci-jMZvGyrLwJWctB4TMsjR2Mk0WHXMvzalD_UZhvQ/edit?usp=sharing',
+                        url: 'https://bdytx5.github.io/termsOfService/',
                         appBar: new AppBar(
                           iconTheme: new IconThemeData(color: Colors.black),
 
@@ -372,9 +441,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                   title: new Text('Notification Settings'),
                   leading: new Icon(Icons.settings),
                   onTap: ()async{
-
-                    handleNotifications();
-
+                    handleNotificationsForSideMenu();
                   },
                 ),
               ) : new Container(),
@@ -389,6 +456,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                     if(res){
                       try{
                         final FacebookLogin facebookSignIn = new FacebookLogin();
+
                           await facebookSignIn.logOut();
                           var ref = FirebaseDatabase.instance.reference();
                           await ref.child('tokens').child(globals.id).remove();
@@ -419,31 +487,31 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
   }
 
 
-  Future<void> handleNotifications()async{
-     
-    final prefs = await _prefs;
-    var notificationResult = prefs.getBool('notifications');
-    if(notificationResult == null){
-      // show menu to ask for access
-      var res = await _warningMenu("Allow Notifications?", "Would you like to allow notifications?", '');
-      if(res) {
-        // request access to notifications 
-        _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
-      }
-    }else{
-      var permissions = await platform.invokeMethod("checkNotificationStatus");
-      if(permissions  == 1){
-        // tell the user that notifications are enabled 
-        _warningMenu("Notifications are Enabled", "They can be turned off in settings", '');
-      }else{
-        // tell the user that notifications are not enabled, and that they need to go to settings 
-      var res = await  _warningMenu("Notifications are Disabled", "Click okay to be redirected to notification settings", '');
-      if(res){
-        platform.invokeMethod("goToSettings");
-      }
-      }
-    }
-  }
+//  Future<void> handleNotifications()async{
+//
+//    final prefs = await _prefs;
+//    var notificationResult = prefs.getBool('notifications');
+//    if(notificationResult == null){
+//      // show menu to ask for access
+//      var res = await _warningMenu("Allow Notifications?", "Would you like to allow notifications?", '');
+//      if(res) {
+//        // request access to notifications
+//        _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
+//      }
+//    }else{
+//      var permissions = await platform.invokeMethod("checkNotificationStatus");
+//      if(permissions  == 1){
+//        // tell the user that notifications are enabled
+//        _warningMenu("Notifications are Enabled", "They can be turned off in settings", '');
+//      }else{
+//        // tell the user that notifications are not enabled, and that they need to go to settings
+//      var res = await  _warningMenu("Notifications are Disabled", "Click okay to be redirected to notification settings", '');
+//      if(res){
+//        platform.invokeMethod("goToSettings");
+//      }
+//      }
+//    }
+//  }
 //
 
 
@@ -509,6 +577,8 @@ void grabUsersImgAndFullName()async{
      if(globals.fullName != null && globals.imgURL != null){
        return;
      }
+     print(globals.cityCode);
+     print(globals.id);
   DataSnapshot snapshot = await database.reference().child(globals.cityCode).child('userInfo').child(globals.id).once();
 
   setState(() {

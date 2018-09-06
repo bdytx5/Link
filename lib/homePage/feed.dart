@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../loginFlow/login_page.dart';
+import '../loginFlow/notificationsSplash.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
@@ -67,6 +67,7 @@ class _FeedState extends State<Feed> {
     static const platform = const MethodChannel('thumbsOutChannel');
     String transportMode;
     LatLng destination;
+    SnackBar snackBar;
 
 
     FirebaseMessaging _firMes = new FirebaseMessaging();
@@ -86,9 +87,8 @@ class _FeedState extends State<Feed> {
     super.initState();
     destination = widget.destination;
     transportMode = widget.transportMode;
-    if(Platform.isIOS){
-      handleNotifications();
-    }
+
+
     updateGlobalInfo(globals.id);
 
 
@@ -115,7 +115,8 @@ class _FeedState extends State<Feed> {
       floatingActionButton: (!commenting) ? new FloatingActionButton(
         backgroundColor: Colors.yellowAccent,
         onPressed: () {
-          showDialog(context: context, builder: (BuildContext context) => new PostPopUp(widget.app));
+       showDialog(context: context, builder: (BuildContext context) => new PostPopUp(widget.app));
+
         },
         child: new Icon(Icons.calendar_today),
       ) :  null,
@@ -150,12 +151,13 @@ class _FeedState extends State<Feed> {
       Map info = snap.value;
       if(info != null ){
         /// need city code, id, full name, home city
-        setState(() {
-          globals.id = id;
-          globals.city = info['city'];
-          globals.cityCode = info['cityCode'];
-        });
-
+        if(mounted){
+          setState(() {
+            globals.id = id;
+            globals.city = info['city'];
+            globals.cityCode = info['cityCode'];
+          });
+        }
       }
     }
 
@@ -179,44 +181,49 @@ class _FeedState extends State<Feed> {
     void handleNotifications() async {
       final SharedPreferences prefs = await _prefs;
       (!askedToAllowNotifications && prefs.getBool('requestedNotifications') == null) ? new Future.delayed(
-          const Duration(seconds: 2))
+          const Duration(milliseconds: 1000))
           .then((idk) {
         askedToAllowNotifications = true;
-        createSnackBar();
+        Navigator.push(context, new MaterialPageRoute(builder: (context) => new NotificationsSplash())).then((res){
+          if(res != null){
+            if(res){
+              platform.invokeMethod("goToSettings");
+            }
+          }
+        });
+
       }
       ) : null;
     }
 
 
-    void createSnackBar() async{
-      final SharedPreferences prefs = await _prefs;
-
-      final snackBar = new SnackBar(content: new Row(
-        children: <Widget>[
-         new Expanded(child:  new Text('Allow Message Notifcations'),),
-          new Padding(padding: new EdgeInsets.all(5.0),
-            child: new MaterialButton(
-              onPressed: () {
-
-                  prefs.setBool('requestedNotifications', true);
-                  Scaffold.of(context).hideCurrentSnackBar();
-                  _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
-
-            },
-              child: new Text(
-                'TURN ON', style: new TextStyle(color: Colors.black),),
-              color: Colors.yellowAccent,
-            ),
-          )
-
-        ],
-      ),
-          backgroundColor: Colors.grey[800], duration: new Duration(seconds: 10));
-      // Find the Scaffold in the Widget tree and use it to show a SnackBar
-      if(context != null){
-        Scaffold.of(context).showSnackBar(snackBar);
-      }
-    }
+//    void createSnackBar() async{
+//      final SharedPreferences prefs = await _prefs;
+//
+//      final snackBar = new SnackBar(content: new Row(
+//        children: <Widget>[
+//         new Expanded(child:  new Text('Allow Message Notifcations'),),
+//          new Padding(padding: new EdgeInsets.all(5.0),
+//            child: new MaterialButton(
+//              onPressed: () {
+//                     prefs.setBool('requestedNotifications', true);
+//                    _scaffoldKey.currentState.removeCurrentSnackBar();
+//                    _firMes.requestNotificationPermissions(const IosNotificationSettings(sound: true, badge: true, alert: true));
+//                    },
+//              child: new Text(
+//                'TURN ON', style: new TextStyle(color: Colors.black),),
+//              color: Colors.yellowAccent,
+//            ),
+//          )
+//
+//        ],
+//      ),
+//          backgroundColor: Colors.grey[800], duration: new Duration(seconds: 10));
+//      // Find the Scaffold in the Widget tree and use it to show a SnackBar
+//      if(context != null){
+//        Scaffold.of(context).showSnackBar(snackBar);
+//      }
+//    }
 
 
 

@@ -105,18 +105,13 @@ class _SnapPageState extends State<SnapPage> {
            key: repaintKey,
        child: new Stack(
           children: <Widget>[
-            (!fromCameraRoll) ? new Container(
+            new Container(
                 decoration:  new BoxDecoration(
                   image:new DecorationImage(image: FileImage(img),
                     fit: BoxFit.cover,
                   ),
                 ),
-              ) : new Container(
-              decoration: new BoxDecoration(border: new Border(bottom: new BorderSide(color: Colors.white,width: 50.0),top: new BorderSide(color: Colors.white,width: 50.0),),
-                  image:new DecorationImage(image: FileImage(img))
-
               ),
-            ),
 
             (textAdded) ? new DragBox(new Offset(0.0, 200.0), "square", Color.fromRGBO(0, 0, 0, 0.75),msgController) : new Container(),
           ],

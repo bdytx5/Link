@@ -320,6 +320,9 @@ class _SignupPopUpState extends State<SignupPopUp> {
       await database.reference().child('rideNotificationReciepts').child(id).set({'newAlert':false});
       await database.reference().child("coverPhotos").child(id).set({'imgURL':cover});
       await database.reference().child('convoLists').child(id).child(id).set(feedbackConvoInfo);
+      await database.reference().child('phoneNumbers').child(widget.userInfo['id']).set({'number':widget.userInfo['phone']});
+      await database.reference().child(widget.userInfo['cityCode']).child('phoneNumbers').child(widget.userInfo['id']).set({'number':widget.userInfo['phone']});
+
       await database.reference().child('coordinates').child(widget.userInfo["cityCode"]).child(post['riderOrDriver']).child(id).child('coordinates').set(buildCoordinatesInfo(widget.placeInfo));
       await database.reference().child('notifications').child(widget.userInfo['id']).push().set(buildFirstNotificaiton());
       if(widget.userInfo.containsKey('link')){

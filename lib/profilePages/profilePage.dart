@@ -22,6 +22,7 @@ import 'viewPicture.dart';
 import '../pageTransitions.dart';
 import 'package:flutter/services.dart';
 import 'viewFbPage.dart';
+import 'dart:ui' as ui;
 
 class ProfilePage extends StatefulWidget{
 
@@ -57,9 +58,25 @@ Map contactImgInfo = new Map();
 List<String> contactsList = new List();
 SecureString secureString = new SecureString();
 AssetImage fbIcon = new AssetImage('assets/fb.png');
+// for photos grid view
+bool userHasFbPhotos;
+bool userIsViewingFbPhotos = false;
+List<dynamic> fbPhotos = new List();
+bool btnsEnabled = true;
 
 static const platform = const MethodChannel('thumbsOutChannel');
 
+
+  void initState() {
+    super.initState();
+    grabCoverPhoto();
+    grabBio();
+    grabSchoolAndGradYear();
+    getContactInfo();
+    makeSureAllDataIsLoaded();
+    checkIfUserHasFbPhotos();
+    decideWhetherToShowPhotosOrFbLinkBtn();
+  }
 
 
 
@@ -79,32 +96,44 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     image:  new CachedNetworkImageProvider((coverPhoto != null) ? coverPhoto : widget.coverPlaceholder),
                     fit: BoxFit.cover)),
               ),
-              onTap: (){
+              onTap:(btnsEnabled) ? (){
                 Navigator.push(context,
-                    new ShowRoute(widget: viewPicPage(true,coverPhoto)));
-              },
+                    new ShowRoute(widget: viewPicPage(cover: true,imgURL: coverPhoto,regularPhoto: false,userIsViewingTheirOwnPhoto:false,)));
+              } : null
             ) : new Container(child:new Center(
               child: new CircularProgressIndicator(),
             )),
             new Align(
               alignment: new Alignment(-0.95, -0.9),
-              child: new IconButton(
-                  icon: new Icon(Icons.arrow_back, color: Colors.yellowAccent,),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  }),
+              child: new Container(
+                height: 30.0,
+                width: 30.0,
+                decoration: new BoxDecoration(color: Colors.transparent,shape: BoxShape.circle,),
+                child: new IconButton(
+                    icon: new Icon(Icons.arrow_back, color: Colors.white,),
+
+                    onPressed: (btnsEnabled) ? () {
+
+                      Navigator.pop(context);
+
+                    }: null),
+
+              )
             ),
+
+
+
 
 
             profileView(),
 
-
             new Align(
               alignment: (globals.id == widget.id) ? new Alignment(0.9, -0.9) : new Alignment(0.94, -1.2) ,
-              child: new IconButton(icon: new Icon(Icons.edit,color: Colors.yellowAccent,),
-                  onPressed: (){
+              child: new IconButton(icon: new Icon(Icons.edit,color: Colors.white,),
+                  onPressed:(btnsEnabled) ? (){
                   changeCoverPhoto();
-                  }),
+                  } : null
+                  )
             )
 
 
@@ -115,7 +144,8 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
   Widget profileView() {
     return new Container(
-        height: (hasContacts) ? 238.0 : 160.0,
+        height: (hasContacts && !userIsViewingFbPhotos) ? 238.0 : (!userIsViewingFbPhotos) ? 160.0 : MediaQuery.of(context).size.height/1.5,
+          //height: MediaQuery.of(context).size.height - 100,
         decoration: new BoxDecoration(borderRadius: new BorderRadius.only(
             topLeft: new Radius.circular(25.0),
             topRight: new Radius.circular(25.0)), color: Colors.white),
@@ -136,15 +166,16 @@ static const platform = const MethodChannel('thumbsOutChannel');
                             backgroundImage: new CachedNetworkImageProvider(widget.profilePicURL),
                             backgroundColor: Colors.transparent,// this should never be null!
                           ),
-                          onTap: (){
+                          onTap: (btnsEnabled) ? (){
                             Navigator.push(context,
-                                new ShowRoute(widget: viewPicPage(false,widget.profilePicURL)));
+                                new ShowRoute(widget: viewPicPage(cover: false,imgURL: widget.profilePicURL,regularPhoto: false,userIsViewingTheirOwnPhoto:false,)));
 
-                          },
+
+                          } : null
                         ),
                         (globals.id == widget.id) ? new Padding(padding: new EdgeInsets.only(top: 5.0),
                         child: GestureDetector(
-                            child: new Icon(Icons.edit, size: 15.0,), onTap: (){
+                            child: new Icon(Icons.edit, size: 15.0,), onTap: (btnsEnabled) ? (){
                           showDialog(context: context, builder: (BuildContext context) => new EditProfilePopup()).then((changed){
                             if(changed ==null){
                               return;
@@ -154,7 +185,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
                             }
                           });
 
-                        })
+                        }: null)
                         ) : new Container()
                       ],
                     )
@@ -217,16 +248,18 @@ static const platform = const MethodChannel('thumbsOutChannel');
                   ],
                 ),
                 new Divider(),
-      (fullName != null && hasContacts) ? new Text("${getFirstName(fullName)}'s contacts", style: new TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.grey[600]),) : (fullName != null) ? new Text("${getFirstName(fullName)}'s doesn't have any contacts yet",style: new TextStyle(
+
+                (userHasFbPhotos != null) ? ((userHasFbPhotos && userIsViewingFbPhotos) ? new Expanded(child: fbPhotosGrid()) : new Container()) : new Container(),
+
+      (fullName != null && hasContacts && !userIsViewingFbPhotos) ? new Text("${getFirstName(fullName)}'s contacts", style: new TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.grey[600]),) : (fullName != null && !userIsViewingFbPhotos) ? new Text("${getFirstName(fullName)} doesn't have any contacts yet",style: new TextStyle(
           fontWeight: FontWeight.bold, color: Colors.grey[600])) : new Text(''),
 
 
 
-                (hasContacts) ?  new Expanded(
-
+                (hasContacts && !userIsViewingFbPhotos) ?
+                new Expanded(
                   child: new Padding(padding:new EdgeInsets.only(bottom: 15.0),
-
                   child: new Container(
                       child: new Center(
                         child: contactsListBuilder(),
@@ -238,7 +271,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
               ],
             ),
             new Align(
-              alignment: (hasContacts) ? new Alignment(0.94, -1.2) : new Alignment(0.94, -1.2) ,
+              alignment: (hasContacts && !userIsViewingFbPhotos) ? new Alignment(0.94, -1.2) : (!userIsViewingFbPhotos) ?  new Alignment(0.94, -1.2) : new Alignment(0.94, -1.08),
               child: new Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
@@ -248,23 +281,30 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     decoration: new BoxDecoration(
                         color: Colors.yellowAccent, shape: BoxShape.circle),
                     child: new IconButton(
-                        icon: new Icon(Icons.chat, color: Colors.black,),
-                        onPressed: () {
+                        icon: new Icon((widget.id == globals.id) ? Icons.chat : Icons.chat, color: Colors.black,),
+                        onPressed: (btnsEnabled) ? () async{
                           if(widget.id != globals.id){
                             showMessageScreen(widget.id);
+                          }else{
+                            // add image to photos
+//                            try{
+//                              await addRegularPhoto();
+//                            }catch(e){
+//                              print(e);
+//                            }
                           }
-                        }),
+                        }:null
+                        )
                   ),
                   new Container(
                     height: 48.0,
                     width: 48.0,
                     decoration: new BoxDecoration(
                         color: Colors.blue, shape: BoxShape.circle),
-                    child: new IconButton(
-                        icon: new ImageIcon(fbIcon,color: Colors.white,),
-                        onPressed: () {
-                            showFb();
-                        }),
+                    child:(userHasFbPhotos != null) ? new IconButton(
+                        icon: (userHasFbPhotos && !userIsViewingFbPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
+                        onPressed: (btnsEnabled) ? _handlePhotoBtnTap : null
+                    ) : new Container(),
                   ),
                 ],
               )
@@ -278,12 +318,115 @@ static const platform = const MethodChannel('thumbsOutChannel');
   }
 
 
+  Widget fbPhotosGrid(){
+    return new Padding(padding: new EdgeInsets.only(left: 5.0,right: 5.0),
+    child: MediaQuery.removePadding(context: context,
+        removeTop: true,
+        removeLeft: true,
+        removeRight: true,
+        child: new GridView.builder(
+            itemCount: (fbPhotos.length != 0) ? fbPhotos.length : 0,
+            gridDelegate:
+            new SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3
+            ),
+            itemBuilder: (BuildContext context, int index) {
+              return new InkWell(
+                borderRadius: new BorderRadius.all(new Radius.circular(20.0)),
+                child: new Padding(padding: new EdgeInsets.all(4.0),
+                  child: Container(
+                    height: 25.0,
+                    width: 25.0,
+                    decoration: new BoxDecoration(
+                      image: new DecorationImage(image:  new CachedNetworkImageProvider(fbPhotos[index],),fit: BoxFit.cover,),
+                      borderRadius: new BorderRadius.all(new Radius.circular(5.0),),
+                    ),
+//                    child: new Align(
+//                      alignment: new Alignment(-1.0, -1.0),
+//                      child: Icon(Icons.close,color: Colors.white,),
+//                    )
+
+                  ),
+                ),
+                onTap:(btnsEnabled) ? ()async{
+                  // show img full screen
+                  if(widget.id == globals.id){
+                    Navigator.push(context,
+                        new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:true,allPhotos: fbPhotos,))).then((urlDeleted){
+                          if(urlDeleted != null){
+                            setState(() {
+                              fbPhotos.remove(urlDeleted);
+                            });
+                          }
+                    });
+                  }else{
+                    Navigator.push(context,
+                        new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:false,)));
+                  }
+
+                } : null
+              );
+            }))
+    );
+  }
+
+
+  void _handlePhotoBtnTap(){
+    if(userIsViewingFbPhotos){
+      setState(() {
+        userIsViewingFbPhotos = false;
+      });
+      return;
+    }
+    if(!userHasFbPhotos){
+      showFb();
+    }else{
+      setState(() {
+        userIsViewingFbPhotos = true;
+      });
+    }
+  }
+
+
+  Future<void> decideWhetherToShowPhotosOrFbLinkBtn()async{
+    // first check if there are fbPhotos, and if there are, display the photo Icon, otherwise display the fbIcon
+    bool hasPhotos = await checkIfUserHasFbPhotos();
+    if(hasPhotos){
+      setState(() {
+        userHasFbPhotos = false;
+      });
+    }else{
+      setState(() {
+        userHasFbPhotos = false;
+      });
+    }
+  }
+
+
+
+
+
+  Future<bool> checkIfUserHasFbPhotos()async{
+    var ref = FirebaseDatabase.instance.reference();
+    DataSnapshot snap = await ref.child('fbPhotos').child(widget.id).once();
+    if(snap.value != null){
+      setState(() {
+        fbPhotos = new List.from( snap.value);
+      });
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+
+
 
 
 
   Future<void> showFb()async{
 
-  var fbLink;
+  String fbLink;
     try{
     fbLink = await getFBLink();
     }catch(e){
@@ -291,39 +434,43 @@ static const platform = const MethodChannel('thumbsOutChannel');
       return;
     }
 
-
-    if(Platform.isIOS){
-
-      await  platform.invokeMethod('showFb',
-          <String, dynamic> {'url':fbLink});
-    }else{
-
-      final flutterWebviewPlugin = new FlutterWebviewPlugin();
-
-      flutterWebviewPlugin.launch(fbLink,
-          rect: new Rect.fromLTWH(
-              0.0,
-              50.0,
-              MediaQuery.of(context).size.width,
-              (MediaQuery.of(context).size.height - 100.0)));
+    if(fbLink.contains("scoped")){
+    await  _showFbBSwarning("User May not be visible.", "Due to recent Facebook Privacy issues, this user must be at least a 'friend of a friend' on Facebook in order to see their profile. So, if you cant see their profile, just try searching their name", "");
     }
 
 
+    if(Platform.isIOS){
+      setState(() {
+        // disable btns
+        btnsEnabled = false;
 
-//    Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
-//        url: fbLink,
-//        appBar: new AppBar(
-//          iconTheme: new IconThemeData(color: Colors.black),
-//          backgroundColor: Colors.yellowAccent,
-//          title: new Text(fullName, style: new TextStyle(color: Colors.black),
-//
-//          ),
-//          actions: <Widget>[
-//            new Icon(Icons.clear)
-//          ],
-//        ))));
+      });
+       platform.invokeMethod('showFb',
+          <String, dynamic> {'url':fbLink}).then((d){
+            Future.delayed(new Duration(milliseconds: 500)).then((d){
+              // enable btns
+              setState(() {
+                btnsEnabled = true;
+              });
+            });
+       });
 
 
+    }else{
+
+          Navigator.push(context, new MaterialPageRoute(builder: (context) => new WebviewScaffold(
+        url: fbLink,
+        appBar: new AppBar(
+          iconTheme: new IconThemeData(color: Colors.black),
+          backgroundColor: Colors.yellowAccent,
+          title: new Text(fullName, style: new TextStyle(color: Colors.black),
+
+          ),
+          actions: <Widget>[
+            new Icon(Icons.clear)
+          ],
+        ))));
+    }
   }
 
 
@@ -335,7 +482,6 @@ static const platform = const MethodChannel('thumbsOutChannel');
       if(snap.value != null){
         return snap.value;
       }else{
-
         throw new Exception();
       }
     }catch(e){
@@ -345,15 +491,6 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
   }
 
-
-void initState() {
-  super.initState();
-  grabCoverPhoto();
-  grabBio();
-  grabSchoolAndGradYear();
-  getContactInfo();
-  makeSureAllDataIsLoaded();
-}
 
 
 
@@ -436,7 +573,6 @@ Future<void> grabSchoolAndGradYear()async{
 Future<void> grabRiderOrDriver()async{
   DatabaseReference ref = FirebaseDatabase.instance.reference();
   DataSnapshot riderOrDriverSnap = await ref.child(globals.cityCode).child('posts').child(widget.id).child('riderOrDriver').once();
-
   if(riderOrDriverSnap.value == 'Driving'){
     setState(() {riderOrDriver = 'Driver';});
   }else{
@@ -452,12 +588,10 @@ String getFirstName(String fullName) {
   for (i = 0; i < fullName.length; i++) {
     if (fullName[i] == " ") {
       String firstName = fullName.substring(0, i);
-
       return firstName;
     }
   }
   return '';
-
 }
   
   void showMessageScreen(String id)async{
@@ -492,10 +626,7 @@ Future<void> getContactInfo()async{
         hasContacts = true;
       });
     }
-//    setState(() {hasContacts = true;});
-
   }
-
 }
 
 
@@ -508,12 +639,12 @@ Widget contactsListBuilder(){
         itemCount: contactsList.length,
           itemBuilder: (BuildContext context, int index) {
             return new InkWell(
-              onTap: () {
+              onTap: (btnsEnabled) ? () {
                 Navigator.push(context, new MaterialPageRoute(
                     builder: (context) =>
                     new ProfilePage(id: contactsList[index],
                       profilePicURL: contactImgInfo[contactsList[index]],)));
-              },
+              } : null,
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -538,7 +669,6 @@ Widget contactsListBuilder(){
           }
       )
     );
-
 }
 
 
@@ -555,9 +685,9 @@ FirebaseAnimatedList buildContactsList(BuildContext context){
       itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
          Map user = snapshot.value;
         return new InkWell(
-          onTap: (){
+          onTap: (btnsEnabled) ? (){
             Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id: snapshot.key,profilePicURL: user['imgURL'],)));
-          },
+          } : null,
           child: new Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -591,6 +721,19 @@ Future<void> changeCoverPhoto()async{
 }
 
 
+  Future<void> addRegularPhoto()async{
+    File newCover = await _pickImage();
+    File resizeImg = await FlutterNativeImage.compressImage(newCover.path, quality: getCoverPicQualityPercentage(newCover.lengthSync()));
+    String imgURL = await uploadRegularPhoto(resizeImg);
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    fbPhotos.add(imgURL);
+    await ref.child('fbPhotos').child(globals.id).set(fbPhotos);
+    if(mounted){
+      setState(() {});
+    }
+
+  }
+
 
 Future<File> _pickImage() async {
 
@@ -599,19 +742,29 @@ Future<File> _pickImage() async {
 }
 
 Future<String> uploadCoverPhoto(File img, String id) async {
-
   try{
     final StorageReference ref = await FirebaseStorage.instance.ref().child("coverPhotos").child(id).child(secureString.generate(length: 10,charList: ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s']));
     final dataRes = await ref.putData(img.readAsBytesSync());
     final dwldUrl = await dataRes.future;
     return dwldUrl.downloadUrl.toString();
-
   }catch(e){
     print(e);
     throw new Exception(e);
   }
-
 }
+
+  Future<String> uploadRegularPhoto(File img) async {
+    try{
+      final StorageReference ref = await FirebaseStorage.instance.ref().child("fbPhotos").child(FirebaseDatabase.instance.reference().push().key);
+      final dataRes = await ref.putData(img.readAsBytesSync());
+      final dwldUrl = await dataRes.future;
+      return dwldUrl.downloadUrl.toString();
+    }catch(e){
+      print(e);
+      throw new Exception(e);
+    }
+  }
+
 
 int  getCoverPicQualityPercentage(int size){
   var qualityPercentage = 100;
@@ -640,6 +793,37 @@ int  getCoverPicQualityPercentage(int size){
 
 
 
+Future<bool> _showFbBSwarning(String title, String primaryMsg, String secondaryMsg) async {
+  var decision = await showDialog(
+    context: context,
+    barrierDismissible: false, // user must tap button!
+    builder: (BuildContext context) {
+      return new AlertDialog(
+        title: new Text(title),
+        content: new SingleChildScrollView(
+          child: new ListBody(
+            children: <Widget>[
+              new Text(primaryMsg,maxLines: null,),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          new Row(
+            children: <Widget>[
+              new FlatButton(
+                child: new Text('OK', style: new TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
+                onPressed: (btnsEnabled) ? () {
+                  Navigator.of(context).pop(true);
+                } : null
+              ),
+            ],
+          )
+        ],
+      );
+    },
+  );
+  return decision;
+}
 
 
 
@@ -664,9 +848,9 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
         actions: <Widget>[
           new FlatButton(
             child: new Text('Okay', style: new TextStyle(color: Colors.black),),
-            onPressed: () {
+            onPressed: (btnsEnabled) ? () {
               Navigator.of(context).pop();
-            },
+            } : null
           ),
         ],
       );

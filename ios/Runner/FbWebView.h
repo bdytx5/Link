@@ -7,10 +7,13 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <Flutter/Flutter.h>
+
 
 @interface FbWebView : UIViewController 
 @property (strong, nonatomic) NSString *url;
+@property (strong, nonatomic) FlutterResult flutterRes;
 
-- (instancetype)initWithURL:(NSString *)url;
+- (instancetype)initWithURL:(NSString *)url Result:(FlutterResult )result;
 
 @end

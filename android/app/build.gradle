@@ -28,8 +28,8 @@ android {
         applicationId "com.youngApps.uber"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 10
-        versionName "1.09"
+        versionCode 12
+        versionName "1.11"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -82,10 +82,11 @@ buildscript {
         jcenter()
 
 
+        google()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.1.4'
         classpath 'com.google.gms:google-services:3.1.0'
 
 

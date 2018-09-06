@@ -33,10 +33,11 @@
 @implementation FbWebView
 
 
-- (instancetype)initWithURL:(NSString *)url{
+- (instancetype)initWithURL:(NSString *)url Result:(FlutterResult )result{
     self = [super init];
     if (self) {
         _url = url;
+        _flutterRes = result;
     }
     return self;
 }
@@ -105,6 +106,7 @@
     [_webView goForward];
 }
 -(void) close{
+    _flutterRes(@true);
     [self dismissViewControllerAnimated:true completion:nil];
 }
 

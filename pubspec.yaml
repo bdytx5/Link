@@ -39,6 +39,8 @@ dev_dependencies:
   latlong: ^0.5.3
   cached_network_image: ^0.4.1+1
   camera: ^0.2.1
+  photo_view: ^0.0.7
+
 
 
 
@@ -69,6 +71,10 @@ flutter:
    - assets/femaleIcon65.png
    - assets/switchCamera65.png
    - assets/appIcon83.png
+   - assets/androidPhone100.png
+   - assets/iphone100.png
+   - assets/signal100.png
+   - assets/logoSignal.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
