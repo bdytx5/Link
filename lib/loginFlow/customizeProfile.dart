@@ -563,6 +563,23 @@ void continueArrowTapped(){
     _errorMenu("Error", "Please enter your phone number!", 'Type only the digits, nothing else.');
     return;
   }
+  if(lastNameController.text == null){
+    _errorMenu("Error", "Please enter your last name!", '');
+    return;
+  }
+  if(firstNameController.text == null){
+    _errorMenu("Error", "Please enter your first name!", '');
+    return;
+  }
+
+  if(lastNameController.text == ''){
+    _errorMenu("Error", "Please enter your last name!", '');
+    return;
+  }
+  if(firstNameController.text == ''){
+    _errorMenu("Error", "Please enter your first name!", '');
+    return;
+  }
 
   // if temp photos have not been added yet, wait on them to be added
   if(!tempPhotosAdded){

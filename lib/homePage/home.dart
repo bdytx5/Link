@@ -647,26 +647,49 @@ void fetchRideNotificationStatuses()async {
     if(commentNotificationSnap.value == null || data.snapshot.value == null){
       return;
     }
-    setState(() {
-      if(data.snapshot.value == null){
-        if(commentNotificationSnap.value){
-          commentNotificationReciepts = true;
-        }
-        return;
-      }
+   if(mounted){
+     setState(() {
+       if(data.snapshot.value == null){
+         if(commentNotificationSnap.value){
+           commentNotificationReciepts = true;
+         }
+         return;
+       }
 
 
-      if(data.snapshot.value['newAlert']) {
-        rideNotificationReciepts = true; // set the flag!
-      }else{
-        rideNotificationReciepts = false; // now need to make sure there are no ride notifications!!
-        if(commentNotificationSnap.value != null){
-          if(commentNotificationSnap.value){
-            commentNotificationReciepts = true;
-          }
-        }
-      }
-    });
+       if(data.snapshot.value['newAlert']) {
+         rideNotificationReciepts = true; // set the flag!
+       }else{
+         rideNotificationReciepts = false; // now need to make sure there are no ride notifications!!
+         if(commentNotificationSnap.value != null){
+           if(commentNotificationSnap.value){
+             commentNotificationReciepts = true;
+           }
+         }
+       }
+     });
+   }else{
+     if(data.snapshot.value == null){
+       if(commentNotificationSnap.value){
+         commentNotificationReciepts = true;
+       }
+       return;
+     }
+
+
+     if(data.snapshot.value['newAlert']) {
+       rideNotificationReciepts = true; // set the flag!
+     }else{
+       rideNotificationReciepts = false; // now need to make sure there are no ride notifications!!
+       if(commentNotificationSnap.value != null){
+         if(commentNotificationSnap.value){
+           commentNotificationReciepts = true;
+         }
+       }
+     }
+
+
+   }
   });
 }
 
@@ -679,7 +702,19 @@ void fetchRideNotificationStatuses()async {
       if(data.snapshot.value == null){
         return;
       }
-      setState(() {
+      if(mounted){
+        setState(() {
+          if (data.snapshot.value) {
+            if(_tabController.index == 0){
+              database.reference().child('messageNotificationReciepts').child(globals.id).update({'newAlert':false});
+            }else{
+              messageNotification = true;
+            }
+          }else{
+            messageNotification = false;
+          }
+        });
+      }else{
         if (data.snapshot.value) {
           if(_tabController.index == 0){
             database.reference().child('messageNotificationReciepts').child(globals.id).update({'newAlert':false});
@@ -689,7 +724,7 @@ void fetchRideNotificationStatuses()async {
         }else{
           messageNotification = false;
         }
-      });
+      }
     });
   }
 

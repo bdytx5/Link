@@ -178,7 +178,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
             child: new Padding(padding: new EdgeInsets.only(left: 25.0),
             child: new Row(
               children: <Widget>[
-                (showingRibbon) ? new Icon(Icons.check,color: Colors.grey[600],size: 15.0,) : new Container(),
+                (showingRibbon && widget.convoId != globals.id) ? new Icon(Icons.check,color: Colors.grey[600],size: 15.0,) : new Container(),
                 (showingRibbon && recipHasRead != null) ? new Text((recipHasRead) ? "Read" : "Sent",style: new TextStyle(fontSize: 12.0),) : new Container(),
               ],
             ),
@@ -518,6 +518,7 @@ Future<void> sendRegularMsg(String id, String msg)async{
    // Map brettsChatlist = { 'imgURL':senderImgURL, 'formattedTime':now, 'new': true, 'recentMsg':_textController.text, 'recipFullName':senderFullName, 'recipId':globals.id, 'convoId':FirebaseDatabase.instance.reference().push().key}
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     Map message = {'from':globals.id,'message':_textController.text, 'formattedTime':now};
+    _textController.clear();
     try{
       ref.child('feedback').child('admin').push().set(message); // for meee
       ref.child('feedback').child(globals.id).push().set(message);
