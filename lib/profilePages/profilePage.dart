@@ -60,8 +60,13 @@ SecureString secureString = new SecureString();
 AssetImage fbIcon = new AssetImage('assets/fb.png');
 // for photos grid view
 bool userHasFbPhotos;
+bool userHasTempPhotos;
+
 bool userIsViewingFbPhotos = false;
 List<dynamic> fbPhotos = new List();
+
+
+
 bool btnsEnabled = true;
 
 static const platform = const MethodChannel('thumbsOutChannel');
@@ -120,10 +125,6 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
               )
             ),
-
-
-
-
 
             profileView(),
 
@@ -247,7 +248,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     )
                   ],
                 ),
-                new Divider(),
+                   new Divider(),
 
                 (userHasFbPhotos != null) ? ((userHasFbPhotos && userIsViewingFbPhotos) ? new Expanded(child: fbPhotosGrid()) : new Container()) : new Container(),
 
@@ -301,8 +302,8 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     width: 48.0,
                     decoration: new BoxDecoration(
                         color: Colors.blue, shape: BoxShape.circle),
-                    child:(userHasFbPhotos != null) ? new IconButton(
-                        icon: (userHasFbPhotos && !userIsViewingFbPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
+                    child:(userHasFbPhotos != null && userHasTempPhotos != null) ? new IconButton(
+                        icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
                         onPressed: (btnsEnabled) ? _handlePhotoBtnTap : null
                     ) : new Container(),
                   ),
@@ -324,6 +325,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
         removeTop: true,
         removeLeft: true,
         removeRight: true,
+        removeBottom: true,
         child: new GridView.builder(
             itemCount: (fbPhotos.length != 0) ? fbPhotos.length : 0,
             gridDelegate:
@@ -350,24 +352,36 @@ static const platform = const MethodChannel('thumbsOutChannel');
                 ),
                 onTap:(btnsEnabled) ? ()async{
                   // show img full screen
-                  if(widget.id == globals.id){
-                    Navigator.push(context,
-                        new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:true,allPhotos: fbPhotos,))).then((urlDeleted){
-                          if(urlDeleted != null){
-                            setState(() {
-                              fbPhotos.remove(urlDeleted);
-                            });
-                          }
-                    });
-                  }else{
-                    Navigator.push(context,
-                        new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:false,)));
-                  }
+                 await handleFbPhotoTap(index);
 
                 } : null
               );
             }))
     );
+  }
+
+
+  Future<void> handleFbPhotoTap(int index)async{
+
+    if(userHasTempPhotos){
+      // tell the user that images are still processing
+     var na = await _showFbBSwarning('Images Processing', 'Your photos are still processing. Please refresh this page in a minute or so.', '');
+      return;
+    }
+
+    if(widget.id == globals.id){
+      Navigator.push(context,
+          new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:true,allPhotos: fbPhotos,))).then((urlDeleted){
+        if(urlDeleted != null){
+          setState(() {
+            fbPhotos.remove(urlDeleted);
+          });
+        }
+      });
+    }else{
+      Navigator.push(context,
+          new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:false,)));
+    }
   }
 
 
@@ -379,7 +393,13 @@ static const platform = const MethodChannel('thumbsOutChannel');
       return;
     }
     if(!userHasFbPhotos){
-      showFb();
+      if(userHasTempPhotos){
+        setState(() {
+          userIsViewingFbPhotos = true;
+        });
+      }else{
+        showFb();
+      }
     }else{
       setState(() {
         userIsViewingFbPhotos = true;
@@ -393,17 +413,12 @@ static const platform = const MethodChannel('thumbsOutChannel');
     bool hasPhotos = await checkIfUserHasFbPhotos();
     if(hasPhotos){
       setState(() {
-        userHasFbPhotos = false;
+        userHasFbPhotos = true;
       });
     }else{
-      setState(() {
-        userHasFbPhotos = false;
-      });
+      var hasTempPhotos = await checkIfUserHasTempPhotos();
     }
   }
-
-
-
 
 
   Future<bool> checkIfUserHasFbPhotos()async{
@@ -411,6 +426,22 @@ static const platform = const MethodChannel('thumbsOutChannel');
     DataSnapshot snap = await ref.child('fbPhotos').child(widget.id).once();
     if(snap.value != null){
       setState(() {
+        userHasTempPhotos = false;
+        fbPhotos = new List.from(snap.value);
+      });
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  Future<bool> checkIfUserHasTempPhotos()async{
+    var ref = FirebaseDatabase.instance.reference();
+    DataSnapshot snap = await ref.child('tempPhotos').child(widget.id).once();
+    if(snap.value != null){
+      setState(() {
+        userHasTempPhotos = true;
+        userHasFbPhotos = true;
         fbPhotos = new List.from( snap.value);
       });
       return true;

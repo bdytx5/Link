@@ -887,7 +887,7 @@ void setupStreamQuery(){
                                 child: new Text(fullName,style: new TextStyle(fontWeight: FontWeight.bold),),
 
                               ),
-    (msg['formattedTime'] != null) ?  new Padding(padding: new EdgeInsets.only(left: 10.0,top: 1.0, bottom:1.0 ),
+        (msg['formattedTime'] != null) ?  new Padding(padding: new EdgeInsets.only(left: 10.0,top: 1.0, bottom:1.0 ),
                                 child:  Text(getDateOfMsg(msg['formattedTime']), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
                               ) : new Container(),
 
