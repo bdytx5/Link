@@ -47,8 +47,21 @@ android {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
+            ndk {
+                abiFilters "x86", "armeabi-v7a", "armeabi"
+                //abiFilters ABI_FILTERS
+            }
             signingConfig signingConfigs.release
         }
+
+        debug {
+            ndk {
+                abiFilters "x86", "armeabi-v7a", "armeabi"
+                //abiFilters ABI_FILTERS
+            }
+        }
+
+
     }
     productFlavors {
     }

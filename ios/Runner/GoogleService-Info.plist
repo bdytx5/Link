@@ -7,21 +7,21 @@
 	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
 	<string>ca-app-pub-3940256099942544/4411468910</string>
 	<key>CLIENT_ID</key>
-	<string>509399610383-3kge2o61pu324l4i7lobre7mgh6u25lg.apps.googleusercontent.com</string>
+	<string>25981611197-i06i26qsh4alap3nr2oo5vob1os0mfgd.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.509399610383-3kge2o61pu324l4i7lobre7mgh6u25lg</string>
+	<string>com.googleusercontent.apps.25981611197-i06i26qsh4alap3nr2oo5vob1os0mfgd</string>
 	<key>API_KEY</key>
-	<string>AIzaSyAxGkdBDCVjrS8VrA6RXrSqeBQQamRPFw0</string>
+	<string>AIzaSyDaD4a6svIU_2bIt5ddk_VinYERvKG-mcI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>509399610383</string>
+	<string>25981611197</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>YoungApps.uber</string>
+	<string>com.youngApps.uber</string>
 	<key>PROJECT_ID</key>
-	<string>mu-ridesharing</string>
+	<string>link-ridesharing</string>
 	<key>STORAGE_BUCKET</key>
-	<string>mu-ridesharing.appspot.com</string>
+	<string>link-ridesharing.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<true></true>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -33,8 +33,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:509399610383:ios:ed8580dcd2bec84e</string>
+	<string>1:25981611197:ios:774236cab0dde510</string>
 	<key>DATABASE_URL</key>
-	<string>https://mu-ridesharing.firebaseio.com</string>
+	<string>https://link-ridesharing.firebaseio.com</string>
 </dict>
 </plist>

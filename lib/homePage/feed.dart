@@ -50,7 +50,7 @@ class Feed extends StatefulWidget {
   _FeedState createState() => new _FeedState();
 }
 
-class _FeedState extends State<Feed> {
+class _FeedState extends State<Feed> with AutomaticKeepAliveClientMixin<Feed> {
 
     bool commenting = false;
     static bool askedToAllowNotifications = false;
@@ -73,7 +73,10 @@ class _FeedState extends State<Feed> {
     FirebaseMessaging _firMes = new FirebaseMessaging();
     final _scaffoldKey = new GlobalKey<ScaffoldState>();
 
-  @override
+    @override
+    bool get wantKeepAlive => true;
+
+    @override
   void dispose() {
     // Clean up the controller when the Widget is removed from the Widget tree
 
@@ -113,6 +116,7 @@ class _FeedState extends State<Feed> {
         ),
       ),
       floatingActionButton: (!commenting) ? new FloatingActionButton(
+        heroTag: "feed",
         backgroundColor: Colors.yellowAccent,
         onPressed: () {
        showDialog(context: context, builder: (BuildContext context) => new PostPopUp(widget.app));

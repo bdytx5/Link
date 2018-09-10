@@ -35,7 +35,7 @@ class ChatList extends StatefulWidget{
 
 }
 
-class _chatListState extends State<ChatList> {
+class _chatListState extends State<ChatList> with AutomaticKeepAliveClientMixin<ChatList>{
 
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   final searchController = new TextEditingController();
@@ -65,7 +65,8 @@ class _chatListState extends State<ChatList> {
   FocusNode searchNode = new FocusNode();
   StreamSubscription keyboardDissmissalStreamSubscription;
 
-
+  @override
+  bool get wantKeepAlive => true;
 
 
 
@@ -118,7 +119,9 @@ class _chatListState extends State<ChatList> {
 
 
   void dismissKeyboard(){
-    searchNode.unfocus();
+    if(searchNode.hasFocus){
+      searchNode.unfocus();
+    }
   }
 
   @override
@@ -179,6 +182,7 @@ class _chatListState extends State<ChatList> {
 
       ),
       floatingActionButton: (userIsSearching) ? null : new FloatingActionButton(
+        heroTag: "chatlist",
         backgroundColor: Colors.yellowAccent,
         child: actionBtnIconSearch,
         onPressed: () {

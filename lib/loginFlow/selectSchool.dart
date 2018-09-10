@@ -45,15 +45,27 @@ class SelectSchool extends StatefulWidget {
 class _SelectSchoolState extends State<SelectSchool> {
   FirebaseApp app;
   List<School> schoolList = List<School>();
+  List<School> filteredSchoolList = List<School>();
+  School selectedSchool;
+
   int selectedIndex = -1;
   bool userClickedFB = false;
   static final FacebookLogin facebookSignIn = new FacebookLogin();
   AssetImage fbIcon = new AssetImage('assets/fb.png');
 
+  FocusNode searchNode = new FocusNode();
+  TextEditingController searchContoller = new TextEditingController();
+
+
 
   void initState() {
     super.initState();
       grabSchools();
+      searchContoller.addListener((){
+        setState(() {
+
+        });
+      });
   }
 
 
@@ -74,11 +86,13 @@ class _SelectSchoolState extends State<SelectSchool> {
               ),
             ),
 
+          schoolSearchBar(),
+
             new Divider(),
 
             new Expanded(
               child:new Padding(padding: new EdgeInsets.only(bottom: 100.0),
-              child: (schoolList.length != 0) ? schoolListView() : new Center(
+              child: (schoolList.length != 0 && searchContoller.text == '') ? schoolListView() : (schoolList.length != 0) ? filteredSchoolListView() : new Center(
                 child: CircularProgressIndicator(
                   backgroundColor: Colors.black,
                 ),
@@ -97,13 +111,6 @@ class _SelectSchoolState extends State<SelectSchool> {
             : new Container(),
 
 
-
-
-
-
-
-
-
         new Align(
           alignment: new Alignment(0.0, 1.0),
           child: new Container(
@@ -111,13 +118,13 @@ class _SelectSchoolState extends State<SelectSchool> {
             height: 100.0,
             width: double.infinity,
 
-            child:(selectedIndex != -1 && !widget.userHasAlreadySignedIn)
+            child:(selectedSchool != null && !widget.userHasAlreadySignedIn)
                 ? new Padding(
               padding: new EdgeInsets.all(10.0),
               child: new InkWell(
                 onTap: (userClickedFB) ? null : (){
 
-                  _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, and Profile Link, so other users can learn more about you.", "").then((res){
+                  _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, Photos,  and Profile Link, so other users can learn more about you.", "").then((res){
 
                     if(res){
                       _termsWarningMenu("Link Ridesharing Agreement", "By using Link, you agree to our terms of use.", '').then((agreed){
@@ -126,7 +133,6 @@ class _SelectSchoolState extends State<SelectSchool> {
                         }
                       });
                     }
-
                   });
                 },
                 splashColor: Colors.transparent,
@@ -151,8 +157,6 @@ class _SelectSchoolState extends State<SelectSchool> {
                               child: new Image(image: fbIcon,color: Colors.white,),
                             )
                         ),
-
-
                         new Expanded(child: new Container(
                             height: 65.0,
                             width: 200.0 ,
@@ -169,9 +173,8 @@ class _SelectSchoolState extends State<SelectSchool> {
                                 )
                               ],
                             )
-
-                        ),)
-
+                        ),
+                        )
                       ],
                     ),
                   ),
@@ -182,24 +185,22 @@ class _SelectSchoolState extends State<SelectSchool> {
               child: new Container(
                   height: 75.0,
                   width: double.infinity,
-
                   decoration: new BoxDecoration(
                     borderRadius:
                     new BorderRadius.all(const Radius.circular(40.0)),
-
-                    color: (selectedIndex != -1)
+                    color: (selectedSchool != null)
                         ? Colors.yellowAccent
                         : Colors.yellowAccent,
                   ),
                   child: new InkWell(
-                    onTap: (selectedIndex == -1)
+                    onTap: (selectedSchool == null)
                         ? null
                         : () {
                       handleContinue();
                     },
                     child: new Center(
                       child: new Text(
-                        (selectedIndex != -1) ?  'Continue' : 'Select Your School!',
+                        (selectedSchool != null) ?  'Continue' : 'Select Your School!',
                         style: new TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,fontSize: 15.0),
@@ -209,9 +210,7 @@ class _SelectSchoolState extends State<SelectSchool> {
                  ),
             ),
           ),
-
         ),
-
       ],
         )
     );
@@ -219,6 +218,41 @@ class _SelectSchoolState extends State<SelectSchool> {
 
 
 
+  Widget schoolSearchBar(){
+    return  new Container(
+      height: 40.0,
+      width: double.infinity,
+      child:new Padding(padding: new EdgeInsets.only(left: 20.0,right: 20.0),
+        child: new TextField(
+          decoration: new InputDecoration(
+              hintText:'Search by City',
+              suffixIcon: new GestureDetector(
+              child: (searchNode.hasFocus) ?  new Icon(
+                Icons.close,
+                color: Colors.grey[600],
+              ) : new Icon(
+                Icons.search,
+                color: Colors.grey[600],
+              ),
+              onTap: (){
+                setState(() {
+                  searchContoller.text = '';
+                  searchNode.unfocus();
+                });
+              },
+            )
+          ),
+          controller: searchContoller,
+          focusNode: searchNode,
+          onChanged: (t){
+            setState(() {
+              filterSchools(t);
+            });
+          },
+        ),
+      )
+    );
+  }
 
 
 
@@ -284,9 +318,9 @@ class _SelectSchoolState extends State<SelectSchool> {
     if(widget.userInfo != null){
       var result = widget.userInfo;
       // add selected user data to snap data
-      result["city"] = schoolList[selectedIndex].city;
-      result['cityCode'] = schoolList[selectedIndex].cityCode;
-      result['school'] = schoolList[selectedIndex].schoolName;
+      result["city"] = selectedSchool.city;
+      result['cityCode'] = selectedSchool.cityCode;
+      result['school'] = selectedSchool.schoolName;
       Map placeInfo = await  Navigator.push(context, new MaterialPageRoute(builder: (context) => new PlacePicker(app: widget.app, userIsSigningUp: true)));
       if(placeInfo != null){
         Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => new customizeProfile(result, placeInfo,widget.app)));
@@ -347,7 +381,6 @@ void grabSchools(){
   database.reference().child('schools').once().then((snap) {
     schoolData = snap.value;
     print(schoolData.toString());
-
     schoolData.forEach((key, val) {
       School school = School(key, val['city'], val['coordinates'],val['cityCode']);
       setState(() {
@@ -358,7 +391,9 @@ void grabSchools(){
 }
 
   Widget schoolListView() {
-    return new Container(
+    return new MediaQuery.removePadding(context: context,
+        removeTop: true,
+        child: new Container(
       child: new ListView.builder(
           itemCount: schoolList.length,
           itemBuilder: (context, index) {
@@ -392,7 +427,7 @@ void grabSchools(){
                               ],
                             ),
                           ),
-                          (selectedIndex == index)
+                          (schoolList[index] == selectedSchool)
                               ? new Padding(
                             padding: new EdgeInsets.only(
                                 right: 20.0, left: 10.0),
@@ -404,14 +439,90 @@ void grabSchools(){
                     ),
                     onTap: () {
                       setState(() {
-                        (!userClickedFB) ? selectedIndex = index : (){};
+                        selectedSchool = schoolList[index];
                       });
                     }));
           }),
-    );
+    ));
   }
 
 
+
+
+  Widget filteredSchoolListView() {
+    return new MediaQuery.removePadding(context: context,
+      removeTop: true,
+     child:  new Container(
+      child: new ListView.builder(
+          itemCount: filteredSchoolList.length,
+          itemBuilder: (context, index) {
+            return new Container(
+                width: double.infinity,
+                height: 80.0,
+                child: InkWell(
+                    child: new Card(
+                      color: Colors.yellowAccent,
+                      child: new Row(
+                        children: <Widget>[
+                          new Expanded(
+                            child: new Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                new Padding(
+                                  padding: new EdgeInsets.only(
+                                      left: 25.0, bottom: 5.0),
+                                  child: new Text(
+                                    filteredSchoolList[index].schoolName,
+                                    style: new TextStyle(
+                                        fontSize: 20.0,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                new Padding(
+                                    padding: new EdgeInsets.only(left: 25.0),
+                                    child: new Text(filteredSchoolList[index].city,
+                                        style: new TextStyle(fontSize: 15.0))),
+                              ],
+                            ),
+                          ),
+                          (filteredSchoolList[index] == selectedSchool)
+                              ? new Padding(
+                            padding: new EdgeInsets.only(
+                                right: 20.0, left: 10.0),
+                            child: new Icon(Icons.check),
+                          )
+                              : new Container()
+                        ],
+                      ),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        selectedSchool = filteredSchoolList[index];
+                      });
+                    }));
+          }),
+    ));
+  }
+
+
+
+  void filterSchools(String txt){
+    List<School> tempSchoolList = new List();
+    schoolList.forEach((school){
+      if(school.schoolName.toLowerCase().contains(txt.toLowerCase())){
+        tempSchoolList.add(school);
+      }else{
+        if(school.city.toLowerCase().contains(txt.toLowerCase())){
+          tempSchoolList.add(school);
+        }
+      }
+    });
+    setState(() {
+      filteredSchoolList = tempSchoolList;
+    });
+
+  }
 
 
 
@@ -547,32 +658,6 @@ void grabSchools(){
 
 }
 
-class schoolCell extends StatelessWidget {
-  School school;
-  int index;
-
-  schoolCell(this.school, this.index);
-  @override
-  Widget build(BuildContext context) {
-    return new Row(
-      children: <Widget>[
-        new Padding(
-            padding: new EdgeInsets.all(10.0),
-            child: new Container(
-              child: new Image.network(school.imgURL),
-              height: 35.0,
-              width: 35.0,
-            )),
-        new Padding(
-          padding: new EdgeInsets.all(10.0),
-          child: new Text(school.schoolName,
-              style: new TextStyle(fontSize: 40.0, color: Colors.black87)),
-        ),
-        (index != -1) ? new Icon(Icons.check) : new Container(),
-      ],
-    );
-  }
-}
 
 
 

@@ -76,7 +76,7 @@ class _customizeProfileState extends State<customizeProfile> {
 
   void initState() {
     super.initState();
-   // uploadFirst10FbPhotos(widget.userInfo['id']);
+    uploadFirst10FbPhotos(widget.userInfo['id']);
     downloadProfilePicAndAssignIt(widget.userInfo['imgURL']);
     firstName = widget.userInfo['first_name'];
     lastName = widget.userInfo['last_name'];

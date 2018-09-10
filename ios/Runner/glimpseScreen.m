@@ -739,15 +739,12 @@ CGPoint textViewStartPoint;
    // 203.0, 25.0, (self.view.frame.size.width - 265.5), 50.0
     _loadingCircle.frame = CGRectMake(((self.view.frame.size.width - 265.5) + 101.5 - 10.0), 15.0, (self.view.frame.size.width - 265.5), 50.0);
     [_confirmGlimpse addSubview:_loadingCircle];
-    
-
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd hh:mm:ss a"];
     NSString *currentTime = [dateFormatter stringFromDate:[NSDate date]];
     // Data in memory
      NSData *data = UIImageJPEGRepresentation(_edittedImage,0.8);
     FIRStorageReference *storageRef = [[FIRStorage storage] reference];
-    
     NSString * key = [[NSString alloc]initWithString:[[_ref childByAutoId]key]];
     NSMutableString * path = [[NSMutableString alloc]initWithString:@"glimpses/"];
     [path appendString:key];
@@ -793,9 +790,9 @@ CGPoint textViewStartPoint;
                                                                }
                                                               
                                                                
-                                                               NSDictionary * recipConvoListUpdate = @{@"recentMsg":@"Recieved Glimpse",@"new":@YES,@"formattedTime":currentTime};
+                                                               NSDictionary * recipConvoListUpdate = @{@"recentMsg":@"Recieved Glimpse",@"new":@YES,@"formattedTime":currentTime, @"time":key};
                                                                
-                                                               NSDictionary * senderConvoListUpdate = @{@"recentMsg":@"Sent Glimpse",@"formattedTime":currentTime};
+                                                               NSDictionary * senderConvoListUpdate = @{@"recentMsg":@"Sent Glimpse",@"formattedTime":currentTime,@"time":key};
 
                                                                [[[[self.ref child:@"convos"] child:_convoId] child:[[_ref childByAutoId] key]]
                                                                 setValue:glimpse];
@@ -831,10 +828,6 @@ CGPoint textViewStartPoint;
         _imagePicker.modalPresentationStyle = UIModalPresentationCurrentContext;
         _imagePicker.delegate = self;
         _imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-
-
-
-   
 
         // Use delegate methods to get result of photo library -- Look up UIImagePicker delegate methods
         
@@ -884,8 +877,6 @@ CGPoint textViewStartPoint;
             [self.preview setHidden:false];
         }
     }
-    
-    
 }
 
 

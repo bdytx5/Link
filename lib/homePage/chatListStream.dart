@@ -41,6 +41,10 @@ class chatListStream extends StatelessWidget {
 
     String getTime(DataSnapshot snap){
     Map info = snap.value;
+
+    if(info['time'] == null){
+      return FirebaseDatabase.instance.reference().push().key;
+    }
     return info['time'];
     }
 
@@ -62,11 +66,18 @@ class chatListStream extends StatelessWidget {
         reverse: false,
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
           Map info = snapshot.value;
+          if(info['time'] == null){
+            return new Container();
+          }
           if(info.containsKey('group')){
-
+            if(!info.containsKey('groupName')){ // double checking there isnt a boched convoNode
+              return new Container();
+            }
             return GroupChatCell(info['groupImg'], info['groupName'], 'Group Message', info['formattedTime'], context, info['new'], info);
-
           }else{
+            if(!info.containsKey('imgURL')){  // double checking there isnt a boched convoNode
+              return new Container();
+            }
             return ConvoCell(snapshot.value,context, snapshot.value['new']);
           }
 

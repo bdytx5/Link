@@ -153,7 +153,7 @@ class _LoginState extends State<LoginPage> {
       if(fbInfo.containsKey('link')){
         userInfo['link'] = fbInfo['link'];
       }
-      _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, and Profile Link, so other users can learn more about you.", "").then((res){
+      _fbWarningMenu("Facebook Privacy Notice", "Link uses Facebook Login to recieve your Full Name, Profile Picture, Photos, and Profile Link, so other users can learn more about you.", "").then((res){
 
         if(res){
           _termsWarningMenu("Link Ridesharing Agreement", "By using Link, you agree to our terms of use.", '').then((agreed){

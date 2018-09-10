@@ -233,16 +233,23 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   AnimationController _controller;
   Animation<double> _iconTurns;
 
+  ScrollController txtListener = new ScrollController();
+
   void initState() {
     super.initState();
     commentNode.addListener(_onFocusChange);
-    keyboardDismissalStreamSubscription = widget.stream.listen((_) => someMethod());
+    keyboardDismissalStreamSubscription = widget.stream.listen((_) => dismissCommentNode());
 
    _controller = new AnimationController(duration: _kExpand, vsync: this);
     _easeInAnimation = new CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _iconTurns = new Tween<double>(begin: 0.0, end: 0.25).animate(_easeInAnimation);
 
+  //  txtListener.addListener(listener)
+
   }
+
+
+
 
 
 
@@ -264,27 +271,63 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
               child: new Column(
                 children: <Widget>[
                   new Divider(),
-                  // comment input textfield (height does not change!)
-                  new Container(
-                    height: 34.0,
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(horizontal: 9.0),
-                    child: new EnsureVisibleWhenFocused(child: new TextField(
-                      controller: commentController,
-                      focusNode: commentNode,
-                      decoration: new InputDecoration(
-                          border: InputBorder.none,
-                          hintText: 'Add a comment!',
-                          suffixIcon: new IconButton(
-                              icon: new Icon(Icons.send, color: Colors.grey,size: 18.0,),
-                              onPressed: () async{
-                                sendCommentHandler(widget.snapshot);
-                              })),
-                    ), focusNode: commentNode)
 
-                        //focusNode: commentNode)
-                  ),
+                  // comment input textfield (height does not change!)
+                   new Stack(
+                     children: <Widget>[
+                       new Container(
+                         child: new ConstrainedBox(
+                           constraints: new BoxConstraints(
+                             minWidth: MediaQuery.of(context).size.width - 48.0,
+                             maxWidth: MediaQuery.of(context).size.width - 47.0,
+                             minHeight: 33.0,
+                             maxHeight: 34.0,
+                           ),
+                           child: new Container(
+                             margin: const EdgeInsets.symmetric(horizontal: 9.0),
+                             child: new SingleChildScrollView(
+                                 reverse: (commentNode.hasFocus) ? true : false,
+                                 scrollDirection: Axis.vertical,
+                                 child: new EnsureVisibleWhenFocused(child: new TextField(
+                                   controller: commentController,
+                                   focusNode: commentNode,
+                                   maxLines: null,
+                                   onSubmitted: (f){
+                                     commentNode.unfocus();
+                                   },
+                                   keyboardType: TextInputType.text,
+                                   decoration: new InputDecoration(
+                                       border: InputBorder.none,
+                                       hintText: 'Add a comment!',
+                                     //  suffixIcon:
+//                                       new IconButton(
+//                                           icon: new Icon(Icons.send, color: Colors.grey,size: 18.0,),
+//                                           onPressed: () async{
+//                                             sendCommentHandler(widget.snapshot);
+//                                           })
+
+                                   ),
+                                 ), focusNode: commentNode)
+
+                             )
+                             ,
+                           ),
+                           //focusNode: commentNode)
+                         ),
+                       ),
+                       new Align(
+                         alignment: new Alignment(0.95, 0.4),
+                         child: new GestureDetector(
+                           child: new Icon(Icons.send,color: Colors.grey,),
+                           onTap: (){},
+                         )
+                       )
+//
+                     ],
+                   ),
                   // container for comment stream, height changes up to 3 comments, then stays the same!
+
+
 
                   new Container(
                     height: checkCommentCountForCommentsOnly(widget.snapshot.value),
@@ -543,10 +586,13 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
 
-  void someMethod(){
-    commentNode.unfocus(); // well, it's not pretty but neither is flutter state management...
+  void dismissCommentNode(){
+    if(commentNode.hasFocus){
+      commentNode.unfocus(); // well, it's not pretty but neither is flutter state management...
+    }
   }
   void _onFocusChange(){
+
     widget.uIcallback();
   }
 
@@ -849,7 +895,6 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
           return 280.0;
       }
     }else{
-      return 51.0;
     }
   }
 
@@ -990,6 +1035,8 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   }
 
 
+
+
   Future<bool> _editPostWarning(String title, String primaryMsg, String secondaryMsg) async {
     var decision = await showDialog(
       context: context,
@@ -998,6 +1045,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
         return new AlertDialog(
           title: new Text(title),
           content: new SingleChildScrollView(
+            controller: txtListener,
             child: new ListBody(
               children: <Widget>[
                 new Text(primaryMsg),
