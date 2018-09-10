@@ -4,24 +4,7 @@
     <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="Show only selected application" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="644d45a3-af24-48cd-a4c6-ccde61fbae53" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/ios/Runner/GoogleService-Infoxx.plist" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/android/gradle.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/Runner/GoogleService-Infox.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/GoogleService-Info.plist" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/Runner/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Info.plist" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/Runner/glimpseScreen.m" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/glimpseScreen.m" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Chat/confirmGlimpse.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Chat/confirmGlimpse.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/homePage/chatList.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/chatList.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/homePage/chatListStream.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/chatListStream.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/homePage/feed.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/feed.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/homePage/feedStream.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/feedStream.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/loginFlow/login_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/loginFlow/login_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/loginFlow/selectSchool.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/loginFlow/selectSchool.dart" afterDir="false" />
-    </list>
+    <list default="true" id="644d45a3-af24-48cd-a4c6-ccde61fbae53" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/.dart_tool/" />
     <ignored path="$PROJECT_DIR$/.idea/" />
     <ignored path="$PROJECT_DIR$/.pub/" />
@@ -140,7 +123,7 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/homePage/chatList.dart">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
+            <state relative-caret-position="276">
               <caret line="184" column="26" selection-start-line="184" selection-start-column="26" selection-end-line="184" selection-end-column="26" />
               <folding>
                 <element signature="e#0#39#0" expanded="true" />
@@ -450,12 +433,12 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49946752" weight="0.23781094" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32891566" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.8340486" visible="true" weight="0.37951806" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.8340486" visible="true" weight="0.17228916" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.49960285" weight="0.32891566" />
       <window_info anchor="bottom" id="Dart Analysis" order="7" sideWeight="0.8755365" weight="0.46144578" />
-      <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.16595136" side_tool="true" visible="true" weight="0.37951806" />
+      <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.16595136" side_tool="true" visible="true" weight="0.17228916" />
       <window_info anchor="bottom" id="Logcat" order="9" />
       <window_info anchor="bottom" id="Version Control" order="10" sideWeight="0.49960285" weight="0.0" />
       <window_info anchor="bottom" id="Terminal" order="11" />
@@ -984,7 +967,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/homePage/chatList.dart">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
+        <state relative-caret-position="276">
           <caret line="184" column="26" selection-start-line="184" selection-start-column="26" selection-end-line="184" selection-end-column="26" />
           <folding>
             <element signature="e#0#39#0" expanded="true" />

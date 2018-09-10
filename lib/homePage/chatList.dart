@@ -183,6 +183,7 @@ class _chatListState extends State<ChatList> with AutomaticKeepAliveClientMixin<
       ),
       floatingActionButton: (userIsSearching) ? null : new FloatingActionButton(
         heroTag: "chatlist",
+        // test
         backgroundColor: Colors.yellowAccent,
         child: actionBtnIconSearch,
         onPressed: () {
