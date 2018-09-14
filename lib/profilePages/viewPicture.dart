@@ -18,7 +18,8 @@ import 'dart:io';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_view/photo_view.dart';
+//import 'package:photo_view/photo_view.dart';
+import '../photoView/photo_view.dart';
 
 
 
@@ -34,14 +35,25 @@ class viewPicPage extends StatefulWidget{
   final String imgURL;
   final bool userIsViewingTheirOwnPhoto;
   final List<dynamic> allPhotos;
+  final String photoId;
 
   // id and profile pic url will ALWAYS be available, full name will be sometimes, and coverphoto never will be available
-  viewPicPage({this.cover, this.imgURL,this.regularPhoto,this.userIsViewingTheirOwnPhoto,this.allPhotos});
+  viewPicPage({this.cover, this.imgURL,this.regularPhoto,this.userIsViewingTheirOwnPhoto,this.allPhotos, this.photoId});
 }
 
 class _viewPicPageState extends State<viewPicPage> {
   // profilePage({Key key, this.layoutGroup, this.onLayoutToggle,}) : super(key: key);
 
+  Map tagCoodinates;
+  double xTag;
+  double yTag;
+
+  void initState() {
+    super.initState();
+    if(widget.photoId != null){
+      getTagCoordinates(widget.photoId);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,28 +67,40 @@ class _viewPicPageState extends State<viewPicPage> {
                 width: double.infinity,
                 color: Colors.grey[800],
                 child: new Center(
-                    child: (!widget.cover && widget.imgURL != null && !widget.regularPhoto) ? new Container(
-                      height: MediaQuery
-                          .of(context)
-                          .size
-                          .width - 100,
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width - 100,
-                      decoration: new BoxDecoration(shape: BoxShape.circle,
-                        image: new DecorationImage(
-                            image: new CachedNetworkImageProvider(widget.imgURL),
-                            fit: BoxFit.contain),),
-                    ) : (widget.imgURL != null && !widget.regularPhoto) ?  new Container(
-                      height: MediaQuery.of(context).size.height,
-                      width: MediaQuery.of(context).size.width,
-                      decoration: new BoxDecoration(image: new DecorationImage(
-                          image: new CachedNetworkImageProvider(widget.imgURL),
-                          fit: BoxFit.cover),),
-                    ) : (widget.regularPhoto) ? new Container(
-                      child: new PhotoView(imageProvider: new NetworkImage(widget.imgURL),minScale: PhotoViewScaleBoundary.contained,loadingChild: new Container(),backgroundColor: Colors.grey[800],),
-                    ) : new Container()
+                    child:new Stack(
+                      children: <Widget>[
+                        (!widget.cover && widget.imgURL != null && !widget.regularPhoto) ? new Container(
+                          height: MediaQuery
+                              .of(context)
+                              .size
+                              .width - 100,
+                          width: MediaQuery
+                              .of(context)
+                              .size
+                              .width - 100,
+                          decoration: new BoxDecoration(shape: BoxShape.circle,
+                            image: new DecorationImage(
+                                image: new CachedNetworkImageProvider(widget.imgURL),
+                                fit: BoxFit.contain),),
+                        ) : (widget.imgURL != null && !widget.regularPhoto) ?  new Container(
+                          height: MediaQuery.of(context).size.height,
+                          width: MediaQuery.of(context).size.width,
+                          decoration: new BoxDecoration(image: new DecorationImage(
+                              image: new CachedNetworkImageProvider(widget.imgURL),
+                              fit: BoxFit.cover),),
+                        ) : (widget.regularPhoto) ? new Container(
+                          child: new PhotoView(imageProvider: new NetworkImage(widget.imgURL),minScale: PhotoViewScaleBoundary.contained,loadingChild: new Container(),backgroundColor: Colors.grey[800],xTag: xTag,yTag: yTag,),
+                        ) : new Container(),
+//                        new Positioned(child: new Container(
+//                          height: 30.0,
+//                          width: 30.0,
+//                          color: Colors.green,
+//                        ),
+//                        top: 44.0,
+//                          left: 66.0,
+//                        )
+                      ],
+                    )
                 ),
               ),
               onTap: () {
@@ -92,6 +116,28 @@ class _viewPicPageState extends State<viewPicPage> {
                 if(res){
                   deletePhoto();
                 }
+              }),
+            ) : new Container(),
+
+
+
+              (tagCoodinates != null) ? new Align(
+              alignment: new Alignment(0.7, 0.95),
+              child: new IconButton(icon: new Icon(Icons.tag_faces,color: Colors.white, ), onPressed: ()async{
+                // delete photo
+                setState(() {
+                  xTag = tagCoodinates['x'];
+                  yTag = tagCoodinates['y'];
+                });
+
+                Future.delayed(new Duration(seconds: 2)).then((s){
+                 if(mounted){
+                   setState(() {
+                     xTag = null;
+                     yTag = null;
+                   });
+                 }
+                });
               }),
             ) : new Container()
           ],
@@ -111,6 +157,17 @@ class _viewPicPageState extends State<viewPicPage> {
   }
 
 
+  Future<void> getTagCoordinates(String photoId)async{
+    var ref = FirebaseDatabase.instance.reference();
+    var snap = await ref.child('tagCoordinates').child(globals.id).child(photoId).once();
+    Map coordinates = snap.value;
+    setState(() {
+      tagCoodinates = snap.value;
+    });
+
+  }
+
+
   Future<bool> _photoDeleteWarningMenu(String title, String primaryMsg, String secondaryMsg) async {
     var decision = await showDialog(
       context: context,
@@ -122,8 +179,6 @@ class _viewPicPageState extends State<viewPicPage> {
             child: new ListBody(
               children: <Widget>[
                 new Text(primaryMsg,maxLines: null,),
-
-
               ],
             ),
           ),

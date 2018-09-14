@@ -59,6 +59,12 @@ static const BasicMessageChannel _chan = const BasicMessageChannel('notification
 
 String logoURL = "https://is4-ssl.mzstatic.com/image/thumb/Purple125/v4/b2/a7/91/b2a7916a-35be-5a7e-4c91-45317fb40d9c/AppIcon-1x_U007emarketing-0-0-GLES2_U002c0-512MB-sRGB-0-0-0-85-220-0-0-0-3.png/246x0w.jpg";
 
+
+
+
+
+
+
 final destinationTextContoller = new TextEditingController();
     Map data = {};
     TabController _tabController;
@@ -71,6 +77,7 @@ final destinationTextContoller = new TextEditingController();
     String transportMode;
     LatLng destination;
     SecureString secureString = new SecureString();
+    String titleCity = '';
 
 Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 final keyboardDismissalChangeNotifier = new StreamController.broadcast(); // for communicating down the widget tree to dismiss the keyboard
@@ -88,6 +95,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
    void initState() {
     super.initState();
   //  migrateData();
+    getUsersCityName();
     globals.id = widget.userID;
     updateCityCode(widget.userID).then((idk){
       // need cityCode for these two functions
@@ -283,7 +291,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
           color: Colors.black
         ),
    
-        title: new Text('Columbia, MO', style: new TextStyle(color: Colors.black),),
+        title: new Text(titleCity, style: new TextStyle(color: Colors.black),),
         elevation: 0.7,
           bottom: new TabBar(
         controller: _tabController,
@@ -513,6 +521,17 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
 //    }
 //  }
 //
+  
+  
+  
+  Future<void> getUsersCityName()async{
+     DatabaseReference ref = FirebaseDatabase.instance.reference();
+     var cityName = await ref.child('usersCities').child(globals.id).child('city').once();
+      setState(() {
+        titleCity = cityName.value;
+      });
+
+  }
 
 
   Future<void> changeProfilePic()async{

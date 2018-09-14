@@ -176,10 +176,7 @@ class _chatListState extends State<ChatList> with AutomaticKeepAliveClientMixin<
                   )
               )
           )
-
         ],
-
-
       ),
       floatingActionButton: (userIsSearching) ? null : new FloatingActionButton(
         heroTag: "chatlist",
@@ -209,11 +206,7 @@ class _chatListState extends State<ChatList> with AutomaticKeepAliveClientMixin<
             }
           });
         },
-
-
       ),
-
-
     );
   }
 

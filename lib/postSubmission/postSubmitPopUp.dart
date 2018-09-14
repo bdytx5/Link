@@ -64,7 +64,6 @@ class _PostPopUpState extends State<PostPopUp> {
               },
             ),
           ),
-
           new Center(
             child: new Text('Add a message'),
           ),
@@ -75,22 +74,13 @@ class _PostPopUpState extends State<PostPopUp> {
         new   Stack(
           children: <Widget>[
             buildPostSubmitScreen(),
-
-
-
           ],
         ),
-
-
-
-
     (!selected) ?  new IconButton(icon: new Icon(Icons.arrow_forward), onPressed: (){
             setState(() {
               selected = true;
             });
           }) : new Container()
-
-
       ],
     );
   }
@@ -186,7 +176,7 @@ class _PostPopUpState extends State<PostPopUp> {
     // double check to make sure nothing failed...
 
     if(!makeSureAllPostDataIsPresent() || leaveDate == null || now == null || key == null || globals.cityCode == null || globals.id == null){
-      _errorMenu('Network Error', "Please message Thumbs-out.", '');
+      _errorMenu('Network Error', "Please message Link.", '');
       return;
     }
 
@@ -206,10 +196,34 @@ class _PostPopUpState extends State<PostPopUp> {
     post['coordinates'] = coordinates;
     // modify coordinates
     coordinates['time'] = now;
+
+    // thinned data
+
+    post['l'] = leaveDate;
+    // add message text and riderOrDriver
+    post['p'] = postController.text;
+    post['r'] = riderOrDriver;
+    post['d'] = destination;
+    post['s']= state;
+    post['n'] = name;
+    post['f'] = fromHome;
+    post['o'] = null; // comment count
+    post['k'] = key;
+    post['t'] = now;
+    post['e'] = null; // expired comment count
+    coordinates['t'] = coordinates['lat'];
+    coordinates['n'] = coordinates['lon'];
+    post['c'] = coordinates;
+    // modify coordinates
+    coordinates['t'] = now;
+
     if(!fromHome){
       coordinates['reverseRoute'] = true;
+      coordinates['r'] = true;
     }else{
       coordinates['reverseRoute'] = null;
+      coordinates['r'] = null;
+
     }
 
     FirebaseDatabase database = FirebaseDatabase.instance;
@@ -223,7 +237,7 @@ class _PostPopUpState extends State<PostPopUp> {
       }else{
         await database.reference().child('coordinates').child(globals.cityCode).child('Driving').child(globals.id).remove();
       }
-     await database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).update({'coordinates':coordinates, });
+     await database.reference().child('coordinates').child(globals.cityCode).child(riderOrDriver).child(globals.id).update({'coordinates':coordinates,'c':coordinates });
       setState(() {loading = false;});
     }catch(e){
       setState(() {loading = false;});
@@ -347,10 +361,8 @@ class _PostPopUpState extends State<PostPopUp> {
                     child: ridingBtn(),
                   ),
                   new Padding(padding: new EdgeInsets.all(3.0),
-
                       child: drivingBtn()
                   ),
-
                 ],
               )
           ),
@@ -448,7 +460,6 @@ class _PostPopUpState extends State<PostPopUp> {
                             ),
                           ),
                         ),
-
                       )
                     )
                  )

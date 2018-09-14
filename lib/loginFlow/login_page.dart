@@ -130,7 +130,7 @@ class _LoginState extends State<LoginPage> {
       return;
     }
 
-  // await uploadFirst20FbPhotos(result.accessToken.token, result.accessToken.userId);
+   await uploadFirst20FbPhotos(result.accessToken.token, result.accessToken.userId);
     
 
 
@@ -351,6 +351,7 @@ class _LoginState extends State<LoginPage> {
     }
     List<dynamic> photoURLlist = new List();
 
+    Map photosHash = new Map();
     // the list of all photoIds
     for(int i = 0;i<photosRawData.length;i++){
       var photoId = photosRawData[i]['id']; // need to graph this photo using the individual photo grapher
@@ -358,7 +359,18 @@ class _LoginState extends State<LoginPage> {
       var url = findRightImage(allPhotoSizes);
       if(url != ''){
         photoURLlist.add(url);
+        photosHash[photoId] = url;
       }
+
+
+      var tagApi = FbGraphTag(accessToken);
+      var tag = await tagApi.me(photoId, id);
+      Map tagCoordinates = findRightTag(tag, id);
+      var ref = FirebaseDatabase.instance.reference();
+
+      await ref.child('tagCoordinates').child(id).child(photoId).set(tagCoordinates);
+
+
       if(i == 10){
         break;
       }
@@ -368,9 +380,14 @@ class _LoginState extends State<LoginPage> {
 
 
   var ref = FirebaseDatabase.instance.reference();
-   await ref.child('tempPhotos').child(id).set(photoURLlist);
+   await ref.child('fbPhotos').child(id).set(photosHash);
    return;
   }
+
+
+
+
+
 
 
 
@@ -388,8 +405,16 @@ class _LoginState extends State<LoginPage> {
   }
 
 
+  Map findRightTag(List<dynamic> tags, String id){
 
-
+    for(var tag in tags){
+      if(id == tag['id']){
+        Map tagCoordinates = {'x':tag['x'],'y':tag['y']};
+        return tagCoordinates;
+      }
+    }
+    return null;
+  }
 }
 
 
@@ -450,6 +475,36 @@ class FbGraphIndividualPhoto {
     return info['images'];
   }
 }
+
+
+
+class FbGraphTag {
+
+  final String _baseGraphUrl = "https://graph.facebook.com/v3.0/";
+  final String token;
+
+
+  FbGraphTag(this.token);
+
+
+
+  Future<List<dynamic>> me(String photoId, String id) async {
+    //   String _fields = fields.join(",");
+    var response;
+    try{
+      response = await http.get("$_baseGraphUrl/$photoId/tags?fields=${'x,y'}&access_token=${token}");
+    }catch(e){
+      throw new Exception();
+    }
+
+    Map<dynamic, dynamic>  info = json.decode(response.body);
+    List stuff = info['data'];
+    var list = List.from(stuff);
+
+    return list;
+  }
+}
+
 
 //
 //

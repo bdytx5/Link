@@ -215,7 +215,7 @@ Future<void> main() async {
 
 
 
-   final FacebookLogin facebookSignIn = new FacebookLogin();
+  final FacebookLogin facebookSignIn = new FacebookLogin();
 
 
   var fbLoggedIn = await facebookSignIn.isLoggedIn;

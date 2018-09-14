@@ -38,11 +38,12 @@ class ProfilePage extends StatefulWidget{
   final String coverPlaceholder = "https://is4-ssl.mzstatic.com/image/thumb/Purple125/v4/b2/a7/91/b2a7916a-35be-5a7e-4c91-45317fb40d9c/AppIcon-1x_U007emarketing-0-0-GLES2_U002c0-512MB-sRGB-0-0-0-85-220-0-0-0-3.png/1200x630wa.jpg";
   final String riderOrDriver;
   final String destination;
+
   // id and profile pic url will ALWAYS be available, full name will be sometimes, and coverphoto never will be available
   ProfilePage({this.id, this.profilePicURL, this.firstName, this.fullName, this.riderOrDriver});
 }
 
-class _profilePageState extends State<ProfilePage> {
+class _profilePageState extends State<ProfilePage> with TickerProviderStateMixin{
   // profilePage({Key key, this.layoutGroup, this.onLayoutToggle,}) : super(key: key);
 String coverPhoto;
 String fullName;
@@ -56,11 +57,23 @@ String fbLink;
 Map contactNameInfo = new Map();
 Map contactImgInfo = new Map();
 List<String> contactsList = new List();
+Animation<double> contactsAnimation;
+AnimationController contactsController;
+bool contactsAnimationCompleted = false;
+AnimationController contactsDelayController;
+bool contactsDelayCompleted = false;
 SecureString secureString = new SecureString();
 AssetImage fbIcon = new AssetImage('assets/fb.png');
 // for photos grid view
 bool userHasFbPhotos;
 bool userHasTempPhotos;
+Animation<double> fbGridAnimation;
+AnimationController fbGridController;
+bool fbGridAnimationReversing = false;
+bool fbGridanimationCompletedReversing = true;
+Map fbPhotoHash;
+
+
 
 bool userIsViewingFbPhotos = false;
 List<dynamic> fbPhotos = new List();
@@ -74,6 +87,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
   void initState() {
     super.initState();
+    startContactsDelay();
     grabCoverPhoto();
     grabBio();
     grabSchoolAndGradYear();
@@ -102,8 +116,8 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     fit: BoxFit.cover)),
               ),
               onTap:(btnsEnabled) ? (){
-                Navigator.push(context,
-                    new ShowRoute(widget: viewPicPage(cover: true,imgURL: coverPhoto,regularPhoto: false,userIsViewingTheirOwnPhoto:false,)));
+//                Navigator.push(context,
+//                    new ShowRoute(widget: viewPicPage(cover: true,imgURL: coverPhoto,regularPhoto: false,userIsViewingTheirOwnPhoto:false,)));
               } : null
             ) : new Container(child:new Center(
               child: new CircularProgressIndicator(),
@@ -145,7 +159,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
   Widget profileView() {
     return new Container(
-        height: (hasContacts && !userIsViewingFbPhotos) ? 238.0 : (!userIsViewingFbPhotos) ? 160.0 : MediaQuery.of(context).size.height/1.5,
+        height: (hasContacts && !userIsViewingFbPhotos && !fbGridAnimationReversing) ? ((contactsController.value != null) ? (160.0 + (78.0 * contactsController.value)) : 238.0) : (!userIsViewingFbPhotos && !fbGridAnimationReversing) ?  160.0 : (fbGridAnimationReversing) ? ( ((hasContacts) ? 238.0 : 160.0) + (MediaQuery.of(context).size.height/3.0 * fbGridController.value)) : ( ((hasContacts) ? 238.0 : 160.0) + (MediaQuery.of(context).size.height/3 * fbGridController.value)) ,
           //height: MediaQuery.of(context).size.height - 100,
         decoration: new BoxDecoration(borderRadius: new BorderRadius.only(
             topLeft: new Radius.circular(25.0),
@@ -250,15 +264,13 @@ static const platform = const MethodChannel('thumbsOutChannel');
                 ),
                    new Divider(),
 
-                (userHasFbPhotos != null) ? ((userHasFbPhotos && userIsViewingFbPhotos) ? new Expanded(child: fbPhotosGrid()) : new Container()) : new Container(),
+                (userHasFbPhotos != null ) ? ((userHasFbPhotos && userIsViewingFbPhotos) ? new Expanded(child: fbPhotosGrid()) : new Container()) : new Container(),
 
-      (fullName != null && hasContacts && !userIsViewingFbPhotos) ? new Text("${getFirstName(fullName)}'s contacts", style: new TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.grey[600]),) : (fullName != null && !userIsViewingFbPhotos) ? new Text("${getFirstName(fullName)} doesn't have any contacts yet",style: new TextStyle(
+      (fullName != null && hasContacts && !userIsViewingFbPhotos && fbGridanimationCompletedReversing) ? new Text("${getFirstName(fullName)}'s contacts", style: new TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.grey[600]),) : (fullName != null && !userIsViewingFbPhotos && fbGridanimationCompletedReversing) ? new Text("${getFirstName(fullName)} doesn't have any contacts yet",style: new TextStyle(
           fontWeight: FontWeight.bold, color: Colors.grey[600])) : new Text(''),
 
-
-
-                (hasContacts && !userIsViewingFbPhotos) ?
+                (hasContacts && !userIsViewingFbPhotos && fbGridanimationCompletedReversing && contactsAnimationCompleted)  ?
                 new Expanded(
                   child: new Padding(padding:new EdgeInsets.only(bottom: 15.0),
                   child: new Container(
@@ -272,7 +284,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
               ],
             ),
             new Align(
-              alignment: (hasContacts && !userIsViewingFbPhotos) ? new Alignment(0.94, -1.2) : (!userIsViewingFbPhotos) ?  new Alignment(0.94, -1.2) : new Alignment(0.94, -1.08),
+              alignment: (hasContacts && !userIsViewingFbPhotos && fbGridanimationCompletedReversing) ? new Alignment(0.94, -1.2) : (!userIsViewingFbPhotos) ?  new Alignment(0.94, -1.2) : new Alignment(0.94, -1.08),
               child: new Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
@@ -303,7 +315,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     decoration: new BoxDecoration(
                         color: Colors.blue, shape: BoxShape.circle),
                     child:(userHasFbPhotos != null && userHasTempPhotos != null) ? new IconButton(
-                        icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
+                        icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos ) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : (fbGridAnimationReversing) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
                         onPressed: (btnsEnabled) ? _handlePhotoBtnTap : null
                     ) : new Container(),
                   ),
@@ -361,6 +373,13 @@ static const platform = const MethodChannel('thumbsOutChannel');
   }
 
 
+
+
+
+
+
+
+
   Future<void> handleFbPhotoTap(int index)async{
 
     if(userHasTempPhotos){
@@ -368,10 +387,19 @@ static const platform = const MethodChannel('thumbsOutChannel');
      var na = await _showFbBSwarning('Images Processing', 'Your photos are still processing. Please refresh this page in a minute or so.', '');
       return;
     }
+    var photoId;
+
+     fbPhotoHash.forEach((key,val){
+       if(fbPhotos[index] == val){
+         photoId = key;
+       }
+     });
+
+
 
     if(widget.id == globals.id){
       Navigator.push(context,
-          new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:true,allPhotos: fbPhotos,))).then((urlDeleted){
+          new ShowRoute(widget: viewPicPage(cover: true,imgURL: fbPhotos[index],regularPhoto: true,userIsViewingTheirOwnPhoto:true,allPhotos: fbPhotos,photoId:photoId))).then((urlDeleted){
         if(urlDeleted != null){
           setState(() {
             fbPhotos.remove(urlDeleted);
@@ -386,9 +414,19 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
 
   void _handlePhotoBtnTap(){
+
     if(userIsViewingFbPhotos){
       setState(() {
-        userIsViewingFbPhotos = false;
+        fbGridAnimationReversing = true;
+        fbGridController.reverse().then((TickerFuture animationStatus){
+
+
+              setState(() {
+                fbGridanimationCompletedReversing = true;
+                userIsViewingFbPhotos = false;
+
+              });
+        });
       });
       return;
     }
@@ -402,10 +440,82 @@ static const platform = const MethodChannel('thumbsOutChannel');
       }
     }else{
       setState(() {
+        animatePhotoGridUp();
+        fbGridanimationCompletedReversing = false;
         userIsViewingFbPhotos = true;
+
+
       });
     }
   }
+
+
+  void animatePhotoGridUp(){
+    fbGridController = AnimationController(
+        duration: const Duration(milliseconds: 150), vsync: this);
+
+    fbGridAnimation = CurvedAnimation(parent: fbGridController, curve: Curves.linear)..addListener((){
+      setState(() {});
+    });
+    // need to start from the time that would b
+    fbGridController.forward();
+  }
+
+  void animateContactsListUp(){
+    contactsController = AnimationController(
+        duration: const Duration(milliseconds: 150), vsync: this);
+
+    contactsAnimation = CurvedAnimation(parent: contactsController, curve: Curves.linear)..addListener((){
+    setState(() {
+    });
+    });
+
+    if(mounted){
+      setState(() {
+        hasContacts = true;
+      });
+    }
+
+    // need to start from the time that would b
+
+    if(contactsDelayCompleted ){
+      contactsController.forward().then((TickerFuture animationStatus){
+        if(mounted){
+          setState(() {
+            contactsAnimationCompleted = true;
+          });
+        }
+      });
+    }else if(contactsDelayController.value != null){
+      int duration = ((1 - contactsDelayController.value) * 500.0).round();
+      Future.delayed(new Duration(milliseconds: duration)).then((d){
+        contactsController.forward().then((TickerFuture animationStatus){
+          if(mounted){
+            setState(() {
+              contactsAnimationCompleted = true;
+            });
+          }
+        });
+      });
+
+    }
+
+
+  }
+
+
+  void startContactsDelay(){
+    contactsDelayController = AnimationController(
+        duration: const Duration(milliseconds: 500), vsync: this);
+    contactsDelayController.forward().then((TickerFuture animationStatus){
+
+      setState(() {
+        contactsDelayCompleted = true;
+      });
+    });
+
+  }
+
 
 
   Future<void> decideWhetherToShowPhotosOrFbLinkBtn()async{
@@ -425,9 +535,12 @@ static const platform = const MethodChannel('thumbsOutChannel');
     var ref = FirebaseDatabase.instance.reference();
     DataSnapshot snap = await ref.child('fbPhotos').child(widget.id).once();
     if(snap.value != null){
+      fbPhotoHash = snap.value;
+      fbPhotoHash.forEach((key,val){
+        fbPhotos.add(val);
+      });
       setState(() {
         userHasTempPhotos = false;
-        fbPhotos = new List.from(snap.value);
       });
       return true;
     }else{
@@ -650,13 +763,12 @@ Future<void> getContactInfo()async{
 
       for(var id in contacts){
       var usersInfo = await ref.child(globals.cityCode).child('userInfo').child(id).once();
-      setState(() {
-        contactsList.add(id);
-        contactImgInfo[id] = usersInfo.value['imgURL'];
-        contactNameInfo[id] = usersInfo.value['fullName'];
-        hasContacts = true;
-      });
+      contactsList.add(id);
+      contactImgInfo[id] = usersInfo.value['imgURL'];
+      contactNameInfo[id] = usersInfo.value['fullName'];
     }
+    animateContactsListUp();
+
   }
 }
 

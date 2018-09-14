@@ -53,7 +53,7 @@ final originTextContoller = new TextEditingController();
     });
 
  
-originTextContoller.addListener(_onOriginTouch);
+
 
 
        
@@ -61,44 +61,12 @@ originTextContoller.addListener(_onOriginTouch);
    }
 
 
-   _onOriginTouch() {
-    
-     print('find a way to win');
-
-//Navigator.push(context,
-          //      new MaterialPageRoute(builder: (context) => new PlacePicker(app: widget.app,userIsSigningUp: false)));
-
-
-     
-
-     
-
-     
-
-
-    //  final place = await Navigator.push(context,
-    //             new MaterialPageRoute(builder: (context) => new PlacePicker(app: widget.app,userIsSigningUp: false)),
-    //             ).then((val){
-
-              //    print(val);
-
-                //  print(originTextContoller.hasListeners.toString());
-
-
-       
-          // originTextContoller.text = place;
- //  });
-
-
-
-   }
 
    
   @override
   void dispose() {
     // Clean up the controller when the Widget is removed from the Widget tree
 
-     originTextContoller.removeListener(_onOriginTouch);
     originTextContoller.dispose();
 
     super.dispose();

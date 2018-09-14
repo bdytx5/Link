@@ -227,7 +227,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
                   });
                   var post =  buildFirstPostForSnap(widget.placeInfo, widget.userInfo);
                   var info = buildUserInfo(widget.userInfo['imgURL'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}' );
-                  await uploadInfoForProfile('Riding', post, info, buildNotificationInfo(), widget.userInfo['id']);
+                  await uploadInfoForProfile('Riding', post, info, buildNotificationInfo(true), widget.userInfo['id']);
                   Navigator.pop(context);
                   return;
                 }
@@ -254,7 +254,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
                   });
                   var post =  await buildFirstPostForSnap(widget.placeInfo, widget.userInfo);
                   var info = await buildUserInfo(widget.userInfo['imgURL'],'${widget.userInfo['firstName']} ${widget.userInfo['lastName']}');
-                  await uploadInfoForProfile('Driving', post, info, buildNotificationInfo(), widget.userInfo['id']);
+                  await uploadInfoForProfile('Driving', post, info, buildNotificationInfo(true), widget.userInfo['id']);
                 }
               },
             ),
@@ -309,25 +309,27 @@ class _SignupPopUpState extends State<SignupPopUp> {
     }
     post['riderOrDriver'] = riderOrDriver;
     try{
-      await database.reference().child("bios").child(id).set({'bio':widget.userInfo['bio']});
+      await database.reference().child("bios").child(id).set({'bio':widget.userInfo['bio'],'b':widget.userInfo['bio']});
       await database.reference().child("gradYears").child(id).set(buildGraduationYear(gradYear));
       await database.reference().child(widget.userInfo['cityCode']).child("posts").child(id).set(post);
       await database.reference().child(widget.userInfo['cityCode']).child("userInfo").child(id).set(usersInfo); // more efficient for grabbing entire userbase for a search
       await database.reference().child("notificationReciepts").child(id).set(notificationInfo);
-      await database.reference().child("usersCities").child(id).set({'city':widget.userInfo["city"], 'cityCode':widget.userInfo["cityCode"], 'school':widget.userInfo['school'], 'fullName':usersInfo['fullName'],'imgURL':usersInfo['imgURL']});
-      await database.reference().child('commentNotificationReciepts').child(id).set({'newAlert':false});
-      await database.reference().child('messageNotificationReciepts').child(id).set({'newAlert':false});
-      await database.reference().child('rideNotificationReciepts').child(id).set({'newAlert':false});
-      await database.reference().child("coverPhotos").child(id).set({'imgURL':cover});
+      await database.reference().child("usersCities").child(id).set(buildUsersCities(usersInfo));
+      await database.reference().child('commentNotificationReciepts').child(id).set(buildNotificationInfo(false));
+      await database.reference().child('messageNotificationReciepts').child(id).set(buildNotificationInfo(false));
+      await database.reference().child('rideNotificationReciepts').child(id).set(buildNotificationInfo(false));
+      await database.reference().child("coverPhotos").child(id).set({'imgURL':cover, 'i':cover});
       await database.reference().child('convoLists').child(id).child(id).set(feedbackConvoInfo);
-      await database.reference().child('phoneNumbers').child(widget.userInfo['id']).set({'number':widget.userInfo['phone']});
-      await database.reference().child(widget.userInfo['cityCode']).child('phoneNumbers').child(widget.userInfo['id']).set({'number':widget.userInfo['phone']});
+      await database.reference().child('phoneNumbers').child(widget.userInfo['id']).set({'number':widget.userInfo['phone'], 'n':widget.userInfo['phone']});
+      await database.reference().child(widget.userInfo['cityCode']).child('phoneNumbers').child(widget.userInfo['id']).set({'number':widget.userInfo['phone'], 'n':widget.userInfo['phone']});
 
       await database.reference().child('coordinates').child(widget.userInfo["cityCode"]).child(post['riderOrDriver']).child(id).child('coordinates').set(buildCoordinatesInfo(widget.placeInfo));
+      await database.reference().child('coordinates').child(widget.userInfo["cityCode"]).child(post['riderOrDriver']).child(id).child('c').set(buildCoordinatesInfo(widget.placeInfo));
+
       await database.reference().child('notifications').child(widget.userInfo['id']).push().set(buildFirstNotificaiton());
       if(widget.userInfo.containsKey('link')){
         if(widget.userInfo['link'] != null){
-          await database.reference().child('fbLinks').child(widget.userInfo['id']).set({'link':widget.userInfo['link']});
+          await database.reference().child('fbLinks').child(widget.userInfo['id']).set({'link':widget.userInfo['link'], 'l':widget.userInfo['link']});
         }
       }
     }catch(e){
@@ -361,12 +363,20 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
 
 
+
+
   Map buildGraduationYear(String year){
-    return {'gradYear': year};
+    return {
+      'gradYear': year,
+      'g':year
+    };
   }
 
-  Map buildNotificationInfo() {
-    return {'newAlert': true};
+  Map buildNotificationInfo(bool status) {
+    return {
+      'newAlert': status,
+      'n':status
+    };
   }
 
 
@@ -374,13 +384,28 @@ class _SignupPopUpState extends State<SignupPopUp> {
     Map info = {
       'fullName': fullName,
       'imgURL': imgURL,
+      //thinned data
+      'i':imgURL,
+      'f':fullName
     };
     return info;
   }
-  Map buildUsersCities(String cityName, String cityCode) {
+  Map buildUsersCities(Map usersInfo) {
+
+    //{'city':widget.userInfo["city"], 'cityCode':widget.userInfo["cityCode"], 'school':widget.userInfo['school'], 'fullName':usersInfo['fullName'],'imgURL':usersInfo['imgURL']}
     Map info = {
-      'cityName': cityName,
-      'cityCode': cityCode,
+      'city': widget.userInfo["city"],
+      'cityCode': widget.userInfo["cityCode"],
+      'school':widget.userInfo['school'],
+      'fullName':usersInfo['fullName'],
+      'imgURL':usersInfo['imgURL'],
+
+      // thinned data
+      'n': widget.userInfo["city"],
+      'c': widget.userInfo["cityCode"],
+      's':widget.userInfo['school'],
+      'f':usersInfo['fullName'],
+      'i':usersInfo['imgURL']
     };
     return info;
   }
@@ -399,6 +424,18 @@ class _SignupPopUpState extends State<SignupPopUp> {
       'key':nowKey,
       'time':formatter.format(new DateTime.now()),
       'coordinates':buildCoordinatesForPost(placeInfo),
+      // thinned data, data above will be deprecated at some point
+      'd': placeInfo['city'],
+      'f': true,
+      'i': userInfo['imgURL'], // chaneged upload func
+      'l': formatter.format(new DateTime.now()), // need to format...
+      'r': '', // user input..
+      's': placeInfo['state'],
+      'n': userInfo['firstName'],
+      'k':nowKey,
+      't':formatter.format(new DateTime.now()),
+      'c':buildCoordinatesForPost(placeInfo),
+
     };
     return post;
   }
@@ -416,6 +453,9 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
   Map buildCoordinatesForPost(Map placeInfo){
     Map coordinate = placeInfo['coordinates'];
+    coordinate['t'] = coordinate['lat'];
+    coordinate['n'] = coordinate['lon'];
+
     return coordinate;
   }
 
@@ -423,7 +463,11 @@ class _SignupPopUpState extends State<SignupPopUp> {
     Map notification = {
       'imgURL':logoURL,
       'type':'signup',
-      'message':'Welcome to Link!! This is where you will recieve ride alerts, when someone is going to a city near your destination.'
+      'message':'Welcome to Link!! This is where you will recieve ride alerts, when someone is going to a city near your destination.',
+     // thinned data...
+      'i':logoURL,
+      't':'signup',
+      'm':'Welcome to Link!! This is where you will recieve ride alerts, when someone is going to a city near your destination.'
     };
     return notification;
   }

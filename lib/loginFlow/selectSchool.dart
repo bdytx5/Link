@@ -48,7 +48,7 @@ class _SelectSchoolState extends State<SelectSchool> {
   List<School> filteredSchoolList = List<School>();
   School selectedSchool;
 
-  int selectedIndex = -1;
+
   bool userClickedFB = false;
   static final FacebookLogin facebookSignIn = new FacebookLogin();
   AssetImage fbIcon = new AssetImage('assets/fb.png');
@@ -262,6 +262,13 @@ class _SelectSchoolState extends State<SelectSchool> {
   Future<void> handleFbLogin()async{
     FacebookLoginResult result;
     bool userExists = false;
+
+    if(selectedSchool == null){
+      _errorMenu("Error", "Please select a school", "");
+      return;
+    }
+
+
     try{//, 'user_photos'
       result = await facebookSignIn.logInWithReadPermissions(['public_profile', 'user_link']);
     }catch(e){
@@ -288,9 +295,9 @@ class _SelectSchoolState extends State<SelectSchool> {
     }else{
       // add selected user data to snap data
       Map userInfo = new Map();
-      userInfo["city"] = schoolList[selectedIndex].city;
-      userInfo['cityCode'] = schoolList[selectedIndex].cityCode;
-      userInfo['school'] = schoolList[selectedIndex].schoolName;
+      userInfo["city"] = selectedSchool.city;
+      userInfo['cityCode'] = selectedSchool.cityCode;
+      userInfo['school'] = selectedSchool.schoolName;
       //do facebook graph stuff
 
       var fbInfo;

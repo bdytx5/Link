@@ -490,12 +490,12 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
       if(commentController.text != '' ){
         if(checkDateOfPost(widget.snapshot.value)){
           await handleCommentNotificaitonList(snap.value['key'],snap.key );
-          sendComment(snap.value['key'], commentController.text, snap.key);
-          incrementCommentCount(snap.key, false );
+          await incrementCommentCount(snap.key, false );
+          await sendComment(snap.value['key'], commentController.text, snap.key);
         }else{
           await handleCommentNotificaitonList("${snap.value['key']}expired", snap.key);
-          sendComment("${snap.value['key']}expired",commentController.text,snap.key);
-          incrementCommentCount(snap.key, true );
+          await incrementCommentCount(snap.key, true );
+          await sendComment("${snap.value['key']}expired",commentController.text,snap.key);
         }
         commentController.clear();
         commentNode.unfocus();
@@ -504,7 +504,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
   }
 
 
-  void sendComment(String key,String comment, String postId)async {
+  Future<void> sendComment(String key,String comment, String postId)async {
     await grabUserInfo();
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
@@ -519,7 +519,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
         'postId':postId  // so we can get back to the post when the user views the notification
       };
       try{
-        ref.child('comments').child(key).push().set(msg);
+       await ref.child('comments').child(key).push().set(msg);
       }catch(e){
         return;
       }
@@ -528,7 +528,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
 
 
-    void incrementCommentCount(String postId,bool expired)async {
+    Future<void> incrementCommentCount(String postId,bool expired)async {
 
         try{
           if(!expired){
