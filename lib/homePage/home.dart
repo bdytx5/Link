@@ -556,7 +556,6 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
      }catch(e){
        return;
      }
-
   }
 
   Future<File> _pickImage() async {

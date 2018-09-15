@@ -7,3 +7,15 @@
 build/
 
 .flutter-plugins
+
+GoogleService-Info.plist
+
+GoogleService-Infox.plist
+
+GoogleService-Infoxx.plist
+
+google-services.json
+
+key.properties
+
+

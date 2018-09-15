@@ -144,9 +144,14 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
             new Align(
               alignment: (globals.id == widget.id) ? new Alignment(0.9, -0.9) : new Alignment(0.94, -1.2) ,
-              child: new IconButton(icon: new Icon(Icons.edit,color: Colors.white,),
+              child: new IconButton(icon: new Icon(Icons.settings,color: Colors.white,),
                   onPressed:(btnsEnabled) ? (){
-                  changeCoverPhoto();
+                 // changeCoverPhoto();
+                    _showProfileSettings('', '', '').then((d){
+                      changeBio();
+                    });
+
+
                   } : null
                   )
             )
@@ -190,7 +195,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
                         ),
                         (globals.id == widget.id) ? new Padding(padding: new EdgeInsets.only(top: 5.0),
                         child: GestureDetector(
-                            child: new Icon(Icons.edit, size: 15.0,), onTap: (btnsEnabled) ? (){
+                            child: new Icon(Icons.settings, size: 20.0,color: Colors.grey[800],), onTap: (btnsEnabled) ? (){
                           showDialog(context: context, builder: (BuildContext context) => new EditProfilePopup()).then((changed){
                             if(changed ==null){
                               return;
@@ -322,11 +327,8 @@ static const platform = const MethodChannel('thumbsOutChannel');
                 ],
               )
             ),
-
           ],
         )
-
-
     );
   }
 
@@ -850,6 +852,20 @@ FirebaseAnimatedList buildContactsList(BuildContext context){
 }
 
 
+Future<void> changeBio(){
+  if(btnsEnabled){
+    showDialog(context: context, builder: (BuildContext context) => new EditProfilePopup()).then((changed){
+      if(changed ==null){
+        return;
+      }
+      if(changed){
+        grabBio();
+      }
+    });
+
+  }
+}
+
 
 Future<void> changeCoverPhoto()async{
     File newCover = await _pickImage();
@@ -1000,6 +1016,96 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
     },
   );
 }
+
+  Future<Null> _showProfileSettings(String title, String primaryMsg, String secondaryMsg) async {
+
+    // change bio
+    //change cover
+    // change profile pic
+    //
+
+
+
+    return showDialog<Null>(
+      context: context,
+      barrierDismissible: true, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Center(
+            child: new Text('Profile Settings', style: new TextStyle(fontWeight: FontWeight.bold),),
+          ),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Container(height: 60.0,width: MediaQuery.of(context).size.width/1.5,child:
+                  new Card(
+                    color: Colors.yellowAccent,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        new Padding(padding: new EdgeInsets.only(left: 10.0,right: 20.0,top: 10.0,bottom: 10.0),
+                          child: new Icon(Icons.photo,),
+                        ),
+                           new Text('Change CoverPhoto',style: new TextStyle(fontWeight: FontWeight.bold),)
+
+                      ],
+                    ),
+                  )
+                  ,),
+                new Container(height: 60.0,width: MediaQuery.of(context).size.width/1.5,child:
+                new InkWell(
+                  child: new Card(
+                    color: Colors.yellowAccent,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        new Padding(padding: new EdgeInsets.only(left: 10.0,right: 20.0,top: 10.0,bottom: 10.0),
+                          child: new Icon(Icons.border_color,),
+                        ),
+                        new Text('Change Bio',style: new TextStyle(fontWeight: FontWeight.bold),)
+                      ],
+                    ),
+                  ),
+                  onTap: ()async{
+                   await changeCoverPhoto();
+                   Navigator.of(context).pop(false);
+
+                  },
+                )
+                ),
+                new Container(height: 60.0,width: MediaQuery.of(context).size.width/1.5,child:
+               new InkWell(
+                 child:  new Card(
+                   color: Colors.yellowAccent,
+                   child: Row(
+                     crossAxisAlignment: CrossAxisAlignment.center,
+                     children: <Widget>[
+                       new Padding(padding: new EdgeInsets.only(left: 10.0,right: 20.0,top: 10.0,bottom: 10.0),
+                         child: new Icon(Icons.perm_identity,),
+                       ),
+                       new Text('Change Profile Pic',style: new TextStyle(fontWeight: FontWeight.bold),)
+
+                     ],
+                   ),
+                 ),
+                 onTap: (){
+                   Navigator.of(context).pop(true);
+                 },
+               )
+                  ,)
+              ],
+            ),
+          ),
+          actions: <Widget>[
+
+
+          ],
+        );
+      },
+    );
+  }
+
+
 
 
 
