@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="644d45a3-af24-48cd-a4c6-ccde61fbae53" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/homePage/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/home.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/profilePages/editProfilePopup.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/profilePages/editProfilePopup.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/profilePages/profilePage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/profilePages/profilePage.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/android/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/key.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/ios/.gitignore" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.dart_tool/" />
     <ignored path="$PROJECT_DIR$/.idea/" />
@@ -47,7 +46,7 @@
           <entry key="lock" value="1" />
           <entry key="m" value="2" />
           <entry key="png" value="1" />
-          <entry key="properties" value="9" />
+          <entry key="properties" value="10" />
           <entry key="xml" value="3" />
           <entry key="yaml" value="3" />
         </counts>
@@ -58,7 +57,7 @@
           <entry key="Groovy" value="10" />
           <entry key="Image" value="1" />
           <entry key="PLAIN_TEXT" value="3" />
-          <entry key="Properties" value="9" />
+          <entry key="Properties" value="10" />
           <entry key="XML" value="3" />
           <entry key="YAML" value="3" />
         </counts>
@@ -92,18 +91,42 @@
         <entry file="file://$PROJECT_DIR$/lib/profilePages/profilePage.dart">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="16">
-              <caret line="347" column="14" lean-forward="true" selection-start-line="347" selection-start-column="14" selection-end-line="347" selection-end-column="14" />
+              <caret line="347" column="14" selection-start-line="347" selection-start-column="14" selection-end-line="347" selection-end-column="14" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/android/build.gradle">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="541">
               <caret line="41" selection-start-line="41" selection-end-line="41" />
             </state>
           </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/android/app/key.properties">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/android/app/google-services.json">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/homePage/chatListStream.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="410">
+              <caret line="183" selection-start-line="183" selection-end-line="183" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/android/key.properties">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
@@ -263,22 +286,13 @@
             <path>
               <item name="Link" type="b2602c69:ProjectViewProjectNode" />
               <item name="Link" type="462c0819:PsiDirectoryNode" />
-              <item name="android" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Link" type="462c0819:PsiDirectoryNode" />
-              <item name="android" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="ios" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Link" type="b2602c69:ProjectViewProjectNode" />
               <item name="Link" type="462c0819:PsiDirectoryNode" />
               <item name="ios" type="462c0819:PsiDirectoryNode" />
+              <item name="Runner" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Link" type="b2602c69:ProjectViewProjectNode" />
@@ -627,13 +641,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/lib/Chat/msgScreen.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="146">
-          <caret line="388" column="4" selection-start-line="388" selection-start-column="4" selection-end-line="388" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/rendering/sliver_multi_box_adaptor.dart">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2985">
@@ -664,8 +671,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/homePage/chatListStream.dart">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="495">
-          <caret line="50" selection-start-line="50" selection-end-line="50" />
+        <state relative-caret-position="410">
+          <caret line="183" selection-start-line="183" selection-end-line="183" />
         </state>
       </provider>
     </entry>
@@ -932,7 +939,7 @@
     <entry file="file://$PROJECT_DIR$/lib/profilePages/profilePage.dart">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="16">
-          <caret line="347" column="14" lean-forward="true" selection-start-line="347" selection-start-column="14" selection-end-line="347" selection-end-column="14" />
+          <caret line="347" column="14" selection-start-line="347" selection-start-column="14" selection-end-line="347" selection-end-column="14" />
         </state>
       </provider>
     </entry>
@@ -942,6 +949,9 @@
           <caret line="41" selection-start-line="41" selection-end-line="41" />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/key.properties">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
   </component>
   <component name="masterDetails">

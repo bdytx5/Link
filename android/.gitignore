@@ -8,3 +8,7 @@
 /build
 /captures
 GeneratedPluginRegistrant.java
+
+key.properties
+/app/key.properties
+/app/google-services.json
