@@ -23,6 +23,7 @@ import '../pageTransitions.dart';
 import 'package:flutter/services.dart';
 import 'viewFbPage.dart';
 import 'dart:ui' as ui;
+import 'package:image_cropper/image_cropper.dart';
 
 class ProfilePage extends StatefulWidget{
 
@@ -72,8 +73,7 @@ AnimationController fbGridController;
 bool fbGridAnimationReversing = false;
 bool fbGridanimationCompletedReversing = true;
 Map fbPhotoHash;
-
-
+String profilePicUrl;
 
 bool userIsViewingFbPhotos = false;
 List<dynamic> fbPhotos = new List();
@@ -87,6 +87,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
   void initState() {
     super.initState();
+    profilePicUrl = widget.profilePicURL;
     startContactsDelay();
     grabCoverPhoto();
     grabBio();
@@ -95,6 +96,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
     makeSureAllDataIsLoaded();
     checkIfUserHasFbPhotos();
     decideWhetherToShowPhotosOrFbLinkBtn();
+
   }
 
 
@@ -148,7 +150,17 @@ static const platform = const MethodChannel('thumbsOutChannel');
                   onPressed:(btnsEnabled) ? (){
                  // changeCoverPhoto();
                     _showProfileSettings('', '', '').then((d){
-                      changeBio();
+
+                      if(d == null){
+                        return;
+                      }
+                      if(d){
+                        changeBio();
+                      }else{
+                        if(mounted){
+                          setState(() {});
+                        }
+                      }
                     });
 
 
@@ -183,7 +195,7 @@ static const platform = const MethodChannel('thumbsOutChannel');
                       children: <Widget>[
                         new GestureDetector(
                           child: new CircleAvatar(radius: 35.0,
-                            backgroundImage: new CachedNetworkImageProvider(widget.profilePicURL),
+                            backgroundImage: new CachedNetworkImageProvider(profilePicUrl),
                             backgroundColor: Colors.transparent,// this should never be null!
                           ),
                           onTap: (btnsEnabled) ? (){
@@ -204,7 +216,6 @@ static const platform = const MethodChannel('thumbsOutChannel');
                               grabBio();
                             }
                           });
-
                         }: null)
                         ) : new Container()
                       ],
@@ -869,19 +880,23 @@ Future<void> changeBio(){
 
 Future<void> changeCoverPhoto()async{
     File newCover = await _pickImage();
-    File resizeImg = await FlutterNativeImage.compressImage(newCover.path, quality: getCoverPicQualityPercentage(newCover.lengthSync()));
+    if(newCover == null){
+      return;
+    }
+
+    var croppedImg = await _cropImageForCover(newCover);
+    File resizeImg = await FlutterNativeImage.compressImage(croppedImg.path, quality: getCoverPicQualityPercentage(croppedImg.lengthSync()));
     String coverURL = await uploadCoverPhoto(resizeImg, globals.id);
+    coverPhoto = coverURL;
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     await ref.child('coverPhotos').child(globals.id).update({'imgURL':coverURL});
 
-    setState(() {
-      coverPhoto = coverURL;
-    });
 }
 
 
   Future<void> addRegularPhoto()async{
     File newCover = await _pickImage();
+
     File resizeImg = await FlutterNativeImage.compressImage(newCover.path, quality: getCoverPicQualityPercentage(newCover.lengthSync()));
     String imgURL = await uploadRegularPhoto(resizeImg);
     DatabaseReference ref = FirebaseDatabase.instance.reference();
@@ -949,10 +964,91 @@ int  getCoverPicQualityPercentage(int size){
 }
 
 
+  Future<void> changeProfilePic()async{
+
+    try{
+      File newPic = await _pickImageForProfilePic();
+      var croppedImg;
+      if(newPic != null){
+        croppedImg = await _cropImage(newPic);
+      }else{
+        return;
+      }
+
+      if(newPic != null){
+        // File resizeImg = await FlutterNativeImage.compressImage(newPic.path, quality: 100,targetHeight: 200,targetWidth: 200);
+        String picURL = await uploadPhoto(croppedImg, globals.id);
+        DatabaseReference ref = FirebaseDatabase.instance.reference();
+        await ref.child(globals.cityCode).child('posts').child(globals.id).update({'imgURL':picURL});
+        await ref.child(globals.cityCode).child('userInfo').child(globals.id).update({'imgURL':picURL});
+        await ref.child('usersCities').child(globals.id).update({'imgURL':picURL});
+
+
+            profilePicUrl = picURL;
+
+
+      }
+    }catch(e){
+      return;
+    }
+  }
+
+  Future<File> _pickImageForProfilePic() async {
+
+    var imageFile = await  ImagePicker.pickImage(source: ImageSource.gallery);
+    return imageFile;
+  }
+
+  Future<File> _cropImage(File imageFile) async {
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      ratioX: 1.0,
+      ratioY: 1.0,
+      maxWidth: 200,
+      maxHeight: 200,
+    );
+
+    return croppedFile;
+  }
+
+
+  Future<File> _cropImageForCover(File imageFile) async {
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      ratioX: 1.0,
+      ratioY: 2.0,
+      maxWidth: 200,
+      maxHeight: 200,
+    );
+
+    return croppedFile;
+  }
+
+
+  Future<String> uploadPhoto(File img, String id) async {
+
+    try{
+      final StorageReference ref = await FirebaseStorage.instance.ref().child("profilePics").child(id).child(secureString.generate(length: 10,charList: ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s']));
+      final dataRes = await ref.putData(img.readAsBytesSync());
+      final dwldUrl = await dataRes.future;
+      setState(() {
+        globals.imgURL = dwldUrl.downloadUrl.toString();
+      });
+      return dwldUrl.downloadUrl.toString();
+
+    }catch(e){
+      print(e);
+      throw new Exception(e);
+    }
+
+  }
 
 
 
-Future<bool> _showFbBSwarning(String title, String primaryMsg, String secondaryMsg) async {
+
+
+
+  Future<bool> _showFbBSwarning(String title, String primaryMsg, String secondaryMsg) async {
   var decision = await showDialog(
     context: context,
     barrierDismissible: false, // user must tap button!
@@ -1017,7 +1113,7 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
   );
 }
 
-  Future<Null> _showProfileSettings(String title, String primaryMsg, String secondaryMsg) async {
+  Future<bool> _showProfileSettings(String title, String primaryMsg, String secondaryMsg) async {
 
     // change bio
     //change cover
@@ -1026,7 +1122,7 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
 
 
 
-    return showDialog<Null>(
+    var res = await showDialog(
       context: context,
       barrierDismissible: true, // user must tap button!
       builder: (BuildContext context) {
@@ -1037,21 +1133,26 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
           content: new SingleChildScrollView(
             child: new ListBody(
               children: <Widget>[
-                new Container(height: 60.0,width: MediaQuery.of(context).size.width/1.5,child:
+                new InkWell(
+                  child: new Container(height: 60.0,width: MediaQuery.of(context).size.width/1.5,child:
                   new Card(
                     color: Colors.yellowAccent,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         new Padding(padding: new EdgeInsets.only(left: 10.0,right: 20.0,top: 10.0,bottom: 10.0),
-                          child: new Icon(Icons.photo,),
+                          child: new Icon(Icons.border_color,),
                         ),
-                           new Text('Change CoverPhoto',style: new TextStyle(fontWeight: FontWeight.bold),)
+                        new Text('Edit Bio',style: new TextStyle(fontWeight: FontWeight.bold),)
 
                       ],
                     ),
                   )
-                  ,),
+                    ,),
+                  onTap: (){
+                    changeBio();
+                  },
+                ),
                 new Container(height: 60.0,width: MediaQuery.of(context).size.width/1.5,child:
                 new InkWell(
                   child: new Card(
@@ -1060,14 +1161,18 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         new Padding(padding: new EdgeInsets.only(left: 10.0,right: 20.0,top: 10.0,bottom: 10.0),
-                          child: new Icon(Icons.border_color,),
+                          child: new Icon(Icons.photo,),
                         ),
-                        new Text('Change Bio',style: new TextStyle(fontWeight: FontWeight.bold),)
+                        new Text('Edit Cover Photo',style: new TextStyle(fontWeight: FontWeight.bold),)
                       ],
                     ),
                   ),
                   onTap: ()async{
-                   await changeCoverPhoto();
+                  try{
+                    await changeCoverPhoto();
+                  }catch(e){
+
+                  }
                    Navigator.of(context).pop(false);
 
                   },
@@ -1083,13 +1188,19 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
                        new Padding(padding: new EdgeInsets.only(left: 10.0,right: 20.0,top: 10.0,bottom: 10.0),
                          child: new Icon(Icons.perm_identity,),
                        ),
-                       new Text('Change Profile Pic',style: new TextStyle(fontWeight: FontWeight.bold),)
+                       new Text('Edit Profile Pic',style: new TextStyle(fontWeight: FontWeight.bold),)
 
                      ],
                    ),
                  ),
-                 onTap: (){
-                   Navigator.of(context).pop(true);
+                 onTap: ()async {
+                   try{
+                     await changeProfilePic();
+
+                   }catch(e){
+                     //
+                   }
+                   Navigator.of(context).pop(false);
                  },
                )
                   ,)
@@ -1103,6 +1214,8 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
         );
       },
     );
+
+    return res;
   }
 
 

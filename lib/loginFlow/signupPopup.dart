@@ -77,7 +77,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
   @override
   Widget build(BuildContext context) {
     return new SimpleDialog(
-      title: new Row(
+      title:(!loading) ? new Row(
             mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
               (stage2) ? new InkWell(child: new Icon(Icons.keyboard_arrow_left), onTap: (){
@@ -88,11 +88,15 @@ class _SignupPopUpState extends State<SignupPopUp> {
             }) : new Container(),
               new Expanded(child: new Text((stage1) ? 'Graduation Year?' : (stage2 && !loading) ? 'Which best describes you?' : 'loading...', textAlign: TextAlign.center,))
           ],
+        ) : new Container(
+        child: new Center(
+          child: new CircularProgressIndicator(),
         ),
+      ),
       children: <Widget>[
-        new Stack(
+        (!loading) ?  new Stack(
           children: <Widget>[
-            (stage1) ?  selectGradYear() : (stage2 && !loading) ? selectRiderOrDriverForSnap() : new Container(),
+            (stage1) ?  selectGradYearPicker() : (stage2 && !loading) ? selectRiderOrDriverForSnap() : new Container(),
     (loading) ? new Align(
       alignment: new Alignment(0.0, -2.0),
       child: new CircularProgressIndicator(
@@ -100,7 +104,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
       )
     ): new Container(),
           ],
-        )
+        ) : new Container(),
       ],
     );
   }
@@ -137,28 +141,47 @@ class _SignupPopUpState extends State<SignupPopUp> {
     );
   }
 
+    Widget selectGradYearPicker() {
+      return new Container(
+//          height: 170.0,
+//          width: MediaQuery.of(context).size.width - 50.0,
+          child: new Center(
+              child: new GridView.builder(
+                  itemCount: yearList.length,
+                  gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2
+                ),
+                itemBuilder: (BuildContext context, int index)
+                   {
+                     return yearCell(Colors.yellowAccent, index);
+                   }
+                 )
+               )
+           );
+       }
+
   Widget yearCell(Color color, int index){
     return new Padding(
-      padding: new EdgeInsets.all(5.0),
+      padding: new EdgeInsets.all(8.0),
       child: new Container(
         height: 50.0,
         width: 90.0,
-        child: new InkWell(
+        child: new RaisedButton(
+          color: Colors.yellowAccent,
           child: new Center(
-            child: new Text(yearList[index - 1],style: new TextStyle(fontWeight: FontWeight.bold),),
+            child: new Text(yearList[index],style: new TextStyle(fontWeight: FontWeight.bold),),
           ),
-            onTap: (){
-
+            onPressed: (){
               setState(() {
                 setColors(index);
                 stage1 = false;
                 stage2 = true;
-                gradYear = yearList[index - 1];
+                gradYear = yearList[index];
               });
             }
         ),
         decoration: new BoxDecoration(
-            border: new Border.all(color: color),
+          //  border: new Border.all(color: color),
             borderRadius: new BorderRadius.all(new Radius.circular(10.0)),
            color: Colors.yellowAccent
         ),
@@ -214,7 +237,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
             decoration: new BoxDecoration(
               borderRadius: new BorderRadius.all(new Radius.circular(10.0)),
             ),
-            child:new FlatButton(
+            child:new RaisedButton(
               color: Colors.yellowAccent,
               child: new Text(
                 'Passenger',
@@ -241,8 +264,9 @@ class _SignupPopUpState extends State<SignupPopUp> {
             decoration: new BoxDecoration(
               borderRadius: new BorderRadius.all(new Radius.circular(40.0)),
             ),
-            child:new FlatButton(
+            child:new RaisedButton(
               color: Colors.yellowAccent,
+
               child: new Text(
                 'Driver',
                 style: new TextStyle(color: Colors.black),

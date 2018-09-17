@@ -20,6 +20,7 @@ import '../postSubmission/postSubmitPopUp.dart';
 import '../modifiedExpansionTile.dart';
 
 
+
 typedef UIcallback = void Function();
 
 typedef ActionButtonCallback = void Function(bool hidden);
@@ -274,6 +275,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
                   // comment input textfield (height does not change!)
                    new Stack(
+                     alignment: Alignment.centerLeft,
                      children: <Widget>[
                        new Container(
                          child: new ConstrainedBox(
@@ -281,11 +283,13 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                              minWidth: MediaQuery.of(context).size.width - 48.0,
                              maxWidth: MediaQuery.of(context).size.width - 47.0,
                              minHeight: 33.0,
-                             maxHeight: 34.0,
+                             maxHeight: 60.0,
                            ),
                            child: new Container(
+
                              margin: const EdgeInsets.symmetric(horizontal: 9.0),
                              child: new SingleChildScrollView(
+
                                  reverse: (commentNode.hasFocus) ? true : false,
                                  scrollDirection: Axis.vertical,
                                  child: new EnsureVisibleWhenFocused(child: new TextField(
@@ -316,13 +320,15 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                          ),
                        ),
                        new Align(
-                         alignment: new Alignment(0.95, 0.4),
+                         alignment: new Alignment(0.95, -1.0),
                          child: new GestureDetector(
-                           child: new Icon(Icons.send,color: Colors.grey,),
-                           onTap: (){},
+                            child: new Icon(Icons.send,color: Colors.grey,),
+                           onTap: (){
+
+                             sendCommentHandler(widget.snapshot);
+                           },
                          )
                        )
-//
                      ],
                    ),
                   // container for comment stream, height changes up to 3 comments, then stays the same!
@@ -470,10 +476,8 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
               ),
             ],
           ),
-
-
-        ),)
-
+        ),
+        )
       ),
 
     );
@@ -883,16 +887,16 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
     if(count != null){
       switch (count){
         case 1:
-          return 140.0;
+          return 140.0 + 26.0;
           break;
         case 2:
-          return 220.0;
+          return 220.0 + 26.0;
           break;
         case 3:
-          return 250.0;
+          return 250.0 + 26.0;
           break;
         default:
-          return 280.0;
+          return 280.0 + 26.0;
       }
     }else{
     }

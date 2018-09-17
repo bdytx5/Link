@@ -5,9 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="644d45a3-af24-48cd-a4c6-ccde61fbae53" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/android/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/android/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/key.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/ios/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ios/Runner/GoogleService-Inforeak.plist" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/homePage/chatList.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/chatList.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/homePage/feedStream.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/feedStream.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/homePage/home.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/homePage/home.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/loginFlow/signupPopup.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/loginFlow/signupPopup.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/profilePages/profilePage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/profilePages/profilePage.dart" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.dart_tool/" />
     <ignored path="$PROJECT_DIR$/.idea/" />
@@ -41,8 +46,10 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="dart" value="167" />
+          <entry key="bat" value="1" />
+          <entry key="dart" value="178" />
           <entry key="gradle" value="10" />
+          <entry key="gradlew" value="1" />
           <entry key="lock" value="1" />
           <entry key="m" value="2" />
           <entry key="png" value="1" />
@@ -53,10 +60,10 @@
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Dart" value="167" />
+          <entry key="Dart" value="178" />
           <entry key="Groovy" value="10" />
           <entry key="Image" value="1" />
-          <entry key="PLAIN_TEXT" value="3" />
+          <entry key="PLAIN_TEXT" value="5" />
           <entry key="Properties" value="10" />
           <entry key="XML" value="3" />
           <entry key="YAML" value="3" />
@@ -64,7 +71,7 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="dart" value="25110" />
+          <entry key="dart" value="25990" />
           <entry key="gradle" value="15" />
           <entry key="m" value="15" />
           <entry key="properties" value="11" />
@@ -73,7 +80,7 @@
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Dart" value="25110" />
+          <entry key="Dart" value="25990" />
           <entry key="Groovy" value="15" />
           <entry key="PLAIN_TEXT" value="15" />
           <entry key="Properties" value="11" />
@@ -90,59 +97,104 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/profilePages/profilePage.dart">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="16">
-              <caret line="347" column="14" selection-start-line="347" selection-start-column="14" selection-end-line="347" selection-end-column="14" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/android/build.gradle">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="541">
-              <caret line="41" selection-start-line="41" selection-end-line="41" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/android/app/key.properties">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/android/app/google-services.json">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/lib/homePage/chatListStream.dart">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="410">
-              <caret line="183" selection-start-line="183" selection-end-line="183" />
+            <state relative-caret-position="65">
+              <caret line="352" column="27" selection-start-line="352" selection-start-column="27" selection-end-line="352" selection-end-column="27" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/android/key.properties">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/lib/homePage/home.dart">
+        <entry file="file://$PROJECT_DIR$/lib/loginFlow/signupPopup.dart">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="217">
-              <caret line="921" selection-start-line="921" selection-end-line="932" />
+            <state relative-caret-position="-2717">
+              <caret line="104" column="23" lean-forward="true" selection-start-line="104" selection-start-column="23" selection-end-line="104" selection-end-column="23" />
+              <folding>
+                <marker date="1537081432196" expanded="true" signature="5638:5848" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/lib/profilePages/editProfilePopup.dart">
+        <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/widgets/basic.dart">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="9" column="22" selection-start-line="9" selection-start-column="22" selection-end-line="9" selection-end-column="22" />
+            <state relative-caret-position="181">
+              <caret line="3894" column="8" selection-start-line="3894" selection-start-column="8" selection-end-line="3894" selection-end-column="8" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="245">
+              <caret line="666" column="11" selection-start-line="666" selection-start-column="11" selection-end-line="666" selection-end-column="11" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/material/flat_button.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-87">
+              <caret line="50" column="8" selection-start-line="50" selection-start-column="8" selection-end-line="50" selection-end-column="8" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/loginFlow/selectSchool.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="568">
+              <caret line="603" column="4" selection-start-line="603" selection-start-column="4" selection-end-line="603" selection-end-column="4" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/homePage/home.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="296">
+              <caret line="33" column="46" selection-start-line="33" selection-start-column="46" selection-end-line="33" selection-end-column="46" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/image_cropper-0.0.4/lib/image_cropper.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="30">
+              <caret line="7" column="6" selection-start-line="7" selection-start-column="6" selection-end-line="7" selection-end-column="6" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/homePage/feedStream.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="300">
+              <caret line="20" selection-start-line="20" selection-end-line="20" />
+              <folding>
+                <element signature="e#0#39#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/widgets/framework.dart">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1118">
+              <caret line="933" column="8" selection-start-line="933" selection-start-column="8" selection-end-line="933" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -158,27 +210,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>animation</find>
-      <find>160.0</find>
-      <find>.add</find>
-      <find>.forwar</find>
-      <find>hascontacts</find>
-      <find>contactslistbuil</find>
-      <find>contactslist</find>
-      <find>contactsani</find>
-      <find>completed</find>
-      <find>contactsanimationco</find>
-      <find>icon</find>
-      <find>curve</find>
-      <find>fbphoto</find>
-      <find>photogrid</find>
-      <find>fbPhotos</find>
-      <find>userisviewingfbp</find>
-      <find>.reverse</find>
-      <find>sendcomme</find>
-      <find>columbia</find>
-      <find>== null</find>
-      <find>city</find>
       <find>users</find>
       <find>citycode</find>
       <find>search</find>
@@ -186,8 +217,29 @@
       <find>edit</find>
       <find>changebi</find>
       <find>changeprofile</find>
+      <find>commentnode</find>
+      <find>textfield</find>
+      <find>changepro</find>
+      <find>changeprof</find>
+      <find>image</find>
+      <find>.pop</find>
+      <find>profilepic</find>
+      <find>circleavata</find>
+      <find>imagecroppe</find>
+      <find>.then</find>
+      <find>res</find>
       <find>crop</find>
       <find>changecover</find>
+      <find>settings</find>
+      <find>loading</find>
+      <find>'driver</find>
+      <find>passe</find>
+      <find>2020</find>
+      <find>yearli</find>
+      <find>gridview</find>
+      <find>yearlist</find>
+      <find>expanded</find>
+      <find>Expanded</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -228,11 +280,9 @@
         <option value="$PROJECT_DIR$/android/app/build.gradle" />
         <option value="$PROJECT_DIR$/../flutter/packages/flutter/lib/src/material/text_field.dart" />
         <option value="$PROJECT_DIR$/lib/homePage/feed.dart" />
-        <option value="$PROJECT_DIR$/lib/homePage/chatList.dart" />
         <option value="$PROJECT_DIR$/lib/postSubmission/submitpost.dart" />
         <option value="$PROJECT_DIR$/lib/loginFlow/selectSchool.dart" />
         <option value="$PROJECT_DIR$/lib/postSubmission/postSubmitPopUp.dart" />
-        <option value="$PROJECT_DIR$/lib/loginFlow/signupPopup.dart" />
         <option value="$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart" />
         <option value="$PROJECT_DIR$/lib/photoView/lib/photo_view.dart" />
         <option value="$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/photo_view-0.0.7/lib/photo_view_image_wrapper.dart" />
@@ -242,15 +292,17 @@
         <option value="$PROJECT_DIR$/lib/photoView/photo_view_image_wrapper.dart" />
         <option value="$PROJECT_DIR$/lib/profilePages/viewPicture.dart" />
         <option value="$PROJECT_DIR$/lib/loginFlow/login_page.dart" />
-        <option value="$PROJECT_DIR$/lib/homePage/feedStream.dart" />
         <option value="$PROJECT_DIR$/lib/main.dart" />
         <option value="$PROJECT_DIR$/lib/profilePages/editProfilePopup.dart" />
+        <option value="$PROJECT_DIR$/lib/homePage/chatList.dart" />
         <option value="$PROJECT_DIR$/lib/homePage/home.dart" />
+        <option value="$PROJECT_DIR$/lib/homePage/feedStream.dart" />
         <option value="$PROJECT_DIR$/lib/profilePages/profilePage.dart" />
+        <option value="$PROJECT_DIR$/lib/loginFlow/signupPopup.dart" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="y" value="23" />
     <option name="width" value="1440" />
     <option name="height" value="797" />
@@ -275,28 +327,6 @@
             <path>
               <item name="Link" type="b2602c69:ProjectViewProjectNode" />
               <item name="Link" type="462c0819:PsiDirectoryNode" />
-              <item name="android" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Link" type="462c0819:PsiDirectoryNode" />
-              <item name="android" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Link" type="462c0819:PsiDirectoryNode" />
-              <item name="ios" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Link" type="462c0819:PsiDirectoryNode" />
-              <item name="ios" type="462c0819:PsiDirectoryNode" />
-              <item name="Runner" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Link" type="462c0819:PsiDirectoryNode" />
               <item name="lib" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -304,6 +334,24 @@
               <item name="Link" type="462c0819:PsiDirectoryNode" />
               <item name="lib" type="462c0819:PsiDirectoryNode" />
               <item name="homePage" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Link" type="462c0819:PsiDirectoryNode" />
+              <item name="lib" type="462c0819:PsiDirectoryNode" />
+              <item name="loginFlow" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Link" type="462c0819:PsiDirectoryNode" />
+              <item name="lib" type="462c0819:PsiDirectoryNode" />
+              <item name="notifications" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Link" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Link" type="462c0819:PsiDirectoryNode" />
+              <item name="lib" type="462c0819:PsiDirectoryNode" />
+              <item name="postSubmission" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Link" type="b2602c69:ProjectViewProjectNode" />
@@ -403,9 +451,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="797" extended-state="0" />
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.8331035" visible="true" weight="0.22389127" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.8331035" visible="true" weight="0.17310444" />
       <window_info id="Structure" order="1" sideWeight="0.5011792" side_tool="true" weight="0.10603654" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -417,11 +466,11 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49946752" weight="0.23781094" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32891566" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.82117313" visible="true" weight="0.0" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.82117313" weight="0.31445783" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.49960285" weight="0.32891566" />
-      <window_info anchor="bottom" id="Dart Analysis" order="7" sideWeight="0.82546496" weight="0.1106383" />
+      <window_info active="true" anchor="bottom" id="Dart Analysis" order="7" sideWeight="0.82546496" visible="true" weight="0.031325303" />
       <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.2081545" side_tool="true" weight="0.26666668" />
       <window_info anchor="bottom" id="Logcat" order="9" sideWeight="0.49928468" weight="0.32891566" />
       <window_info anchor="bottom" id="Version Control" order="10" sideWeight="0.49960285" weight="0.0" />
@@ -564,27 +613,27 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/homePage/feedStream.dart</url>
-          <line>846</line>
+          <line>850</line>
           <option name="timeStamp" value="672" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/homePage/feedStream.dart</url>
-          <line>847</line>
+          <line>851</line>
           <option name="timeStamp" value="673" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/homePage/feedStream.dart</url>
-          <line>849</line>
+          <line>853</line>
           <option name="timeStamp" value="674" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/homePage/feedStream.dart</url>
-          <line>857</line>
+          <line>861</line>
           <option name="timeStamp" value="675" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/lib/homePage/feedStream.dart</url>
-          <line>854</line>
+          <line>858</line>
           <option name="timeStamp" value="677" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
@@ -601,11 +650,6 @@
           <url>file://$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart</url>
           <line>205</line>
           <option name="timeStamp" value="724" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="Dart">
-          <url>file://$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart</url>
-          <line>665</line>
-          <option name="timeStamp" value="725" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/image_picker-0.4.6/android/src/main/java/io/flutter/plugins/imagepicker/ImagePickerDelegate.java</url>
@@ -641,48 +685,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/rendering/sliver_multi_box_adaptor.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2985">
-          <caret line="208" column="10" selection-start-line="208" selection-start-column="10" selection-end-line="208" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/material/input_decorator.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="317">
-          <caret line="1874" column="5" lean-forward="true" selection-start-line="1874" selection-start-column="5" selection-end-line="1874" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_database-1.0.3/lib/ui/firebase_animated_list.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2160">
-          <caret line="151" column="24" selection-start-line="151" selection-start-column="24" selection-end-line="151" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/firebase_database-1.0.3/lib/ui/firebase_list.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="495">
-          <caret line="41" column="9" selection-start-line="41" selection-start-column="9" selection-end-line="41" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/homePage/chatListStream.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="410">
-          <caret line="183" selection-start-line="183" selection-end-line="183" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/material/text_field.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="39" column="44" selection-start-line="39" selection-start-column="40" selection-end-line="39" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/postSubmission/submitpost.dart">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1005">
@@ -692,13 +694,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/Chat/msgStream.dart">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/homePage/chatList.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3120">
-          <caret line="208" column="8" selection-start-line="208" selection-start-column="8" selection-end-line="208" selection-end-column="8" />
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/homePage/feed.dart">
       <provider selected="true" editor-type-id="text-editor">
@@ -721,23 +716,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/loginFlow/signupPopup.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="281" column="5" selection-start-line="281" selection-start-column="5" selection-end-line="281" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/loginFlow/selectSchool.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="38" column="36" selection-start-line="38" selection-start-column="36" selection-end-line="38" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#39#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/loginFlow/splashtwo.dart">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="224">
@@ -756,16 +734,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5160">
           <caret line="350" column="6" selection-start-line="350" selection-start-column="6" selection-end-line="350" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-245">
-          <caret line="638" selection-start-line="638" selection-end-line="638" />
-          <folding>
-            <element signature="e#0#39#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -854,13 +822,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/widgets/framework.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16005">
-          <caret line="1093" column="7" selection-start-line="1093" selection-start-column="7" selection-end-line="1093" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/photoView/photo_view_scale_boundaries.dart">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="150">
@@ -872,13 +833,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3750">
           <caret line="253" column="20" selection-start-line="253" selection-start-column="20" selection-end-line="253" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/homePage/feedStream.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="38" column="47" selection-start-line="38" selection-start-column="47" selection-end-line="38" selection-end-column="47" />
         </state>
       </provider>
     </entry>
@@ -916,19 +870,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/android/app/key.properties">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/android/app/google-services.json">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/homePage/home.dart">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="217">
-          <caret line="921" selection-start-line="921" selection-end-line="932" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/profilePages/editProfilePopup.dart">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
@@ -936,12 +877,27 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/profilePages/profilePage.dart">
+    <entry file="file://$PROJECT_DIR$/lib/homePage/chatList.dart">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16">
-          <caret line="347" column="14" selection-start-line="347" selection-start-column="14" selection-end-line="347" selection-end-column="14" />
+        <state relative-caret-position="1800">
+          <caret line="139" column="53" selection-start-line="139" selection-start-column="53" selection-end-line="139" selection-end-column="53" />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/gradlew.bat">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/gradlew">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/key.properties">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/app/google-services.json">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/android/app/key.properties">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/android/build.gradle">
       <provider selected="true" editor-type-id="text-editor">
@@ -950,8 +906,97 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/android/key.properties">
-      <provider selected="true" editor-type-id="text-editor" />
+    <entry file="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/image_cropper-0.0.4/lib/image_cropper.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="7" column="6" selection-start-line="7" selection-start-column="6" selection-end-line="7" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/homePage/feedStream.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="20" selection-start-line="20" selection-end-line="20" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/widgets/framework.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1118">
+          <caret line="933" column="8" selection-start-line="933" selection-start-column="8" selection-end-line="933" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/homePage/home.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="296">
+          <caret line="33" column="46" selection-start-line="33" selection-start-column="46" selection-end-line="33" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/loginFlow/selectSchool.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="568">
+          <caret line="603" column="4" selection-start-line="603" selection-start-column="4" selection-end-line="603" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/widgets/navigator.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="258">
+          <caret line="553" column="6" selection-start-line="553" selection-start-column="6" selection-end-line="553" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/loginFlow/customizeProfile.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="245">
+          <caret line="666" column="11" selection-start-line="666" selection-start-column="11" selection-end-line="666" selection-end-column="11" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/material/flat_button.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-87">
+          <caret line="50" column="8" selection-start-line="50" selection-start-column="8" selection-end-line="50" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/profilePages/profilePage.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="65">
+          <caret line="352" column="27" selection-start-line="352" selection-start-column="27" selection-end-line="352" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../flutter/packages/flutter/lib/src/widgets/basic.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="181">
+          <caret line="3894" column="8" selection-start-line="3894" selection-start-column="8" selection-end-line="3894" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/loginFlow/signupPopup.dart">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2717">
+          <caret line="104" column="23" lean-forward="true" selection-start-line="104" selection-start-column="23" selection-end-line="104" selection-end-column="23" />
+          <folding>
+            <marker date="1537081432196" expanded="true" signature="5638:5848" ph="..." />
+          </folding>
+        </state>
+      </provider>
     </entry>
   </component>
   <component name="masterDetails">

@@ -138,7 +138,6 @@ class _chatListState extends State<ChatList> with AutomaticKeepAliveClientMixin<
       key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
       // prevents widget movement when keyboard shows
-
       body: new Column(
         children: <Widget>[
           (userIsSearching) ? new Container(

@@ -564,6 +564,19 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
     return imageFile;
   }
 
+  Future<File> _cropImage(File imageFile) async {
+    File croppedFile = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      ratioX: 1.0,
+      ratioY: 1.0,
+      maxWidth: 200,
+      maxHeight: 200,
+    );
+
+    return croppedFile;
+  }
+
+
 
 
 
@@ -918,18 +931,6 @@ Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) as
 
 
 
-
-  Future<File> _cropImage(File imageFile) async {
-    File croppedFile = await ImageCropper.cropImage(
-      sourcePath: imageFile.path,
-      ratioX: 1.0,
-      ratioY: 1.0,
-      maxWidth: 200,
-      maxHeight: 200,
-    );
-
-    return croppedFile;
-  }
 
 
 
