@@ -79,8 +79,8 @@ static const platform = const MethodChannel('thumbsOutChannel');
     grabSchoolAndGradYear();
     getContactInfo();
     makeSureAllDataIsLoaded();
-    checkIfUserHasFbPhotos();
-    decideWhetherToShowPhotosOrFbLinkBtn();
+    //checkIfUserHasFbPhotos();
+    //decideWhetherToShowPhotosOrFbLinkBtn();
   }
 
 
@@ -102,8 +102,8 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     fit: BoxFit.cover)),
               ),
               onTap:(btnsEnabled) ? (){
-                Navigator.push(context,
-                    new ShowRoute(widget: viewPicPage(cover: true,imgURL: coverPhoto,regularPhoto: false,userIsViewingTheirOwnPhoto:false,)));
+//                Navigator.push(context,
+//                    new ShowRoute(widget: viewPicPage(cover: true,imgURL: coverPhoto,regularPhoto: false,userIsViewingTheirOwnPhoto:false,)));
               } : null
             ) : new Container(child:new Center(
               child: new CircularProgressIndicator(),
@@ -302,10 +302,11 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     width: 48.0,
                     decoration: new BoxDecoration(
                         color: Colors.blue, shape: BoxShape.circle),
-                    child:(userHasFbPhotos != null && userHasTempPhotos != null) ? new IconButton(
-                        icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
+                    child: new IconButton(
+                     //   icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
+                       icon: new ImageIcon(fbIcon, color: Colors.white,),
                         onPressed: (btnsEnabled) ? _handlePhotoBtnTap : null
-                    ) : new Container(),
+                    ),
                   ),
                 ],
               )
@@ -386,25 +387,26 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
 
   void _handlePhotoBtnTap(){
-    if(userIsViewingFbPhotos){
-      setState(() {
-        userIsViewingFbPhotos = false;
-      });
-      return;
-    }
-    if(!userHasFbPhotos){
-      if(userHasTempPhotos){
-        setState(() {
-          userIsViewingFbPhotos = true;
-        });
-      }else{
-        showFb();
-      }
-    }else{
-      setState(() {
-        userIsViewingFbPhotos = true;
-      });
-    }
+//    if(userIsViewingFbPhotos){
+//      setState(() {
+//        userIsViewingFbPhotos = false;
+//      });
+//      return;
+//    }
+//    if(!userHasFbPhotos){
+//      if(userHasTempPhotos){
+//        setState(() {
+//          userIsViewingFbPhotos = true;
+//        });
+//      }else{
+//        showFb();
+//      }
+//    }else{
+//      setState(() {
+//        userIsViewingFbPhotos = true;
+//      });
+//    }
+  showFb();
   }
 
 

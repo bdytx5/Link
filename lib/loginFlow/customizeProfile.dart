@@ -328,7 +328,11 @@ class _customizeProfileState extends State<customizeProfile> {
 
   Future<void> changeProfilePic()async{
     File pic =  await  ImagePicker.pickImage(source: ImageSource.gallery);
+    if(pic == null){
+      return;
+    }
     File croppedPic = await _cropProfilePic(pic);
+
     setState(() {
       pic = croppedPic;
     });
