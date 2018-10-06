@@ -33,12 +33,13 @@ class Feed extends StatefulWidget {
 
   final UIcallback commentNotificationCallback;
 
-  Feed({this.app, this.userID, this.commentNotificationCallback,this.keyboardNeedsDismissed, this.keyboardDismissalStreamController, this.destination, this.transportMode});
+  Feed({this.app, this.userID, this.commentNotificationCallback,this.keyboardNeedsDismissed, this.keyboardDismissalStreamController, this.destination, this.transportMode, this.contacts});
     final FirebaseApp app;
     String userID;
     final bool keyboardNeedsDismissed;
     final String transportMode;
     final LatLng destination;
+    final List<String> contacts;
 
   final StreamController keyboardDismissalStreamController;// for communicating down the widget tree to dismiss the keyboard
 
@@ -91,7 +92,6 @@ class _FeedState extends State<Feed> with AutomaticKeepAliveClientMixin<Feed> {
     destination = widget.destination;
     transportMode = widget.transportMode;
 
-
     updateGlobalInfo(globals.id);
 
 
@@ -112,7 +112,7 @@ class _FeedState extends State<Feed> with AutomaticKeepAliveClientMixin<Feed> {
             setState(() {
               commenting = !commenting;
             });
-          },widget.commentNotificationCallback,widget.keyboardDismissalStreamController,transportMode,destination) : new CircularProgressIndicator(),
+          },widget.commentNotificationCallback,widget.keyboardDismissalStreamController,transportMode,destination,widget.contacts) : new CircularProgressIndicator(),
         ),
       ),
       floatingActionButton: (!commenting) ? new FloatingActionButton(

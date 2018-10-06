@@ -94,8 +94,8 @@ static const platform = const MethodChannel('thumbsOutChannel');
     grabSchoolAndGradYear();
     getContactInfo();
     makeSureAllDataIsLoaded();
-    checkIfUserHasFbPhotos();
-    decideWhetherToShowPhotosOrFbLinkBtn();
+   // checkIfUserHasFbPhotos();
+   // decideWhetherToShowPhotosOrFbLinkBtn();
 
   }
 
@@ -144,29 +144,29 @@ static const platform = const MethodChannel('thumbsOutChannel');
 
             profileView(),
 
-            new Align(
-              alignment: (globals.id == widget.id) ? new Alignment(0.9, -0.9) : new Alignment(0.94, -1.2) ,
-              child: new IconButton(icon: new Icon(Icons.settings,color: Colors.white,),
-                  onPressed:(btnsEnabled) ? (){
-                 // changeCoverPhoto();
-                    _showProfileSettings('', '', '').then((d){
-
-                      if(d == null){
-                        return;
-                      }
-                      if(d){
-                        changeBio();
-                      }else{
-                        if(mounted){
-                          setState(() {});
-                        }
-                      }
-                    });
-
-
-                  } : null
-                  )
-            )
+//            new Align(
+//              alignment: (globals.id == widget.id) ? new Alignment(0.9, -0.9) : new Alignment(0.94, -1.2) ,
+//              child: new IconButton(icon: new Icon(Icons.settings,color: Colors.white,),
+//                  onPressed:(btnsEnabled) ? (){
+//                 // changeCoverPhoto();
+//                    _showProfileSettings('', '', '').then((d){
+//
+//                      if(d == null){
+//                        return;
+//                      }
+//                      if(d){
+//                        changeBio();
+//                      }else{
+//                        if(mounted){
+//                          setState(() {});
+//                        }
+//                      }
+//                    });
+//
+//
+//                  } : null
+//                  )
+//            )
 
 
           ],
@@ -208,14 +208,28 @@ static const platform = const MethodChannel('thumbsOutChannel');
                         (globals.id == widget.id) ? new Padding(padding: new EdgeInsets.only(top: 5.0),
                         child: GestureDetector(
                             child: new Icon(Icons.settings, size: 20.0,color: Colors.grey[800],), onTap: (btnsEnabled) ? (){
-                          showDialog(context: context, builder: (BuildContext context) => new EditProfilePopup()).then((changed){
-                            if(changed ==null){
+
+                          _showProfileSettings('', '', '').then((d){
+
+                            if(d == null){
                               return;
                             }
-                            if(changed){
-                              grabBio();
+                            if(d){
+                              changeBio();
+                            }else{
+                              if(mounted){
+                                setState(() {});
+                              }
                             }
                           });
+//                          showDialog(context: context, builder: (BuildContext context) => new EditProfilePopup()).then((changed){
+//                            if(changed ==null){
+//                              return;
+//                            }
+//                            if(changed){
+//                              grabBio();
+//                            }
+//                          });
                         }: null)
                         ) : new Container()
                       ],
@@ -280,10 +294,11 @@ static const platform = const MethodChannel('thumbsOutChannel');
                 ),
                    new Divider(),
 
-                (userHasFbPhotos != null ) ? ((userHasFbPhotos && userIsViewingFbPhotos) ? new Expanded(child: fbPhotosGrid()) : new Container()) : new Container(),
+             //   (userHasFbPhotos != null ) ? ((userHasFbPhotos && userIsViewingFbPhotos) ? new Expanded(child: fbPhotosGrid()) : new Container()) : new Container(),
 
       (fullName != null && hasContacts && !userIsViewingFbPhotos && fbGridanimationCompletedReversing) ? new Text("${getFirstName(fullName)}'s contacts", style: new TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.grey[600]),) : (fullName != null && !userIsViewingFbPhotos && fbGridanimationCompletedReversing) ? new Text("${getFirstName(fullName)} doesn't have any contacts yet",style: new TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.grey[600]),) : (fullName != null && !userIsViewingFbPhotos && fbGridanimationCompletedReversing && contactsAnimationCompleted) ? new Text("${getFirstName(fullName)} doesn't have any contacts yet",style: new TextStyle(
+          fontWeight: FontWeight.bold, color: Colors.grey[600])) : (!hasContacts && fullName != null &&  contactsAnimationCompleted ) ? new Text("${getFirstName(fullName)} doesn't have any contacts yet",style: new TextStyle(
           fontWeight: FontWeight.bold, color: Colors.grey[600])) : new Text(''),
 
                 (hasContacts && !userIsViewingFbPhotos && fbGridanimationCompletedReversing && contactsAnimationCompleted)  ?
@@ -330,10 +345,17 @@ static const platform = const MethodChannel('thumbsOutChannel');
                     width: 48.0,
                     decoration: new BoxDecoration(
                         color: Colors.blue, shape: BoxShape.circle),
-                    child:(userHasFbPhotos != null && userHasTempPhotos != null) ? new IconButton(
-                        icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos ) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : (fbGridAnimationReversing) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
-                        onPressed: (btnsEnabled) ? _handlePhotoBtnTap : null
-                    ) : new Container(),
+//                    child:(userHasFbPhotos != null && userHasTempPhotos != null) ? new IconButton(
+//                        icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos ) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : (fbGridAnimationReversing) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
+//                        onPressed: (btnsEnabled) ? _handlePhotoBtnTap : null
+//                    ) : new Container(),
+                  child: new IconButton(
+                    //   icon: ((userHasFbPhotos && !userIsViewingFbPhotos )||userHasTempPhotos) ? new Icon(Icons.photo,color: Colors.white,) : (userIsViewingFbPhotos) ? new Icon(Icons.keyboard_arrow_down,color: Colors.white,size: 28.0,) : new ImageIcon(fbIcon, color: Colors.white,),
+                    icon: new ImageIcon(fbIcon, color: Colors.white,),
+                onPressed: (btnsEnabled) ? (){
+                      showFb();
+                } :(){}
+            ),
                   ),
                 ],
               )
@@ -511,6 +533,10 @@ static const platform = const MethodChannel('thumbsOutChannel');
         });
       });
 
+    }else{
+      setState(() {
+        contactsAnimationCompleted = true;
+      });
     }
 
 
@@ -780,8 +806,15 @@ Future<void> getContactInfo()async{
       contactImgInfo[id] = usersInfo.value['imgURL'];
       contactNameInfo[id] = usersInfo.value['fullName'];
     }
+    setState(() {
+      hasContacts = true;
+    });
     animateContactsListUp();
 
+  }else{
+    setState(() {
+      contactsAnimationCompleted = true;
+    });
   }
 }
 

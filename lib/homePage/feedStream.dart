@@ -10,6 +10,8 @@ import '../globals.dart' as globals;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
+import 'package:firebase_database/ui/firebase_list.dart';
+
 import 'profileSheet.dart';
 import 'feed.dart';
 import 'chatList.dart';
@@ -41,14 +43,15 @@ class feedStream extends StatelessWidget {
   final StreamController keyboardDismissalStreamController;
   final String transportMode;
   final LatLng destination;
+  final List<String> contacts;
 
 
-    feedStream(this.scaffoldKey, this.actionButtonCallback, this.commentNotificationCallback,this.keyboardDismissalStreamController, this.transportMode, this.destination);
+    feedStream(this.scaffoldKey, this.actionButtonCallback, this.commentNotificationCallback,this.keyboardDismissalStreamController, this.transportMode, this.destination, this.contacts);
   @override
   Widget build(BuildContext context) {
 
     return new Container(
-      child: buildFeedStream(),
+      child: buildFeedStream(contacts),
 
     );
   }
@@ -57,7 +60,7 @@ class feedStream extends StatelessWidget {
 
 
 
-  FirebaseAnimatedList buildFeedStream()  {
+  FirebaseAnimatedList buildFeedStream(List<String> contacts)  {
 //    print(globals.city);
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     final falQuery = ref.child(globals.cityCode).child('posts').orderByChild('key');
@@ -69,7 +72,8 @@ class feedStream extends StatelessWidget {
         padding: new EdgeInsets.all(8.0),
         reverse: false,
       // sort: (DataSnapshot a, DataSnapshot b) => (a.key != globals.id) ? sortFeed(a, b) : -1,
-        sort: (DataSnapshot a, DataSnapshot b) => sortFeed(a, b, transportMode, destination),
+        sort: (DataSnapshot a, DataSnapshot b) => sortFeed(a, b, transportMode, destination,contacts),
+       // sort: (DataSnapshot a, DataSnapshot b) =>(a.key.compareTo(b.key)),
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
           // here we can just look up every user from the snapshot, and then pass it into the chat message
 
@@ -92,7 +96,7 @@ class feedStream extends StatelessWidget {
 
 
 
-int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destination){
+int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destination, List<String> contacts){
   // we are sorting the array as follows
   // if user is a driver, we will put all riders first, and vice versa
   // then with those riders, we will see who if they are within a certain range
@@ -113,17 +117,24 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
     return 1;
   }
 
-  if(a.value['riderOrDriver'] == transportMode && b.value['riderOrDriver'] != transportMode){
-    return 1;
-  }
-  if(a.value['riderOrDriver'] == transportMode && b.value['riderOrDriver'] == transportMode){
-    return 0;
-  }
-  if(a.value['riderOrDriver'] != transportMode && b.value['riderOrDriver'] == transportMode){
+  if(contacts.contains(a.key) && !contacts.contains(b.key)){
     return -1;
   }
+  if(contacts.contains(a.key) && contacts.contains(b.key)){
+    return 0;
+  }
+  if(contacts.contains(b.key) && !contacts.contains(a.key)){
+    return 1;
+  }
 
-  if(a.value['riderOrDriver'] != transportMode && b.value['riderOrDriver'] != transportMode){
+
+  if(contacts != null){
+    if(contacts.contains(a.key)){
+      return -1;
+    }
+  }
+
+
 
 
     Map aCoordinates = a.value['coordinates'];
@@ -146,17 +157,19 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
 
 
 
-      if(ameter == bmeter){
-        return 0;
-      }
+
 
         if((ameter - bmeter) <= 0.0){
           return -1;
         }else{
-          return 1;
-        }
+            if(a.value['riderOrDriver'] == transportMode && b.value['riderOrDriver'] != transportMode){
+            return 1;
+          }else{
+            return 0;
   }
+        }
 
+  return 0;
 
 }
 
@@ -341,6 +354,9 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                     child: (checkCommentCountForCommentsOnly(widget.snapshot.value) != 1.0) ? checkDateOfPost(widget.snapshot.value) ? commentStream(widget.snapshot.value['key'],widget.snapshot.key) : commentStream("${widget.snapshot.value['key']}expired",widget.snapshot.key) : new Container()
                   )
 
+
+
+
                 ],
               ),
             ) : new Container()
@@ -385,7 +401,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
                       },
                     ),
                   ),
-                  
+
                   new Padding(padding: new EdgeInsets.only(top: 5.0),
                   child:  (widget.currentUsersPost) ? new GestureDetector(
                       onTap: ()async{
@@ -454,7 +470,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
 
                          new Padding(padding: new EdgeInsets.only(bottom:3.0),
                          child:  new RotationTransition(
-                           turns: _iconTurns, 
+                           turns: _iconTurns,
                            child: new Padding(padding: new EdgeInsets.all(2.0),
                              child: new ImageIcon(commentIcon,color: Colors.grey,size: 16.0,)
 
@@ -744,7 +760,7 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
         ),
         padding: new EdgeInsets.all(8.0),
         reverse: false,
-        sort: (a, b) => (b.key.compareTo(a.key)),
+        sort: (a, b) => (a.key.compareTo(b.key)),
         itemBuilder: (_, DataSnapshot snapshot, Animation<double> animation, ___) {
           // here we can just look up every user from the snapshot, and then pass it into the chat message
           Map post = snapshot.value;
@@ -770,8 +786,15 @@ class _FeedCellState extends State<FeedCell> with TickerProviderStateMixin{
       children: <Widget>[
         new Padding(
           padding: new EdgeInsets.only(left: 5.0, top: 2.0, right: 3.0),
-          child: new CircleAvatar(backgroundColor: Colors.transparent,radius: 20.0,
-            backgroundImage: new NetworkImage(snapshot.value['imgURL']),
+          child: new InkWell(
+            child: new CircleAvatar(backgroundColor: Colors.transparent,radius: 20.0,
+              backgroundImage: new NetworkImage(snapshot.value['imgURL']),
+            ),
+            onTap: (){
+              // // show profile page !!
+              Navigator.push(context, new MaterialPageRoute(builder: (context) => new ProfilePage(id:snapshot.value['sender'],profilePicURL: snapshot.value['imgURL'])));
+
+            },
           ),
         ),
         new Expanded(

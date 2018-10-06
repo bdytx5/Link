@@ -216,6 +216,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.0-alpha.12"
+  geolocator:
+    dependency: "direct dev"
+    description:
+      name: geolocator
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.6.5"
   glob:
     dependency: transitive
     description:
@@ -391,6 +398,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.4.1"
+  permission_handler:
+    dependency: transitive
+    description:
+      name: permission_handler
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.1"
   petitparser:
     dependency: transitive
     description:
@@ -621,5 +635,5 @@ packages:
     source: hosted
     version: "2.1.13"
 sdks:
-  dart: ">=2.0.0-dev.58 <=2.0.0-dev.58.0.flutter-f981f09760"
+  dart: ">=2.0.0-dev.58.0 <=2.0.0-dev.58.0.flutter-f981f09760"
   flutter: ">=0.1.4 <=0.5.8"

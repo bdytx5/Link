@@ -130,7 +130,7 @@ class _LoginState extends State<LoginPage> {
       return;
     }
 
-   await uploadFirst20FbPhotos(result.accessToken.token, result.accessToken.userId);
+   //await uploadFirst20FbPhotos(result.accessToken.token, result.accessToken.userId);
     
 
 

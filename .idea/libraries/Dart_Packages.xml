@@ -219,6 +219,13 @@
             </list>
           </value>
         </entry>
+        <entry key="geolocator">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/geolocator-1.6.5/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="glob">
           <value>
             <list>
@@ -391,6 +398,13 @@
           <value>
             <list>
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1/lib" />
+            </list>
+          </value>
+        </entry>
+        <entry key="permission_handler">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/permission_handler-1.0.1/lib" />
             </list>
           </value>
         </entry>
@@ -657,6 +671,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/flutter_facebook_login-1.1.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/flutter_webview_plugin-0.2.1+2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/front_end-0.1.0-alpha.12/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/geolocator-1.6.5/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/glob-1.1.5/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/google_maps_webservice-0.0.6/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/html-0.13.3/lib" />
@@ -682,6 +697,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/package_resolver-1.0.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/path-1.5.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/permission_handler-1.0.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/petitparser-1.7.7/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/photo_view-0.0.7/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dartlang.org/platform-2.1.2/lib" />

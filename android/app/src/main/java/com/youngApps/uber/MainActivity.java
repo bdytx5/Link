@@ -3,6 +3,8 @@ package com.youngApps.uber;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.net.Uri;
+import android.content.Intent;
 
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -52,6 +54,9 @@ public class MainActivity extends FlutterActivity {
                   logoutOfSnap(cxt, res);
                 }
                 if(call.method.equals("snapGraph")){
+                  snapGraph(cxt,res);
+                }
+                if(call.method.equals("showMap")){
                   snapGraph(cxt,res);
                 }
               }
@@ -118,6 +123,16 @@ public class MainActivity extends FlutterActivity {
     }else{
       res.success("false");
     }
+
+  }
+
+
+
+  public static  void showMap(Context cxt, final Result res){
+
+    Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+            Uri.parse("http://maps.google.com/maps?saddr=20.344,34.34&daddr=20.5666,45.345"));
+    cxt.startActivity(intent);
 
   }
 

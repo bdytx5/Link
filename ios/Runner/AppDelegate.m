@@ -50,6 +50,12 @@ static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
             [self goToSettings];
         }
         
+        if ([@"showMaps" isEqualToString:call.method]) {
+            
+            [self gotToMaps:result lat:call.arguments[@"lat"] lon:call.arguments[@"lon"]];
+        }
+        
+        
 //        if ([@"snapchatLogin" isEqualToString:call.method]) {
 //
 //            [self loginToSnap:controller result:result];
@@ -242,6 +248,16 @@ static NSString *const CHANNEL_NAME = @"thumbsOutChannel";
     
 }
 
+-(void) gotToMaps:(FlutterResult)res lat:(NSString *)lat lon:(NSString *)lon{
+    NSString* directionsURL = [NSString stringWithFormat:@"http://maps.apple.com/?address=%@,%@",lat, lon];
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(openURL:options:completionHandler:)]) {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString: directionsURL] options:@{} completionHandler:^(BOOL success) {}];
+    } else {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString: directionsURL]];
+    }
+
+    
+}
 
 
 

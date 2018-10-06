@@ -60,7 +60,7 @@ class _SignupPopUpState extends State<SignupPopUp> {
   String coverPhotoURL;
   String gradYear = '';
   TextEditingController postController = new TextEditingController();
-  List<String> yearList = ['2019', '2020','2021','2022']; // could get this from the database maybe
+  List<String> yearList = ['2019', '2020','2021','2022','2023','2024']; // could get this from the database maybe
   void initState() {
     super.initState();
     cityCode = widget.userInfo['cityCode'];
@@ -76,8 +76,8 @@ class _SignupPopUpState extends State<SignupPopUp> {
 // popup menu
   @override
   Widget build(BuildContext context) {
-    return new SimpleDialog(
-      title:(!loading) ? new Row(
+    return (!loading)? new SimpleDialog(
+      title: new Row(
             mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
               (stage2) ? new InkWell(child: new Icon(Icons.keyboard_arrow_left), onTap: (){
@@ -88,11 +88,8 @@ class _SignupPopUpState extends State<SignupPopUp> {
             }) : new Container(),
               new Expanded(child: new Text((stage1) ? 'Graduation Year?' : (stage2 && !loading) ? 'Which best describes you?' : 'loading...', textAlign: TextAlign.center,))
           ],
-        ) : new Container(
-        child: new Center(
-          child: new CircularProgressIndicator(),
-        ),
-      ),
+        ) ,
+
       children: <Widget>[
         (!loading) ?  new Stack(
           children: <Widget>[
@@ -106,6 +103,10 @@ class _SignupPopUpState extends State<SignupPopUp> {
           ],
         ) : new Container(),
       ],
+    ) : new Container(
+     child: new Center(
+        child: new CircularProgressIndicator(),
+      ),
     );
   }
 
@@ -143,19 +144,24 @@ class _SignupPopUpState extends State<SignupPopUp> {
 
     Widget selectGradYearPicker() {
       return new Container(
-//          height: 170.0,
-//          width: MediaQuery.of(context).size.width - 50.0,
+          height: 170.0,
+          width: MediaQuery.of(context).size.width - 50.0,
           child: new Center(
-              child: new GridView.builder(
-                  itemCount: yearList.length,
-                  gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2
-                ),
-                itemBuilder: (BuildContext context, int index)
-                   {
-                     return yearCell(Colors.yellowAccent, index);
-                   }
-                 )
+              child: new GridView.count(crossAxisCount: 2,
+                shrinkWrap: true,
+                scrollDirection: Axis.vertical,
+                childAspectRatio:2.0,
+                children: <Widget>[
+                  yearCell(Colors.yellowAccent, 0),
+                  yearCell(Colors.yellowAccent, 1),
+                  yearCell(Colors.yellowAccent, 2),
+                  yearCell(Colors.yellowAccent, 3),
+                  yearCell(Colors.yellowAccent, 4),
+                  yearCell(Colors.yellowAccent, 5),
+
+                ],
+
+              ),
                )
            );
        }

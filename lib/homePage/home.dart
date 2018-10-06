@@ -78,7 +78,8 @@ final destinationTextContoller = new TextEditingController();
     LatLng destination;
     SecureString secureString = new SecureString();
     String titleCity = '';
-
+    bool contactsListLoaded = false;
+    List<String> contacts;
 Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 final keyboardDismissalChangeNotifier = new StreamController.broadcast(); // for communicating down the widget tree to dismiss the keyboard
 
@@ -95,6 +96,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
    void initState() {
     super.initState();
   //  migrateData();
+    grabContactsListForFeed();
     getUsersCityName();
     globals.id = widget.userID;
     updateCityCode(widget.userID).then((idk){
@@ -326,7 +328,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
 
             });
           },),
-      (transportMode != null && destination != null ) ?  new Feed(app: widget.app,userID: widget.userID, commentNotificationCallback:_commentNotificationCallback,keyboardDismissalStreamController: keyboardDismissalChangeNotifier, destination: destination,transportMode: transportMode) : new Container(
+      (transportMode != null && destination != null && contactsListLoaded) ?  new Feed(app: widget.app,userID: widget.userID, commentNotificationCallback:_commentNotificationCallback,keyboardDismissalStreamController: keyboardDismissalChangeNotifier, destination: destination,transportMode: transportMode,contacts: contacts,) : new Container(
         child: new Center(
           child: new CircularProgressIndicator()
         )
@@ -595,6 +597,18 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
       print(e);
       throw new Exception(e);
     }
+
+  }
+
+
+  Future<void> grabContactsListForFeed()async{
+    FirebaseDatabase database = FirebaseDatabase.instance;
+    var contactsSnap = await database.reference().child('contacts').child(globals.id).once();
+
+    setState(() {
+        contacts = List.from(contactsSnap.value);
+      contactsListLoaded = true;
+    });
 
   }
 

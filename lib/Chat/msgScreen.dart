@@ -20,6 +20,7 @@ import 'addUser.dart';
 import 'groupMsgScreen.dart';
 import 'package:flutter/services.dart';
 import '../pageTransitions.dart';
+import 'package:geolocator/geolocator.dart';
 
 typedef glimpseLoadedCB = void Function(File glimpseKey);
 
@@ -218,6 +219,11 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
           if(msg['from'] == globals.id){
               userHasSentAtLeastOneMsg = true;
           }
+
+          if(msg.containsKey('la') && msg.containsKey('lo')){
+            return locationMsgCell(senderFullName, senderImgURL,msg['formattedTime'], msg['la'],msg['lo']);
+          }
+
           if(msg['type'] != null && msg['from'] != globals.id && msg['formattedTime'] != null){
                   return recipGlimpseCell(msg,widget.convoId,snapshot.key,recipFullName,recipImgURL);
           }
@@ -302,9 +308,7 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                     onChanged: (String txt){
                       setState(() {
                         _isWriting = true;
-
                       });
-
                     },
                     onSubmitted: _submitMsg,
                     decoration: new InputDecoration.collapsed(hintText: 'Enter a Message!'),
@@ -318,52 +322,55 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
                       onPressed: (_isWriting && _textController.text != null && !allBtnsDisabled) ? () => _submitMsg(_textController.text) : (){},
                     )
                 ),
-      (widget.convoId != globals.id) ? new Container(
-                  height: 30.0,
-                  width: 30.0,
-                  decoration: new BoxDecoration(
-                      color: Colors.yellowAccent,
-                      shape: BoxShape.circle,
-                      border: new Border.all(color: Colors.grey,width: 3.0)
-                  ),
-                  child: new InkWell(onTap: (!allBtnsDisabled) ? ()async{
-//
-//                    Navigator.push(context,
-//                        new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
+      (widget.convoId != globals.id) ? new Row(
+        children: <Widget>[
+          new Container(
+            height: 30.0,
+            width: 30.0,
+            decoration: new BoxDecoration(
+                color: Colors.yellowAccent,
+                shape: BoxShape.circle,
+                border: new Border.all(color: Colors.grey,width: 3.0)
+            ),
+            child: new InkWell(onTap: (!allBtnsDisabled) ? ()async{
+              handleGlimpseBtnTap();
+            } : null
+            ),
+          ),
+
+          new Container(
+            height: 30.0,
+            width: 30.0,
+       
+            child: new InkWell(
+              child: new Icon(Icons.location_on,color: Colors.grey[600],),
+
+              onTap: ()async{
+               bool res =  await _askToSendCurrentLocation();
+
+               if(res == null){
+                 return;
+               }
+               if(res){
+                 //platform.invokeMethod('showMaps');
+                 try{
+                   Map loc = await getCurrentLocation();
+                   if(loc == null){
+                     // show error msg
+                   }
+                   await sendLocationMsg(recipId, loc['lat'], loc['lon']);
+                 }catch(e) {
+                   // show error msg
+
+                 }
+               }
 
 
-                  if(Platform.isIOS){
-                    txtInputFocusNode.unfocus();
-                    if(mounted){
-                      setState(() {
-                        allBtnsDisabled = true;
-                        textfieldDisabled = true;
-                      });
-                    }
-
-                  platform.invokeMethod('showCamera',
-                        <String, dynamic> {'convoId':widget.convoId, 'sender':globals.id, 'recip':widget.recipID, 'fullName':recipFullName, 'imgURL':recipImgURL}).then((d){
-                          if(mounted){
-                            setState(() {
-                              textfieldDisabled = false;
-                            });
-                          }
-                          Future.delayed(new Duration(milliseconds: 500)).then((idkl){
-                            if(mounted){
-                              setState(() {
-                                allBtnsDisabled = false;
-                              });
-                            }
-
-                          });
-                       });
-                  }else{
-                    Navigator.push(context,
-                        new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
-                    }
-                     } : null
-                  ),
-                ) : new Container(),
+              },
+            ),
+          ),
+        ],
+      ) : new Container(),
               ],
             ),
 
@@ -376,6 +383,58 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
       );
     
   }
+
+
+  void handleGlimpseBtnTap(){
+
+    if(Platform.isIOS){
+      txtInputFocusNode.unfocus();
+      if(mounted){
+        setState(() {
+          allBtnsDisabled = true;
+          textfieldDisabled = true;
+        });
+      }
+
+      platform.invokeMethod('showCamera',
+          <String, dynamic> {'convoId':widget.convoId, 'sender':globals.id, 'recip':widget.recipID, 'fullName':recipFullName, 'imgURL':recipImgURL}).then((d){
+        if(mounted){
+          setState(() {
+            textfieldDisabled = false;
+          });
+        }
+        Future.delayed(new Duration(milliseconds: 500)).then((idkl){
+          if(mounted){
+            setState(() {
+              allBtnsDisabled = false;
+            });
+          }
+
+        });
+      });
+    }else{
+      Navigator.push(context,
+          new ShowRoute(widget: SnapPage(widget.convoId,widget.recipID,recipImgURL, recipFullName,newConvo,userHasSentAtLeastOneMsg)));
+    }
+  }
+
+
+  Future<Map> getCurrentLocation()async{
+    var currentLocation = <String, double>{};
+
+// Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      Position position = await Geolocator().getCurrentPosition();
+
+
+      Map coordinates = {'lat':position.latitude.toString(),'lon':position.longitude.toString()};
+      return coordinates;
+    } catch(e) {
+      print(e);
+      throw new Exception();
+    }
+  }
+
 
 
   String timestamp() => new DateTime.now().millisecondsSinceEpoch.toString();
@@ -488,25 +547,40 @@ void listenToRecipNewFlagForRecip(Event New){
   }
 
 
+  Future<void> sendRegularMsg(String id, String msg)async{
+    await handleContactsList();
+    var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
+    var now = formatter.format(new DateTime.now());
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    var key = ref.child('convos').child(widget.convoId).push().key;
+
+    Map message = {'to':widget.recipID,'from':globals.id,'message':msg, 'formattedTime':now};
+    try{
+      await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'recentMsg':msg, 'time':key,'formattedTime':now});// IDK
+      await ref.child('convoLists').child(widget.recipID).child(globals.id).update({'recentMsg':msg, 'time':key,'formattedTime':now,'new':true});
+      await ref.child('convos').child(widget.convoId).push().set(message); // SEND THE MESSAGE
+    }catch(e){
+      _errorMenu("Error", "There was an error sending your message.", '');
+    }
+
+  }
 
 
-
-Future<void> sendRegularMsg(String id, String msg)async{
+Future<void> sendLocationMsg(String id, String lat, String lon)async{
   await handleContactsList();
   var formatter = new DateFormat('yyyy-MM-dd hh:mm:ss a');
   var now = formatter.format(new DateTime.now());
   DatabaseReference ref = FirebaseDatabase.instance.reference();
   var key = ref.child('convos').child(widget.convoId).push().key;
 
-  Map message = {'to':widget.recipID,'from':globals.id,'message':msg, 'formattedTime':now};
+  Map message = {'to':widget.recipID,'from':globals.id,'message':"Update Link to view ${senderFullName}'s location", 'formattedTime':now,'loca':true,'la':lat,'lo':lon};
   try{
-    await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'recentMsg':msg, 'time':key,'formattedTime':now});// IDK
-    await ref.child('convoLists').child(widget.recipID).child(globals.id).update({'recentMsg':msg, 'time':key,'formattedTime':now,'new':true});
+    await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'recentMsg':'New Location Message!', 'time':key,'formattedTime':now});// IDK
+    await ref.child('convoLists').child(widget.recipID).child(globals.id).update({'recentMsg':'New Location Message!', 'time':key,'formattedTime':now,'new':true});
     await ref.child('convos').child(widget.convoId).push().set(message); // SEND THE MESSAGE
   }catch(e){
     _errorMenu("Error", "There was an error sending your message.", '');
   }
-
 }
 
   Future<void> sendFeedbackMsg()async{
@@ -820,33 +894,6 @@ void setupStreamQuery(){
 
 
 
-  Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) async {
-    return showDialog<Null>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return new AlertDialog(
-          title: new Text(title),
-          content: new SingleChildScrollView(
-            child: new ListBody(
-              children: <Widget>[
-                new Text(primaryMsg),
-                new Text(secondaryMsg),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            new FlatButton(
-              child: new Text('Okay', style: new TextStyle(color: Colors.black),),
-              onPressed:(!allBtnsDisabled) ? () {
-                Navigator.of(context).pop();
-              } : null
-            ),
-          ],
-        );
-      },
-    );
-  }
 
 
 
@@ -973,6 +1020,83 @@ void setupStreamQuery(){
 
 
 
+
+  Widget locationMsgCell( String senderName, String imgURL,String time,String lat, String lon ){
+    return new Container(
+
+        child: InkWell(
+
+            onTap: (!allBtnsDisabled) ? ()async{
+              await platform.invokeMethod('showMaps',
+                                       <String, dynamic> {'lat':lat, 'lon':lon});
+              // nothing
+            } : null,
+            splashColor: Colors.white,
+            highlightColor: Colors.white,
+
+            child:  new Card(
+              child: new Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+
+                      
+                              new Padding(padding: new EdgeInsets.all(5.0),
+                                child:  new CircleAvatar(
+                                  backgroundImage: new CachedNetworkImageProvider(imgURL),
+                                  backgroundColor: Colors.transparent,
+                                ),
+                              ),
+
+                        new Expanded(child:       new Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            new Padding(padding: new EdgeInsets.only(left: 10.0),
+                              child: new Text(senderName,style: new TextStyle(fontWeight: FontWeight.bold),),
+
+                            ),
+                            (time != null) ? new Padding(padding: new EdgeInsets.only(left: 10.0,top: 1.0, bottom:1.0 ),
+                              child:  Text(getDateOfMsg(time), style: new TextStyle(color: Colors.grey, fontSize: 8.0),),
+                            ) : new Container(),
+
+                        new Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                             children: <Widget>[
+                               new Icon(Icons.location_on,size: 13.0,),
+
+
+                                 //   new InkWell(
+                                   //child:
+                                   new Container(
+                                       child: new Expanded( child:!(recipImgURL == imgURL) ? new Text("Tap for directions to ${senderName}'s location",style: new TextStyle(fontStyle: FontStyle.italic)) : new Text('You sent your location!'),
+                                       ),
+
+                               ),
+
+//                                      onTap: ()async{
+//                                        await platform.invokeMethod('showCamera',
+//                                            <String, dynamic> {'lat':lat, 'lon':lon});
+//
+//                                      },
+//
+//
+//                               )
+                             ],
+                           )
+
+                            //  )
+                          ],
+                        ))
+
+
+                ],
+              ),
+            )
+        )
+    );
+  }
+
+
   Future<void> viewGlimpse(String glimpseKey, Map msg)async{
 
     if(msg.containsKey('fromCameraRoll')){
@@ -984,6 +1108,84 @@ void setupStreamQuery(){
   }
 
 
+
+
+  Future<bool> _askToSendCurrentLocation() async {
+
+    // change bio
+    //change cover
+    // change profile pic
+    //
+
+
+
+    var res = await showDialog(
+      context: context,
+      barrierDismissible: true, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Center(
+            child: new Text('Send Current Location?',),
+          ),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text('${recipFullName} will be able to see your current location right now. They will not be able to tack you if you move. ')
+              ],
+            ),
+          ),
+          actions: <Widget>[
+
+            new FlatButton(
+                child: new Text('Cancel', style: new TextStyle(color: Colors.black),),
+                onPressed:(!allBtnsDisabled) ? () {
+                  Navigator.of(context).pop(false);
+                } : null
+            ),
+            new FlatButton(
+                child: new Text('Send', style: new TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
+                onPressed:(!allBtnsDisabled) ? () {
+                  Navigator.of(context).pop(true);
+                } : null
+            ),
+          ],
+        );
+      },
+    );
+
+    return res;
+  }
+
+  Future<Null> _errorMenu(String title, String primaryMsg, String secondaryMsg) async {
+    return showDialog<Null>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return new AlertDialog(
+          title: new Text(title),
+          content: new SingleChildScrollView(
+            child: new ListBody(
+              children: <Widget>[
+                new Text(primaryMsg),
+                new Text(secondaryMsg),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            new FlatButton(
+                child: new Text('Okay', style: new TextStyle(color: Colors.black),),
+                onPressed:(!allBtnsDisabled) ? () {
+                  Navigator.of(context).pop();
+                } : null
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
 }
 
 // solving issues ...
@@ -992,15 +1194,5 @@ class AlwaysDisabledFocusNode extends FocusNode {
   bool get hasFocus => false;
 }
 
-//Future<void> updateReadReceipts()async{
-//  if(!newConvo && widget.convoId != globals.id){
-//    DatabaseReference ref = FirebaseDatabase.instance.reference();
-//    try{
-//      await ref.child('convoLists').child(globals.id).child(widget.recipID).update({'new':false});// IDK
-//    }catch(e){
-//      throw new Exception('Error');
-//    }
-//  }
-//}
 
 
