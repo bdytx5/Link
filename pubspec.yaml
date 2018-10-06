@@ -39,7 +39,7 @@ dev_dependencies:
   cached_network_image: ^0.4.1+1
   camera: ^0.2.1
   photo_view: ^0.0.7
-  geolocator: ^1.6.5
+  location: ^1.4.1
 
 
 

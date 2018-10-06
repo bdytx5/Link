@@ -117,14 +117,17 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
     return 1;
   }
 
-  if(contacts.contains(a.key) && !contacts.contains(b.key)){
-    return -1;
-  }
-  if(contacts.contains(a.key) && contacts.contains(b.key)){
-    return 0;
-  }
-  if(contacts.contains(b.key) && !contacts.contains(a.key)){
-    return 1;
+
+  if(contacts != null){
+    if(contacts.contains(a.key) && !contacts.contains(b.key)){
+      return -1;
+    }
+    if(contacts.contains(a.key) && contacts.contains(b.key)){
+      return 0;
+    }
+    if(contacts.contains(b.key) && !contacts.contains(a.key)){
+      return 1;
+    }
   }
 
 
@@ -159,7 +162,7 @@ int sortFeed(DataSnapshot a, DataSnapshot b, String transportMode, LatLng destin
 
 
 
-        if((ameter - bmeter) <= 0.0){
+        if((ameter - bmeter) < 0.0){
           return -1;
         }else{
             if(a.value['riderOrDriver'] == transportMode && b.value['riderOrDriver'] != transportMode){

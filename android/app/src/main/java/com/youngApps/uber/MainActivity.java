@@ -56,8 +56,8 @@ public class MainActivity extends FlutterActivity {
                 if(call.method.equals("snapGraph")){
                   snapGraph(cxt,res);
                 }
-                if(call.method.equals("showMap")){
-                  snapGraph(cxt,res);
+                if(call.method.equals("showMaps")){
+                  showMap(cxt,res,call.argument("lat").toString(),call.argument("lon").toString());
                 }
               }
             });
@@ -128,10 +128,14 @@ public class MainActivity extends FlutterActivity {
 
 
 
-  public static  void showMap(Context cxt, final Result res){
+  public static  void showMap(Context cxt, final Result res,String lat, String lon){
+
+    String output = String.format("http://maps.google.com/maps?daddr=%s,%s", lat, lon);
+    System.out.println(output);
+
 
     Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
-            Uri.parse("http://maps.google.com/maps?saddr=20.344,34.34&daddr=20.5666,45.345"));
+            Uri.parse(output));
     cxt.startActivity(intent);
 
   }

@@ -20,7 +20,7 @@ import 'addUser.dart';
 import 'groupMsgScreen.dart';
 import 'package:flutter/services.dart';
 import '../pageTransitions.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:location/location.dart';
 
 typedef glimpseLoadedCB = void Function(File glimpseKey);
 
@@ -424,10 +424,12 @@ class _chatScreenState extends State<ChatScreen> with RouteAware{
 
 // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      Position position = await Geolocator().getCurrentPosition();
+      var currentLocation = <String, double>{};
 
+      var location = new Location();
+      currentLocation = await location.getLocation();
 
-      Map coordinates = {'lat':position.latitude.toString(),'lon':position.longitude.toString()};
+      Map coordinates = {'lat':currentLocation['latitude'].toString(),'lon':currentLocation['longitude'].toString()};
       return coordinates;
     } catch(e) {
       print(e);
@@ -1029,6 +1031,8 @@ void setupStreamQuery(){
             onTap: (!allBtnsDisabled) ? ()async{
               await platform.invokeMethod('showMaps',
                                        <String, dynamic> {'lat':lat, 'lon':lon});
+
+//              await platform.invokeMethod('showMaps');
               // nothing
             } : null,
             splashColor: Colors.white,

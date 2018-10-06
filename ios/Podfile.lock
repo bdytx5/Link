@@ -7,25 +7,25 @@ PODS:
   - Bolts/Tasks (1.9.0)
   - camera (0.0.1):
     - Flutter
-  - FBSDKCoreKit (4.34.0):
+  - FBSDKCoreKit (4.35.0):
     - Bolts (~> 1.7)
-  - FBSDKLoginKit (4.34.0):
+  - FBSDKLoginKit (4.35.0):
     - FBSDKCoreKit
-  - Firebase/Auth (5.4.0):
+  - Firebase/Auth (5.6.0):
     - Firebase/CoreOnly
-    - FirebaseAuth (= 5.0.2)
-  - Firebase/Core (5.4.0):
+    - FirebaseAuth (= 5.0.3)
+  - Firebase/Core (5.6.0):
     - Firebase/CoreOnly
-    - FirebaseAnalytics (= 5.0.1)
-  - Firebase/CoreOnly (5.4.0):
-    - FirebaseCore (= 5.0.5)
-  - Firebase/Database (5.4.0):
+    - FirebaseAnalytics (= 5.1.1)
+  - Firebase/CoreOnly (5.6.0):
+    - FirebaseCore (= 5.1.1)
+  - Firebase/Database (5.6.0):
     - Firebase/CoreOnly
     - FirebaseDatabase (= 5.0.2)
-  - Firebase/Messaging (5.4.0):
+  - Firebase/Messaging (5.6.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (= 3.0.3)
-  - Firebase/Storage (5.4.0):
+    - FirebaseMessaging (= 3.1.0)
+  - Firebase/Storage (5.6.0):
     - Firebase/CoreOnly
     - FirebaseStorage (= 3.0.0)
   - firebase_auth (0.0.1):
@@ -45,25 +45,33 @@ PODS:
   - firebase_storage (0.0.1):
     - Firebase/Storage
     - Flutter
-  - FirebaseAnalytics (5.0.1):
-    - FirebaseCore (~> 5.0)
-    - FirebaseInstanceID (~> 3.0)
-    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
+  - FirebaseAnalytics (5.1.1):
+    - FirebaseCore (~> 5.1)
+    - FirebaseInstanceID (~> 3.2)
+    - GoogleAppMeasurement (~> 5.1)
+    - GoogleUtilities/AppDelegateSwizzler (~> 5.2.0)
+    - GoogleUtilities/MethodSwizzler (~> 5.2.0)
+    - GoogleUtilities/Network (~> 5.2)
+    - "GoogleUtilities/NSData+zlib (~> 5.2)"
     - nanopb (~> 0.3)
-  - FirebaseAuth (5.0.2):
+  - FirebaseAuth (5.0.3):
+    - FirebaseAuthInterop (~> 1.0)
     - FirebaseCore (~> 5.0)
+    - GoogleUtilities/Environment (~> 5.2)
     - GTMSessionFetcher/Core (~> 1.1)
-  - FirebaseCore (5.0.5):
-    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
+  - FirebaseAuthInterop (1.0.0)
+  - FirebaseCore (5.1.1):
+    - GoogleUtilities/Logger (~> 5.2)
   - FirebaseDatabase (5.0.2):
     - FirebaseCore (~> 5.0)
     - leveldb-library (~> 1.18)
-  - FirebaseInstanceID (3.1.1):
-    - FirebaseCore (~> 5.0)
-  - FirebaseMessaging (3.0.3):
+  - FirebaseInstanceID (3.2.1):
+    - FirebaseCore (~> 5.1)
+    - GoogleUtilities/Environment (~> 5.2)
+  - FirebaseMessaging (3.1.0):
     - FirebaseCore (~> 5.0)
     - FirebaseInstanceID (~> 3.0)
-    - GoogleToolboxForMac/Logger (~> 2.1)
+    - GoogleUtilities/Reachability (~> 5.2)
     - Protobuf (~> 3.1)
   - FirebaseStorage (3.0.0):
     - FirebaseCore (~> 5.0)
@@ -76,12 +84,29 @@ PODS:
     - Flutter
   - flutter_webview_plugin (0.0.1):
     - Flutter
-  - GoogleToolboxForMac/Defines (2.1.4)
-  - GoogleToolboxForMac/Logger (2.1.4):
-    - GoogleToolboxForMac/Defines (= 2.1.4)
-  - "GoogleToolboxForMac/NSData+zlib (2.1.4)":
-    - GoogleToolboxForMac/Defines (= 2.1.4)
-  - GTMSessionFetcher/Core (1.1.15)
+  - GoogleAppMeasurement (5.1.1):
+    - GoogleUtilities/AppDelegateSwizzler (~> 5.2.0)
+    - GoogleUtilities/MethodSwizzler (~> 5.2.0)
+    - GoogleUtilities/Network (~> 5.2)
+    - "GoogleUtilities/NSData+zlib (~> 5.2)"
+    - nanopb (~> 0.3)
+  - GoogleUtilities/AppDelegateSwizzler (5.2.2):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Network
+  - GoogleUtilities/Environment (5.2.2)
+  - GoogleUtilities/Logger (5.2.2):
+    - GoogleUtilities/Environment
+  - GoogleUtilities/MethodSwizzler (5.2.2):
+    - GoogleUtilities/Logger
+  - GoogleUtilities/Network (5.2.2):
+    - GoogleUtilities/Logger
+    - "GoogleUtilities/NSData+zlib"
+    - GoogleUtilities/Reachability
+  - "GoogleUtilities/NSData+zlib (5.2.2)"
+  - GoogleUtilities/Reachability (5.2.2):
+    - GoogleUtilities/Logger
+  - GTMSessionFetcher/Core (1.2.0)
   - image_cropper (0.0.1):
     - Flutter
     - TOCropViewController (~> 2.3.6)
@@ -97,10 +122,10 @@ PODS:
   - nanopb/encode (0.3.8)
   - path_provider (0.0.1):
     - Flutter
-  - Protobuf (3.6.0)
+  - Protobuf (3.6.1)
   - shared_preferences (0.0.1):
     - Flutter
-  - TOCropViewController (2.3.6)
+  - TOCropViewController (2.3.8)
 
 DEPENDENCIES:
   - camera (from `.symlinks/plugins/camera/ios`)
@@ -127,12 +152,14 @@ SPEC REPOS:
     - Firebase
     - FirebaseAnalytics
     - FirebaseAuth
+    - FirebaseAuthInterop
     - FirebaseCore
     - FirebaseDatabase
     - FirebaseInstanceID
     - FirebaseMessaging
     - FirebaseStorage
-    - GoogleToolboxForMac
+    - GoogleAppMeasurement
+    - GoogleUtilities
     - GTMSessionFetcher
     - leveldb-library
     - nanopb
@@ -174,37 +201,39 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Bolts: ac6567323eac61e203f6a9763667d0f711be34c8
   camera: be01db3b2193839f9af56a9db99b7fea444d35f3
-  FBSDKCoreKit: 0ff57f093b85c8c9d5aba697d3edf68a8960ce78
-  FBSDKLoginKit: 8c78f57a145afb756e4755e69195ebe08a42466e
-  Firebase: d66f4f29c23f22d96808d9abc174d81d8eee968f
+  FBSDKCoreKit: 1a5b2e3ceb5ca827a53c54aa5f4a3480efff80d2
+  FBSDKLoginKit: 00a3d65d1226852f9d76dcddff01981e5e6d9c38
+  Firebase: 75ea9e232eefa158c1049028030b8f661a2ccb62
   firebase_auth: 27a5a77a032d557c18f8e223aaf8ec1368f6cdbc
   firebase_core: c96aa8b2fcf7f5167d32f22034f502f9304952b8
   firebase_database: dd62ab9f71967c9011ce2fd03a89e762dcc364df
   firebase_messaging: a5f5d4a9491b660f33a1f94bd0596558f820bad1
   firebase_storage: e34d30ff8bb57e691191b70e9d255ec2eba2351f
-  FirebaseAnalytics: b3628aea54c50464c32c393fb2ea032566e7ecc2
-  FirebaseAuth: 096e457cdd4274412a66c4a35874787e411f5a03
-  FirebaseCore: 42b3267233bd21a5abd54117ccc38ca3dd0f8e83
+  FirebaseAnalytics: 993577e91157feb40945abedd6ab346d8a4b6ac8
+  FirebaseAuth: 657a25e4be044d2d333663ebf515a861c5a59cd7
+  FirebaseAuthInterop: 0ffa57668be100582bb7643d4fcb7615496c41fc
+  FirebaseCore: cb9ee75e0894def766167c95a4d5a14b1c138269
   FirebaseDatabase: 27be5ac5bc75e0b17537b2bbfada8258addcc8cd
-  FirebaseInstanceID: f3f0657372592ecdfdfe2cac604a5a75758376a6
-  FirebaseMessaging: f43eb0c0e1da096e659de6f713038e74862a62cd
+  FirebaseInstanceID: ea5af6920d0a4a29b40459d055bebe4a6c1333c4
+  FirebaseMessaging: f67b3719f520ee200da0e20ce577fe2bce0c01d0
   FirebaseStorage: 7ca4bb7b58a25fa647b04f524033fc7cb7eb272b
   Flutter: 9d0fac939486c9aba2809b7982dfdbb47a7b0296
   flutter_facebook_login: e3d2f0a348889fe0f49c302bc044b8cc66c691be
   flutter_native_image: 3d9f735f47bf8af7dea28056bf90c03ad4ce531b
   flutter_webview_plugin: 116575b48572029304775b768e9f15ebfc316274
-  GoogleToolboxForMac: 91c824d21e85b31c2aae9bb011c5027c9b4e738f
-  GTMSessionFetcher: 5fa5b80fd20e439ef5f545fb2cb3ca6c6714caa2
+  GoogleAppMeasurement: f7507b39b70ad0bd80b3d81518b2f43868974307
+  GoogleUtilities: 06b66f9567769a7958db20a92f0128b2843e49d5
+  GTMSessionFetcher: 0c4baf0a73acd0041bf9f71ea018deedab5ea84e
   image_cropper: d62a37a42a69ab3d547110664db3177ed3e50003
   image_picker: ee00aab0487cedc80a304085219503cc6d0f2e22
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   location: 26c90953ad5916331d0d1d913898779910416487
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
   path_provider: 09407919825bfe3c2deae39453b7a5b44f467873
-  Protobuf: 0fc0ad8bec688b2a3017a139953e01374fedbd5f
+  Protobuf: 1eb9700044745f00181c136ef21b8ff3ad5a0fd5
   shared_preferences: 5a1d487c427ee18fcd3ea1f2a131569481834b53
-  TOCropViewController: 6d972f2c609372312648f96758e13a7f689efbc0
+  TOCropViewController: 0a075f02c253e88095143bbac7b013fc6fba5090
 
-PODFILE CHECKSUM: 4159d1d0758052c34bbaa8449438b904769206f1
+PODFILE CHECKSUM: 0633e30c1b89206612f169e0cbf9793ae220a97c
 
 COCOAPODS: 1.5.3
