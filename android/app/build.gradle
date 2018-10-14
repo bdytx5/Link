@@ -28,8 +28,8 @@ android {
         applicationId "com.youngApps.uber"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 13
-        versionName "1.12"
+        versionCode 15
+        versionName "1.14"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -47,7 +47,19 @@ android {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
+            ndk {
+                abiFilters "x86", "armeabi-v7a", "armeabi", "arm", "arm64", "x86_64"
+
+                //abiFilters ABI_FILTERS
+            }
             signingConfig signingConfigs.release
+        }
+
+        debug {
+            ndk {
+                abiFilters "x86", "armeabi-v7a", "armeabi", "arm", "arm64", "x86_64"
+                //abiFilters ABI_FILTERS
+            }
         }
     }
     productFlavors {
