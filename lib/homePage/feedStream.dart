@@ -7,15 +7,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong/latlong.dart';
 import '../globals.dart' as globals;
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/ui/firebase_animated_list.dart';
-import 'package:firebase_database/ui/firebase_list.dart';
 
-import 'profileSheet.dart';
-import 'feed.dart';
-import 'chatList.dart';
-import '../profilePages/profilePage.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
+import '../profilePages/alternateProfilePage.dart';
+//import '../profilePages/profilePage.dart';
 import '../textFieldFix.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../postSubmission/postSubmitPopUp.dart';

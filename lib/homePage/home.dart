@@ -266,29 +266,38 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
       key: _scaffoldKey,
       appBar: new AppBar(
         backgroundColor: Colors.yellowAccent,
-        leading:new Container(
-          child:  new Stack(
-            children: <Widget>[
-              new Center(
-                child: new IconButton(icon: new Icon(Icons.menu, color: Colors.black), onPressed: () async{
+        actions: <Widget>[
+          new Padding(padding: new EdgeInsets.all(15.0),
+        child: new Stack(
+          children: <Widget>[
+            new GestureDetector(
+              child:  Icon(Icons.notifications),
+              onTap: (){
+                Navigator.push(context, new MaterialPageRoute(builder: (context) => new NotificationPage(_generalNotificationCallback)));
+              },
+            ),
+            (rideNotificationReciepts || commentNotificationReciepts) ? new Align(
+              alignment: new Alignment(1.0, -1.0),
+              child: new Padding(padding: new EdgeInsets.all(3.0),
+      child: new Container(
+        height: 8.0,
+        width: 8.0,
+        decoration: new BoxDecoration(shape: BoxShape.circle, color: Colors.red,),
+      ),
+    ),
+            ) : new Container(),
+          ],
+        )
+
+
+
+          )
+        ],
+
+        leading: new IconButton(icon: new Icon(Icons.menu, color: Colors.black), onPressed: () async{
                   await grabUsersImgAndFullName();
                  _scaffoldKey.currentState.openDrawer();
-
                 }),
-              ),
-      (commentNotificationReciepts || rideNotificationReciepts) ?  new Align(
-                alignment: new Alignment(0.35, -0.30),
-                child:new Container(
-                  height: 8.0,
-                  width: 8.0,
-                  decoration: new BoxDecoration(shape: BoxShape.circle, color: Colors.red,),
-                ),
-              ):new Container(),
-
-
-            ],
-          ),
-        ),
         iconTheme: new IconThemeData(
           color: Colors.black
         ),
@@ -399,29 +408,7 @@ FirebaseMessaging _firMes = new FirebaseMessaging();
                 ),
                 )
               ),
-               new Card(
-                 child:  new ListTile(
-                   leading: new Icon(Icons.notifications),
-                   title: new Row(
-                        children: <Widget>[
 
-                      new Text('Notifications'),
-                   (rideNotificationReciepts || commentNotificationReciepts) ? new Padding(padding: new EdgeInsets.all(3.0),
-                              child: new Container(
-                              height: 8.0,
-                               width: 8.0,
-                              decoration: new BoxDecoration(shape: BoxShape.circle, color: Colors.red,),
-                          ),
-                        ) : new Container(),
-                        ],
-                   ),
-
-    onTap: (){
-    Navigator.push(context, new MaterialPageRoute(builder: (context) => new NotificationPage(_generalNotificationCallback)));
-    },
-
-                 ),
-               ),
 
 
               new Card(
